@@ -1,0 +1,14 @@
+{
+  "name": "@usenudge/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "@usenudge/shared": "workspace:*",
+    "html-to-image": "^1.11.13"
+  }
+}

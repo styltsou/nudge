@@ -1,0 +1,338 @@
+import Fastify from 'fastify';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { resolve } from 'node:path';
+import type { ServerResponse } from 'node:http';
+import {
+  canAct,
+  createSchema,
+  expectedSchema,
+  idSchema,
+  reportSchema,
+  reviseSchema,
+  statusSchema,
+  snapshotUploadSchema,
+  MAX_SNAPSHOT_BYTES,
+} from '@usenudge/shared';
+import type { Action, Annotation, Authority } from '@usenudge/shared';
+import type { BridgeConfig } from './config';
+import { Repository, RepositoryError } from './repository';
+import { SnapshotStore, validatePng } from './snapshots';
+
+function matches(actual: string, expected: string) {
+  return (
+    actual.length === expected.length &&
+    timingSafeEqual(Buffer.from(actual), Buffer.from(expected))
+  );
+}
+export function createBridge(config: BridgeConfig) {
+  const app = Fastify({
+    logger: false,
+    bodyLimit: 32 * 1024,
+    requestTimeout: 15000,
+    routerOptions: { maxParamLength: 64 },
+  });
+  const repo = new Repository(
+    resolve(config.stateDir, 'data.sqlite'),
+    config.projectId,
+  );
+  const snapshots = new SnapshotStore(config.stateDir);
+  const authorities = new WeakMap<object, Authority>();
+  const clients = new Set<ServerResponse>();
+  let windowStart = Date.now();
+  let requestCount = 0;
+  app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof RepositoryError)
+      return reply
+        .code(error.statusCode)
+        .send({ error: { code: error.code, message: error.message } });
+    const status = (error as { statusCode?: number }).statusCode;
+    return reply
+      .code(status && status >= 400 && status < 500 ? status : 500)
+      .send({
+        error: {
+          code: 'REQUEST_FAILED',
+          message:
+            status === 413
+              ? 'Request is too large'
+              : 'Unable to process request',
+        },
+      });
+  });
+  app.setNotFoundHandler((_request, reply) =>
+    reply
+      .code(404)
+      .send({ error: { code: 'NOT_FOUND', message: 'Route not found' } }),
+  );
+  app.addHook('onRequest', async (request, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    reply.header('X-Content-Type-Options', 'nosniff');
+    const host = request.headers.host ?? '';
+    if (!/^(?:localhost|127\.0\.0\.1)(?::\d{1,5})?$/.test(host))
+      return reply.code(403).send({
+        error: { code: 'HOST_DENIED', message: 'Local host required' },
+      });
+    const origin = request.headers.origin;
+    if (origin && !config.origins.includes(origin))
+      return reply.code(403).send({
+        error: { code: 'ORIGIN_DENIED', message: 'Origin is not allowed' },
+      });
+    if (origin) {
+      reply
+        .header('Access-Control-Allow-Origin', origin)
+        .header('Vary', 'Origin');
+      reply.header(
+        'Access-Control-Allow-Headers',
+        'Authorization, Content-Type',
+      );
+      reply.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    }
+    if (request.method === 'OPTIONS') {
+      if (!origin)
+        return reply.code(403).send({
+          error: {
+            code: 'ORIGIN_REQUIRED',
+            message: 'Local origin required',
+          },
+        });
+      return reply.code(204).send();
+    }
+    if (request.url === '/health' && request.method === 'GET') return;
+    if (Date.now() - windowStart > 60000) {
+      windowStart = Date.now();
+      requestCount = 0;
+    }
+    if (++requestCount > 600)
+      return reply.code(429).send({
+        error: {
+          code: 'RATE_LIMIT',
+          message: 'Too many requests. Retry shortly.',
+        },
+      });
+    const header = request.headers.authorization ?? '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+    let authority: Authority | undefined;
+    if (/^[a-f0-9]{64}$/.test(token)) {
+      if (matches(token, config.browserToken)) authority = 'browser';
+      if (matches(token, config.mcpToken)) authority = 'mcp';
+    }
+    if (!authority)
+      return reply.code(401).send({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Bridge credentials required',
+        },
+      });
+    if ((authority === 'browser' && !origin) || (authority === 'mcp' && origin))
+      return reply.code(403).send({
+        error: {
+          code: 'CHANNEL_DENIED',
+          message: 'Credential is not valid for this channel',
+        },
+      });
+    authorities.set(request, authority);
+  });
+  function publish(annotation: Annotation, event: string) {
+    const data = JSON.stringify({
+      annotationId: annotation.id,
+      projectId: annotation.projectId,
+      version: annotation.version,
+      status: annotation.status,
+    });
+    for (const client of clients) {
+      if (!client.write(`event: ${event}\ndata: ${data}\n\n`)) client.destroy();
+    }
+  }
+  app.get('/health', async () => ({ ok: true, service: 'Nudge' }));
+  app.get('/api/v1/annotations', async (request, reply) => {
+    const query = request.query as { status?: string };
+    if (
+      query.status !== undefined &&
+      !statusSchema.safeParse(query.status).success
+    )
+      return reply
+        .code(400)
+        .send({ error: { code: 'INVALID_INPUT', message: 'Invalid status' } });
+    return repo.list(query.status);
+  });
+  app.post('/api/v1/annotations', async (request, reply) => {
+    if (authorities.get(request) !== 'browser')
+      return reply.code(403).send({
+        error: {
+          code: 'SCOPE_DENIED',
+          message: 'Browser capability required',
+        },
+      });
+    const input = createSchema.safeParse(request.body);
+    if (
+      !input.success ||
+      !config.origins.includes(new URL(input.data.anchor.pageUrl).origin) ||
+      new URL(input.data.anchor.pageUrl).pathname !== input.data.anchor.pathname
+    )
+      return reply.code(400).send({
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Invalid comment or local element anchor',
+        },
+      });
+    const annotation = repo.create(input.data);
+    publish(annotation, 'annotation.created');
+    return reply.code(201).send(annotation);
+  });
+  app.get<{ Params: { id: string } }>(
+    '/api/v1/annotations/:id',
+    async (request, reply) => {
+      if (!idSchema.safeParse(request.params.id).success)
+        return reply.code(400).send({
+          error: { code: 'INVALID_ID', message: 'Invalid annotation ID' },
+        });
+      return repo.get(request.params.id);
+    },
+  );
+  for (const action of [
+    'claim',
+    'release',
+    'implementation',
+    'accept',
+    'request-changes',
+  ] as const satisfies readonly Action[]) {
+    app.post<{ Params: { id: string } }>(
+      `/api/v1/annotations/:id/${action}`,
+      async (request, reply) => {
+        const authority = authorities.get(request);
+        if (!authority || !canAct(authority, action))
+          return reply.code(403).send({
+            error: {
+              code: 'SCOPE_DENIED',
+              message: 'Credential cannot perform this action',
+            },
+          });
+        const input = (
+          action === 'implementation'
+            ? reportSchema
+            : action === 'request-changes'
+              ? reviseSchema
+              : expectedSchema
+        ).safeParse(request.body);
+        if (!idSchema.safeParse(request.params.id).success || !input.success)
+          return reply.code(400).send({
+            error: {
+              code: 'INVALID_INPUT',
+              message: 'Invalid action payload',
+            },
+          });
+        const annotation = repo.transition(
+          request.params.id,
+          action,
+          input.data,
+        );
+        publish(
+          annotation,
+          action === 'implementation'
+            ? 'annotation.review_ready'
+            : action === 'accept'
+              ? 'annotation.accepted'
+              : 'annotation.updated',
+        );
+        return annotation;
+      },
+    );
+  }
+  app.get('/api/v1/events', async (request, reply) => {
+    if (clients.size >= 16)
+      return reply.code(429).send({
+        error: {
+          code: 'SUBSCRIPTION_LIMIT',
+          message: 'Too many event subscribers',
+        },
+      });
+    reply.hijack();
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      ...(request.headers.origin
+        ? {
+            'Access-Control-Allow-Origin': request.headers.origin,
+            Vary: 'Origin',
+          }
+        : {}),
+    });
+    clients.add(reply.raw);
+    reply.raw.write(': connected; refetch current state\n\n');
+    const heartbeat = setInterval(
+      () => reply.raw.write(': heartbeat\n\n'),
+      15000,
+    );
+    reply.raw.on('close', () => {
+      clearInterval(heartbeat);
+      clients.delete(reply.raw);
+    });
+  });
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/annotations/:id/snapshots',
+    { bodyLimit: Math.ceil(MAX_SNAPSHOT_BYTES / 3) * 4 + 2048 },
+    async (request, reply) => {
+      if (authorities.get(request) !== 'browser')
+        return reply.code(403).send({
+          error: {
+            code: 'SCOPE_DENIED',
+            message: 'Browser capability required',
+          },
+        });
+      const input = snapshotUploadSchema.safeParse(request.body);
+      if (!input.success || !idSchema.safeParse(request.params.id).success)
+        return reply.code(400).send({
+          error: {
+            code: 'INVALID_INPUT',
+            message: 'Invalid snapshot payload',
+          },
+        });
+      const image = validatePng(input.data.dataUrl);
+      const ref = {
+        id: randomUUID(),
+        kind: input.data.kind,
+        capturedAt: new Date().toISOString(),
+        mimeType: 'image/png' as const,
+        width: image.width,
+        height: image.height,
+        integrity: input.data.integrity,
+      };
+      let written = false;
+      try {
+        const annotation = repo.attachSnapshot(
+          request.params.id,
+          input.data,
+          ref,
+          () => {
+            snapshots.write(ref.id, image.bytes);
+            written = true;
+          },
+        );
+        publish(annotation, 'annotation.updated');
+        return reply.code(201).send(annotation);
+      } catch (error) {
+        if (written) snapshots.remove(ref.id);
+        throw error;
+      }
+    },
+  );
+  app.get<{ Params: { id: string } }>(
+    '/api/v1/snapshots/:id',
+    async (request, reply) => {
+      if (!idSchema.safeParse(request.params.id).success)
+        return reply.code(400).send({
+          error: { code: 'INVALID_ID', message: 'Invalid snapshot ID' },
+        });
+      const ref = repo.getSnapshot(request.params.id);
+      reply
+        .header('Content-Type', ref.mimeType)
+        .header('Content-Security-Policy', "default-src 'none'; sandbox");
+      return snapshots.read(ref.id);
+    },
+  );
+  app.addHook('preClose', async () => {
+    for (const client of clients) client.end();
+  });
+  app.addHook('onClose', async () => repo.close());
+  return app;
+}

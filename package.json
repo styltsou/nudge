@@ -1,0 +1,39 @@
+{
+  "name": "nudge-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bun scripts/dev.ts",
+    "build": "bun run typecheck && bun run --filter '@usenudge/*' build",
+    "typecheck": "bun --bun tsc --noEmit",
+    "lint": "bun --bun oxlint --deny-warnings packages apps scripts tests",
+    "format": "bun --bun prettier --write .",
+    "format:check": "bun --bun prettier --check .",
+    "test": "bun test ./packages ./tests/contracts --timeout 10000",
+    "test:e2e": "bun --bun playwright test",
+    "bridge:doctor": "bun packages/cli/src/index.ts doctor",
+    "state:clean": "bun packages/cli/src/index.ts clean",
+    "mcp": "bun packages/mcp/src/index.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/bun": "^1.3.0",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "jsdom": "30.1.3",
+    "oxlint": "1.93.0",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.7"
+  }
+}

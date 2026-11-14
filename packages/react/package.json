@@ -1,0 +1,16 @@
+{
+  "name": "@usenudge/react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "@usenudge/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}

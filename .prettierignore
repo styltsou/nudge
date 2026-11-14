@@ -1,0 +1,8 @@
+node_modules
+dist
+.nudge
+.tools
+bun.lock
+coverage
+playwright-report
+test-results

@@ -1,0 +1,3 @@
+[install.cache]
+# Keep installs inside the writable workspace in restricted environments.
+dir = ".tools/bun-cache"

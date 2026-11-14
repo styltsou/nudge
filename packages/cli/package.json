@@ -1,0 +1,12 @@
+{
+  "name": "@usenudge/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun ../../scripts/build-package.ts"
+  },
+  "dependencies": {
+    "@usenudge/bridge": "workspace:*"
+  }
+}
