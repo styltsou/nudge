@@ -84,6 +84,7 @@ over the remaining showcase tasks. See [target contract](../docs/09-MANAGED-AGEN
 
 - [x] Add a local-checkout installer and development-only Vite integration; verify generated wrappers in a separate app, repeat setup, origin/auth handling, cleanup and production exclusion.
 - [x] Build an installable standalone preview archive with CLI, Vite declarations, bundled browser/bridge/MCP runtime; test packaged installation and MCP tools.
+- [x] Support Astro 7.4 through local `usenudge init` and `usenudge dev`. Verify ClientRouter navigation, config restart, managed ACP fixture edit and human acceptance, shutdown and production exclusion in an installed app. ([adapter](../packages/cli/src/astro.ts), [browser coverage](../tests/e2e/package.spec.ts))
 - [x] Add guided Codex/Claude discovery, local authentication checks, explicit host selection and project configuration that preserves unrelated settings.
 - [ ] Before registry publication: verify package ownership/licensing notices, test Linux and other package managers/framework variants, and obtain publishing approval.
 

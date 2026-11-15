@@ -87,7 +87,7 @@ Open the trusted local dev URL. Ensure the browser, runner and optional MCP
 process use the same project/state directory. Their credentials have separate
 scopes and cannot substitute for one another.
 
-Installed Vite setup supplies its dev origins and bridge URL automatically.
+Installed Vite and Astro setups supply their dev origins and bridge URL automatically.
 Manual bridge configuration uses exact local `NUDGE_ALLOWED_ORIGINS` and `NUDGE_PORT`; the installed integration supplies its actual origins automatically. Do not expose the bridge to the network or use wildcard CORS.
 
 ## A write is stale
@@ -98,7 +98,7 @@ active-run conflicts can return 409; accepted annotations are terminal.
 
 ## No overlay appears
 
-Use the supported local Vite dev command after setup. Start `bunx --bun usenudge dev` for local runtime injection. Only explicit `init --integrate` changes the normal dev script to use `vite.nudge.config.ts`. Production builds intentionally
+Start `bunx --bun usenudge dev` for local runtime injection in Vite or Astro. In Vite projects, explicit `init --integrate` changes the normal dev script to use `vite.nudge.config.ts`. Production builds intentionally
 omit Nudge. Manual SDK integrations must explicitly enable it during development.
 
 ## Comparison unavailable

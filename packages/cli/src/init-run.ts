@@ -11,7 +11,7 @@ import { configureAgent, pickAgent } from './agents';
 import { brand } from './brand';
 import { initProject } from './init';
 import { initCommand, type InitArgs, type ResolvedInit } from './init-options';
-import { prepareLocalProject } from './local';
+import { prepareLocalProject, projectFramework } from './local';
 import { packaged, projectMcpFile } from './runtime';
 
 const names: Record<Provider, string> = {
@@ -91,6 +91,7 @@ async function decide(
   args: InitArgs,
   statuses: AgentStatus[],
   interactive: boolean,
+  framework: ReturnType<typeof projectFramework>,
 ): Promise<ResolvedInit> {
   let agents: Provider[] | 'preserve';
   if (args.agents === 'preserve') agents = 'preserve';
@@ -149,7 +150,7 @@ async function decide(
       }),
     );
   let integrate = args.integrate ?? false;
-  if (args.integrate === undefined && interactive)
+  if (args.integrate === undefined && interactive && framework === 'vite')
     integrate = await ask(
       p.select<boolean>({
         message: 'How do you want to start Nudge?',
@@ -187,6 +188,11 @@ function writeAgent(root: string, provider: Provider) {
 }
 
 export async function runInit(args: InitArgs, interactive: boolean) {
+  const framework = projectFramework(args.root);
+  if (framework === 'astro' && args.integrate)
+    throw new Error(
+      'For Astro, use usenudge init and usenudge dev without --integrate.',
+    );
   const ui = interactive ? fancy : plain;
   if (interactive)
     p.intro(
@@ -202,14 +208,14 @@ export async function runInit(args: InitArgs, interactive: boolean) {
     // The agent question shows each status, so no summary line here.
     check.done('');
   }
-  const init = await decide(args, statuses, interactive);
+  const init = await decide(args, statuses, interactive, framework);
   const command = initCommand(commandPrefix, init);
   if (interactive) p.note(brand.accent(command), 'Same setup without prompts');
 
   // 1. Project files: untouched by default, opt-in integration otherwise.
   if (init.integrate) initProject(args.root, init.packageSource);
   else {
-    prepareLocalProject(args.root);
+    prepareLocalProject(args.root, framework);
     ui.info('Local state ready in .nudge/ (git-ignored). App files unchanged.');
   }
 

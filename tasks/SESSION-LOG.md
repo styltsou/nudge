@@ -1310,6 +1310,12 @@ public --tag preview` failed with missing authentication. The alternate local
   15 website tests; 2x screenshots of composer, popover, header and hero in
   both themes.
 
+## Hero install tab indicator
+
+- Added an interruptible sliding underline for pointer selection; keyboard selection and reduced motion remain immediate. The indicator tracks tab size on resize and retains a static fallback.
+- Validation: targeted oxlint passed; website Astro diagnostics reported zero errors, warnings, or hints; website build reported complete; focused Playwright tests passed (2). The initial sandboxed browser run was denied localhost access, and an initial unsandboxed run used stale build output; the rebuilt-site run passed.
+- Next: visually feel-check the transition in the browser; continue the existing backlog and real-provider validation.
+
 ## Subtler wells, fill hovers, rounded frames, step cards
 
 - Wells (site header/footer/install box/terminal, overlay fields and tracks):
@@ -1325,3 +1331,37 @@ public --tag preview` failed with missing authentication. The alternate local
   (point at it / your agent makes it / review it in place).
 - Validation: prettier, oxlint, website typecheck, 112 unit/contract, 13
   overlay browser and 15 website tests; screenshots in both themes.
+
+### 2026-11-15 — Astro local development support
+
+**Scope:** User-requested Astro integration.
+
+**Changes:** Added CLI framework detection and an inline Astro dev integration in
+packages/cli/src/astro.ts. Extracted shared browser middleware, bridge and runner
+startup into packages/vite/src/runtime.ts. Astro uses its existing app config,
+supports ClientRouter page swaps and retains the same bridge/runner during config
+restarts. Shutdown and failed startup close owned services. Default init writes
+only local state. Persistent --integrate remains Vite-specific and is rejected
+for Astro before agent setup. Vite is an optional release peer so Astro apps need
+no direct Vite dependency. Updated installation guides, package README, setup
+skill and its public copy, changelog, decision D-029 and implementation checklist.
+
+**Validation:** bun run release:check passed (typecheck including Astro website,
+lint, unit/integration tests, production builds, 14 tool browser scenarios,
+15 website browser scenarios, archive build and allowlist/privacy check).
+Installed Astro 7.4.12 coverage exercises a non-root base, ClientRouter navigation
+without document reload, single overlay, unknown-origin rejection, config restart
+with unchanged bridge, fixture ACP CSS edit/HMR, persisted human acceptance,
+doctor, production HTML exclusion and stdin shutdown cleanup. Existing installed
+Vite coverage passed. bun --bun tsc --noEmit passed again after startup cleanup
+changes. git diff --check passed. Initial sandbox package installs failed with
+EBADF on Bun's temp directory; approved execution outside the sandbox passed.
+bun run format:check cannot scan restricted .agents (EPERM); changed files were
+checked directly instead.
+
+**Limitations / next task:** Astro support was verified on 7.4.12 with local HTTP.
+The programmatic Astro API is experimental. Other Astro releases/adapters and
+Linux still need compatibility validation. Authenticated live-provider validation
+remains the next managed-run acceptance gate; this session used deterministic ACP.
+Use the rebuilt dist/usenudge.tgz in an existing Astro project and run usenudge
+init followed by usenudge dev. No registry publication or Git commit performed.

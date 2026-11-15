@@ -23,7 +23,7 @@ try {
   )
     console.log(`Nudge ${version} — request UI changes and review them in your browser.
 
-  usenudge init [project]                  Set up Nudge for a Vite app (interactive in a terminal)
+  usenudge init [project]                  Set up Nudge for a Vite or Astro app
     --agent claude,codex                   Agents to set up; the first runs by default
     --agent auto | skip                    Pick the ready agent / leave agents unchanged
     --external                            Connect an agent you run yourself (MCP)

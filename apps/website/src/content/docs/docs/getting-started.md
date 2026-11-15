@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Install Nudge in your existing Vite app and request your first UI change.
+description: Install Nudge in your existing Vite or Astro app and request your first UI change.
 ---
 
 Nudge runs on **your existing project**. Install the development dependency,
@@ -13,12 +13,12 @@ application-source edits are required.
 ## Requirements
 
 - **Bun 1.4.4+**, even if your app uses another package manager.
-- An existing standalone local HTTP **Vite** app with installed dependencies.
+- An existing standalone local HTTP **Vite** or **Astro** app with installed dependencies. Astro support is tested with Astro 7.4.
 - An ESM config (`.ts`, `.mts`, `.js`, `.mjs`), or no config file.
 - A supported agent with native authentication; registry access for new adapters.
 
 Linux is the primary target; live-provider/Linux validation remains open. HTTPS,
-CommonJS configs and middleware servers are unsupported. Nudge dev loads Vite
+CommonJS Vite configs and middleware servers are unsupported. Nudge dev loads your framework's
 config rather than running arbitrary dev-script pipelines.
 
 ## Install in your app
@@ -55,7 +55,7 @@ or Claude for an external agent terminal/IDE.
 bunx --bun usenudge dev
 ```
 
-Open the printed URL. Nudge loads your Vite config, injects the overlay at runtime
+Open the printed URL. Nudge loads your app config, injects the overlay at runtime
 and starts the bridge/runner. No manual tokens or separate bridge terminal are
 needed. `--port 5175` selects a port; `--project /path/to/app` selects a project.
 
@@ -85,7 +85,7 @@ This checks authorization/storage rather than model access.
 
 ## Optional persistent integration
 
-To include Nudge in the normal dev command, opt in:
+Vite users can opt in to including Nudge in the normal dev command:
 
 ```sh
 bunx --bun usenudge init --integrate --agent codex

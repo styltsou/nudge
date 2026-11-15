@@ -2,7 +2,7 @@
 
 ## 0.1.0-preview.1 — unreleased
 
-- Install Nudge as a development dependency in an existing local Vite app.
+- Install Nudge as a development dependency in an existing local Vite or Astro app.
 - Select elements, leave durable pinned comments and review implementations.
 - Run Codex, Claude or OpenCode through a separate local ACP runner, with fresh
   sessions by default and explicit continuation, supported approvals and Stop.

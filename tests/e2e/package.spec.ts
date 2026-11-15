@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
   existsSync,
   mkdtempSync,
@@ -9,19 +9,26 @@ import {
 import { rm } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { createConsumerProject } from '../helpers/consumer-project';
+import {
+  createAstroConsumerProject,
+  createConsumerProject,
+} from '../helpers/consumer-project';
 import { adapterPackages } from '../../packages/runner/src/adapters';
 import { version } from '../../packages/shared/src/release';
 
-test('installed CLI and actual dev process run an ACP edit through human acceptance', async ({
-  page,
-}) => {
+for (const framework of ['Vite', 'Astro'] as const)
+  test(`installed ${framework} app runs an ACP edit through human acceptance`, ({
+    page,
+  }) => installedEdit(page, framework));
+
+async function installedEdit(page: Page, framework: 'Vite' | 'Astro') {
   test.setTimeout(90000);
   const parent = mkdtempSync(resolve('.nudge/consumer-'));
   const root = resolve(parent, 'app');
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     BUN_INSTALL_CACHE_DIR: resolve('.nudge/package-cache'),
+    ASTRO_TELEMETRY_DISABLED: '1',
     PATH: dirname(process.execPath),
   };
   delete env.NUDGE_STATE_DIR;
@@ -39,9 +46,10 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
   };
   try {
     run(['scripts/package-release.ts'], process.cwd());
-    // Only Vite is linked to the existing installation for offline testing.
-    // Every Nudge component, including the runner and CLI, comes from the archive.
-    createConsumerProject(root, resolve('dist/usenudge.tgz'));
+    // Link the installed framework for offline testing. Nudge comes from the archive.
+    const astro = framework === 'Astro';
+    const archive = resolve('dist/usenudge.tgz');
+    (astro ? createAstroConsumerProject : createConsumerProject)(root, archive);
     run(['install', '--cwd', root], root);
     const cli = resolve(root, 'node_modules/usenudge/dist/cli.js');
     const beforeHelp = readFileSync(resolve(root, 'package.json'), 'utf8');
@@ -79,6 +87,11 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
       resolve(adapter, 'fixture.js'),
       await fixture.outputs[0]!.text(),
     );
+    const configPath = resolve(
+      root,
+      astro ? 'astro.config.mjs' : 'vite.config.ts',
+    );
+    const beforeConfig = readFileSync(configPath, 'utf8');
     run([cli, 'init', '--agent', 'codex'], root);
     expect(readFileSync(resolve(root, 'package.json'), 'utf8')).toBe(
       beforeHelp,
@@ -86,7 +99,7 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
     expect(existsSync(resolve(root, 'vite.nudge.config.ts'))).toBe(false);
     let output = '';
     // Launch the published CLI entry, without changing the consumer's dev script.
-    dev = Bun.spawn([process.execPath, cli, 'dev'], {
+    dev = Bun.spawn([process.execPath, cli, 'dev', '--project', root], {
       cwd: root,
       env: { ...env, NO_COLOR: '1' },
       stdin: 'pipe',
@@ -113,8 +126,42 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
       )
       .toBeTruthy();
     const origin = output.match(/http:\/\/(?:localhost|127\.0\.0\.1):\d+/)![0];
-    await page.goto(origin);
+    await page.goto(astro ? `${origin}/app/` : origin);
     const overlay = page.locator('[data-nudge-host]');
+    if (astro) {
+      const hostile = await page.request.get(`${origin}/@nudge/client`, {
+        headers: { Origin: 'http://example.test' },
+      });
+      expect(hostile.status()).toBe(403);
+      await expect(overlay).toHaveCount(1);
+      await page.evaluate(() =>
+        Reflect.set(window, 'astroNavigationTest', true),
+      );
+      await page.getByRole('link', { name: 'Other page' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Other page' }),
+      ).toBeVisible();
+      await expect(overlay).toHaveCount(1);
+      await page.getByRole('link', { name: 'Home' }).click();
+      await expect(page.locator('#publish')).toBeVisible();
+      await expect(overlay).toHaveCount(1);
+      expect(
+        await page.evaluate(() => Reflect.get(window, 'astroNavigationTest')),
+      ).toBe(true);
+      const connectionFile = resolve(root, '.nudge/connection.json');
+      const connection = readFileSync(connectionFile, 'utf8');
+      writeFileSync(
+        configPath,
+        beforeConfig + '\n// Trigger Astro config restart.\n',
+      );
+      await expect
+        .poll(() => output, { timeout: 15000 })
+        .toContain('server restarted');
+      await page.reload();
+      await expect(overlay).toHaveCount(1);
+      expect(readFileSync(connectionFile, 'utf8')).toBe(connection);
+      // Compare with the user's new config later to catch any CLI edits.
+    }
     await overlay
       .getByRole('button', { name: 'Agent setup', exact: true })
       .click();
@@ -161,6 +208,14 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
       overlay.getByRole('heading', { name: 'Accepted', exact: true }),
     ).toBeVisible();
     run([cli, 'doctor'], root);
+    expect(readFileSync(configPath, 'utf8')).toBe(
+      astro
+        ? beforeConfig + '\n// Trigger Astro config restart.\n'
+        : beforeConfig,
+    );
+    expect(readFileSync(resolve(root, 'package.json'), 'utf8')).toBe(
+      beforeHelp,
+    );
     run(['run', 'build'], root);
     expect(
       readFileSync(resolve(root, 'dist/index.html'), 'utf8'),
@@ -181,4 +236,4 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
       retryDelay: 100,
     });
   }
-});
+}

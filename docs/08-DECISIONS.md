@@ -321,3 +321,14 @@ busy). The runner executes claimed runs concurrently, each with its own
 heartbeat, deadline and process; a failure ends that run only. Overlapping runs
 share the working copy: agents editing the same file can conflict, which the
 docs state plainly rather than hiding.
+
+### D-029 Astro support through the local CLI (2026-11-15)
+
+`usenudge dev` prefers Astro when the app declares it, even if the app also
+declares Vite. It resolves Astro from the app and passes a dev-only integration
+to Astro's programmatic server API. This preserves the app's config and scripts.
+The built-in adapter uses Astro's page script hook and the shared Vite middleware
+for browser bootstrap. Astro client navigation remounts the overlay for the new
+page, and Astro config restarts retain the same local bridge and runner. A full
+shutdown closes both. The initial browser-tested target is Astro 7.4 on local HTTP.
+The persistent `init --integrate` option remains Vite-specific.

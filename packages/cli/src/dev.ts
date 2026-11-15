@@ -2,10 +2,10 @@ import { resolve } from 'node:path';
 import { prepareLocalProject } from './local';
 import { nudge } from '../../vite/src/index';
 import { findFreePort } from './port';
+import { startAstro } from './astro';
 
 /** Vite and the app config come from the consumer, never from a global demo. */
-export async function startDev(root: string, port?: number) {
-  prepareLocalProject(root);
+async function startVite(root: string, port?: number) {
   const vite = (await import(
     Bun.resolveSync('vite', root)
   )) as typeof import('vite');
@@ -21,34 +21,42 @@ export async function startDev(root: string, port?: number) {
     plugins: [nudge()],
     ...(port === undefined ? {} : { server: { port, strictPort: true } }),
   });
-  let stopping = false;
-  const stop = async () => {
-    if (stopping) return;
-    stopping = true;
-    await server.close();
-    process.stdin.off('end', onEnd);
-    if (!process.stdin.isTTY) process.stdin.pause();
-    process.off('SIGINT', onEnd);
-    process.off('SIGTERM', onEnd);
-  };
-  const onEnd = () => {
-    void stop();
-  };
   try {
     await server.listen();
-    console.log(
-      `Nudge is running for ${resolve(root)}. Your app's normal dev command and source are unchanged.`,
-    );
     server.printUrls();
-    process.once('SIGINT', onEnd);
-    process.once('SIGTERM', onEnd);
-    if (!process.stdin.isTTY) {
-      process.stdin.once('end', onEnd);
-      process.stdin.resume();
-    }
+    return () => server.close();
   } catch (error) {
-    await stop();
+    await server.close();
     throw error;
   }
-  return server;
+}
+
+export async function startDev(root: string, port?: number) {
+  const framework = prepareLocalProject(root);
+  const close = await (framework === 'astro'
+    ? startAstro(root, port)
+    : startVite(root, port));
+  console.log(`Nudge is running for ${resolve(root)}.`);
+  let stopping = false;
+  const onEnd = () => {
+    if (stopping) return;
+    stopping = true;
+    void close()
+      .catch(() => {
+        console.error('Nudge could not shut down the dev server cleanly.');
+        process.exitCode = 1;
+      })
+      .finally(() => {
+        process.stdin.off('end', onEnd);
+        if (!process.stdin.isTTY) process.stdin.pause();
+        process.off('SIGINT', onEnd);
+        process.off('SIGTERM', onEnd);
+      });
+  };
+  process.once('SIGINT', onEnd);
+  process.once('SIGTERM', onEnd);
+  if (!process.stdin.isTTY) {
+    process.stdin.once('end', onEnd);
+    process.stdin.resume();
+  }
 }

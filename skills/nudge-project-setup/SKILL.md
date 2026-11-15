@@ -1,13 +1,13 @@
 ---
 name: nudge-project-setup
-description: Set up Nudge in an existing Vite app with local development-only injection, configure ACP agents, and keep Nudge runtime state out of commits.
+description: Set up Nudge in an existing Vite or Astro app with local development-only injection, configure ACP agents, and keep Nudge runtime state out of commits.
 ---
 
 # Set up Nudge in an existing app
 
 Nudge adds pinned requests and coding-agent review to the user's running app.
-Inspect the project root, installed Vite, package manager, dev config and existing
-agent preferences. Bun 1.4.4+ and a standalone local HTTP Vite app are required.
+Inspect the project root, installed Vite or Astro, package manager, dev config and
+existing agent preferences. Bun 1.4.4+ and a standalone local HTTP app are required.
 Preserve the app's source, scripts, production build and unrelated settings.
 
 ## Install and run
@@ -25,12 +25,13 @@ bunx --bun usenudge dev
 ```
 
 Choose `claude` or `opencode` when requested. Default local setup writes only
-ignored `.nudge/` state. `usenudge dev` loads the app's existing Vite config and
+ignored `.nudge/` state. `usenudge dev` loads the app's existing framework config and
 injects the overlay at runtime. The normal dev command remains unchanged and
 does not load Nudge. Do not import Nudge into app components or entry points.
 Do not add a demo, mount component or token-bearing config to the app.
 
-`init --integrate` explicitly opts into a persistent dev-script/config change.
+For Vite apps, `init --integrate` explicitly opts into a persistent
+dev-script/config change. Use the default local setup for Astro.
 Use it only when the user wants the normal dev command to include Nudge. Review
 the dev dependency, lockfile, dev script and portable generated wrapper together;
 the wrapper must be available after a clean clone. Keep production scripts intact.

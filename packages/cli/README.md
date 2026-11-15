@@ -3,8 +3,8 @@
 Ask for UI changes where you see them. Select an element in your running app,
 leave a pinned request, run your coding agent and review the result in place.
 
-Requires **Bun 1.4.4+** and an existing local HTTP Vite app with an ESM config
-(or no config file). Nudge is disabled in production.
+Requires **Bun 1.4.4+** and an existing local HTTP Vite or Astro app with installed
+dependencies. Astro support is tested with Astro 7.4. Nudge is disabled in production.
 
 ## Install
 
@@ -19,9 +19,9 @@ bunx --bun usenudge dev
 Before publication, use the release archive instead of the registry package:
 `bun add -d /absolute/path/to/usenudge.tgz`, then run the same init/dev commands.
 No clone, demo app, manual bridge process or token copying is required in your app.
-Default setup writes only self-ignored `.nudge/` state; app source, Vite config
+Default setup writes only self-ignored `.nudge/` state; app source, dev config
 and normal dev/build scripts stay untouched. `usenudge dev` injects Nudge at runtime.
-Use `init --integrate` only to opt into a portable dev-config/script integration.
+Vite users can use `init --integrate` to opt into a portable dev-config/script integration.
 
 In a terminal, `init` asks which installed agents to set up (the first runs by default), how they connect and whether to edit your Vite config, then prints the equivalent one-line command. Every choice has a flag (`--agent claude,codex`, `--external`, `--integrate`, `--yes`); scripts and CI never get prompts and auto-detect a ready agent. Setup installs maintained
 Codex/Claude ACP adapters in ignored `.nudge/agents/`. OpenCode needs an installed

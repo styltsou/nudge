@@ -13,8 +13,9 @@ starts a fresh session by default; continuing a compatible session is explicit.
 
 ## Install in your project
 
-Requires **Bun 1.4.4+**, an existing standalone local HTTP Vite app, installed app
-dependencies and an ESM config (or no config file). No demo app is required.
+Requires **Bun 1.4.4+** and an existing standalone local HTTP Vite or Astro app
+with installed dependencies. Astro support is tested with Astro 7.4.
+Vite requires an ESM config or no config file.
 
 From your app root:
 
@@ -39,13 +40,13 @@ element. Describe a change and choose **Run agent**. Inspect the actual app befo
 
 ## Development only, outside application code
 
-`usenudge dev` loads the app's Vite config and injects Nudge at runtime.
+`usenudge dev` loads the app's Vite or Astro config and injects Nudge at runtime.
 Default `init` writes only self-ignored `.nudge/` state. No component imports,
 mount calls, wrapper or changes to normal dev/build scripts are needed. Your
 usual `bun run dev` runs without Nudge. Production builds omit it. Installing a
 dev dependency changes the manifest and lockfile normally.
 
-To deliberately include Nudge in the normal dev command, opt in:
+Vite users can opt in to including Nudge in the normal dev command:
 
 ```sh
 bunx --bun usenudge init --integrate --agent codex
