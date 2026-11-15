@@ -151,8 +151,20 @@ async function decide(
   let integrate = args.integrate ?? false;
   if (args.integrate === undefined && interactive)
     integrate = await ask(
-      p.confirm({
-        message: `Add Nudge to your Vite config and dev script? ${brand.muted('No keeps your files untouched; start with `usenudge dev` instead.')}`,
+      p.select<boolean>({
+        message: 'How do you want to start Nudge?',
+        options: [
+          {
+            value: false,
+            label: `With ${commandPrefix} dev`,
+            hint: 'recommended · your files stay untouched',
+          },
+          {
+            value: true,
+            label: 'With your usual dev script',
+            hint: 'adds Nudge to your Vite config and dev script',
+          },
+        ],
         initialValue: false,
       }),
     );
