@@ -1095,3 +1095,24 @@ public --tag preview` failed with missing authentication. The alternate local
 - Validation: tsc, oxlint, 102 unit/contract and 13 browser tests passed.
   In the browser pane: renamed and restyled the pinned button and reloaded;
   the pin and comment stayed attached with no notice.
+
+## Icon submit buttons, Enter to submit, pin spinner, annotation cursor
+
+- Shared `packages/core/src/icons.ts` (icons, setIcon, iconButton,
+  submitOnEnter). Submit actions are icon buttons with unchanged accessible
+  names: Run agent/Queue for agent (send/bookmark), Save without running,
+  Request changes (send, beside the follow-up box), Retry agent, Stop agent,
+  Send answer. Composer's duplicate Cancel removed (header close and Escape
+  remain). Accept sits on the right with a check icon.
+- Enter submits the composer, follow-up and question boxes; Shift+Enter and
+  IME composition insert a new line.
+- Comment popups stay aligned with their marker: they move up only when less
+  than 220px remain below and otherwise shrink and scroll; the composer
+  re-finds its element if HMR replaces it while typing.
+- Pins show the 3x3 spinner while their agent run is active, whether or not
+  the comment is open.
+- Annotation mode uses a temporary page-wide custom cursor (coral arrow with a
+  comment badge), removed when annotation ends.
+- Validation: tsc, oxlint, 104 unit/contract and 13 browser tests passed.
+  Browser pane: composer layout, Enter submit, cursor and popup placement
+  checked. The pin spinner was not seen live (no running agent in the pane).

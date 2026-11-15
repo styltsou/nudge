@@ -6,6 +6,7 @@ import { BridgeClient } from './client';
 import { ManagedControls } from './managed';
 import { OnboardingPanel } from './onboarding';
 import { spinner } from './spinner';
+import { icons, iconButton, setIcon, submitOnEnter } from './icons';
 export { anchorFor, findAnchor, selectorFor, textPreview } from './anchors';
 export type NudgeOptions = {
   enabled?: boolean;
@@ -27,7 +28,11 @@ button.primary:hover { filter: brightness(1.08); }
 button.icon { width: 30px; height: 30px; min-height: 0; padding: 0; background: transparent; border-color: transparent; color: var(--muted); border-radius: 8px; }
 button.icon:hover { color: var(--ink); background: var(--raised); }
 button.icon[aria-pressed=true] { color: var(--accent-ink); background: var(--accent); }
-button.icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+button:not(.icon) svg { width: 14px; height: 14px; stroke-width: 2.2; }
+button.icon.primary { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+button.icon.primary:hover { color: var(--accent-ink); background: var(--accent); filter: brightness(1.08); }
+button.icon.primary svg { stroke-width: 2.2; }
 .badge { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; font-size: 10px; line-height: 15px; font-weight: 700; background: var(--accent); color: var(--accent-ink); pointer-events: none; }
 .badge:empty { display: none; }
 .toolbar button.icon { position: relative; }
@@ -87,6 +92,11 @@ button[data-needs-setup=true] { color: var(--accent); }
 .tip { position: fixed; z-index: 3; max-width: 260px; padding: 5px 8px; border-radius: 7px; background: var(--ink); color: var(--bg); font-size: 11px; line-height: 1.35; font-weight: 500; pointer-events: none; white-space: pre-line; box-shadow: 0 4px 16px #0004; opacity: 0; transform: translateY(2px); transition: opacity .12s, transform .12s; }
 .tip[data-show=true] { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .tip { transition: none; } }
+.pin { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.pin[data-working=true] { width: auto; padding: 0 6px 0 7px; border-radius: 999px 999px 999px 3px; }
+.pin .spinner span { background: var(--accent-ink); }
+.composer-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; } .composer-row .check { margin: 0 auto 0 0; }
+.review-row { display: flex; align-items: flex-end; gap: 6px; } .review-row textarea { margin: 0; flex: 1; min-height: 34px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
@@ -106,43 +116,6 @@ function button(text: string, action: () => void) {
   return element;
 }
 
-const svg = (body: string) =>
-  `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
-// Static, trusted markup only; never built from annotation or agent data.
-const icons = {
-  annotate: svg('<path d="M5 3l14 7-6 2-2 6z"/>'),
-  exit: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
-  feedback: svg('<path d="M4 5h16v11H10l-5 4v-4H4z"/>'),
-  setup: svg(
-    '<circle cx="12" cy="12" r="8.2" stroke-width="3.2" stroke-dasharray="3.2 3.24" stroke-linecap="butt"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="2"/>',
-  ),
-  hide: svg(
-    '<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2.5 12S6 19 12 19a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
-  ),
-  show: svg(
-    '<path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/>',
-  ),
-  close: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
-  back: svg('<path d="M15 6l-6 6 6 6"/>'),
-  dock: svg(
-    '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
-  ),
-  pin: svg(
-    '<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
-  ),
-  refresh: svg('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
-};
-function setIcon(element: HTMLButtonElement, icon: string, label: string) {
-  element.innerHTML = icon;
-  element.setAttribute('aria-label', label);
-  element.dataset.tip = label;
-}
-function iconButton(icon: string, label: string, action: () => void) {
-  const element = button('', action);
-  element.className = 'icon';
-  setIcon(element, icon, label);
-  return element;
-}
 export function mountNudge(options: NudgeOptions): NudgeHandle {
   if (!options.enabled || typeof document === 'undefined')
     return { destroy() {} };
@@ -240,6 +213,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   shadow.addEventListener('pointerdown', hideTip);
   let active = false;
   let selected: Element | null = null;
+  let selectedAnchor: ReturnType<typeof anchorFor> | null = null;
   let hovered: Element | null = null;
   let frame = 0;
   let point: { x: number; y: number } | null = null;
@@ -296,6 +270,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   function syncSidebar() {
     const sidebar = !panel.hidden && (view === 'tray' || docked);
     panel.classList.toggle('sidebar', sidebar);
+    if (sidebar || panel.hidden) panel.style.maxHeight = '';
     panel.classList.toggle(
       'docked',
       !panel.hidden && view !== 'tray' && docked,
@@ -511,7 +486,17 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         pinButtons.set(annotation.id, pin);
         pins.append(pin);
       }
-      pin.textContent = String(++number);
+      const working = dotState(annotation) === 'working';
+      const label = String(++number);
+      if (
+        pin.dataset.label !== label ||
+        pin.dataset.working !== String(working)
+      ) {
+        pin.replaceChildren(document.createTextNode(label));
+        if (working) pin.append(spinner());
+        pin.dataset.label = label;
+        pin.dataset.working = String(working);
+      }
       pin.setAttribute(
         'aria-label',
         `Open comment: ${annotation.revisions.at(-1)!.comment}`,
@@ -528,7 +513,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         rect.left >= window.innerWidth;
       if (rect && !pin.hidden)
         Object.assign(pin.style, {
-          left: `${Math.min(window.innerWidth - 32, Math.max(4, rect.right - 12))}px`,
+          left: `${Math.min(window.innerWidth - pin.offsetWidth - 4, Math.max(4, rect.right - 12))}px`,
           top: `${Math.min(window.innerHeight - 32, Math.max(4, rect.top - 12))}px`,
         });
     }
@@ -536,6 +521,13 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   function positionComment() {
     if (panel.hidden || docked || view === 'tray') return;
     const annotation = annotations.find((a) => a.id === detailId);
+    if (
+      view === 'composer' &&
+      selected &&
+      !selected.isConnected &&
+      selectedAnchor
+    )
+      selected = locateAnchor(selectedAnchor) ?? selected;
     const target =
       view === 'composer'
         ? selected
@@ -554,9 +546,17 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         ? rect.right + 12
         : rect.left - width - 12
       : (window.innerWidth - width) / 2;
+    // Align with the marker (pin sits at the element's top edge). Only move up
+    // when fewer than 220px remain below; otherwise shrink and scroll inside.
+    const anchorTop = rect ? rect.top - 12 : 40;
+    const top = Math.max(
+      16,
+      Math.min(anchorTop, window.innerHeight - 16 - Math.min(height, 220)),
+    );
     Object.assign(panel.style, {
       left: `${Math.max(16, Math.min(window.innerWidth - width - 16, left))}px`,
-      top: `${Math.max(16, Math.min(window.innerHeight - height - 16, rect ? rect.top : 40))}px`,
+      top: `${top}px`,
+      maxHeight: `${window.innerHeight - top - 16}px`,
     });
   }
   function move(event: PointerEvent) {
@@ -596,7 +596,22 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     showComposer();
   }
   const observer = new ResizeObserver(schedule);
+  // Temporary page-wide cursor while annotating; removed when annotation ends.
+  const cursorStyle = node(
+    'style',
+    `html[data-nudge-annotating], html[data-nudge-annotating] * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><path d='M3 2.5l15.5 6.6-6.4 2-2.2 6.3z' fill='%23e05246' stroke='%23fff' stroke-width='1.6' stroke-linejoin='round'/><rect x='14.5' y='15.5' width='11' height='8.5' rx='2.6' fill='%2315171a' stroke='%23fff' stroke-width='1.2'/><path d='M17.5 24l-1.4 2.6 3.6-2.6' fill='%2315171a' stroke='%23fff' stroke-width='1' stroke-linejoin='round'/><path d='M17.5 19.75h6' stroke='%23fff' stroke-width='1.3' stroke-linecap='round'/></svg>") 3 2, crosshair !important; }`,
+  );
+  function setCursor(on: boolean) {
+    if (on) {
+      document.head.append(cursorStyle);
+      document.documentElement.setAttribute('data-nudge-annotating', '');
+    } else {
+      cursorStyle.remove();
+      document.documentElement.removeAttribute('data-nudge-annotating');
+    }
+  }
   function setActive(value: boolean) {
+    setCursor(value);
     manualTarget = null;
     active = value;
     selected = null;
@@ -683,6 +698,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   }
   function showComposer() {
     if (!selected) return;
+    selectedAnchor = anchorFor(selected);
     view = 'composer';
     title('Request a change');
     const input = node('textarea');
@@ -700,11 +716,13 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     const requestId = crypto.randomUUID();
     let saved: Annotation | undefined;
     let saveOnly: HTMLButtonElement | undefined;
-    const queue = button(
+    const queue = iconButton(
+      managed.state.enabled ? icons.send : icons.save,
       managed.state.enabled ? 'Run agent' : 'Queue for agent',
       () => {
         void save();
       },
+      'primary',
     );
     const runHint = node('small');
     runHint.setAttribute('role', 'status');
@@ -725,13 +743,11 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     input.addEventListener('input', () => {
       updateComposerReadiness?.();
     });
-    queue.classList.add('primary');
-    const cancel = button('Cancel', () => {
-      setActive(false);
-      closePanel();
-      toggle.focus();
+    // Enter runs (or queues); falls back to saving when a run is not possible.
+    submitOnEnter(input, () => {
+      if (!queue.disabled) queue.click();
+      else if (saveOnly && !saveOnly.disabled) saveOnly.click();
     });
-    actions.append(cancel, queue);
     const capture = node('input');
     capture.type = 'checkbox';
     capture.id = 'nudge-capture';
@@ -747,16 +763,18 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       capture,
       document.createTextNode('Capture before / after'),
     );
-    panel.append(input, captureLabel, error, actions);
+    actions.className = 'composer-row';
+    actions.append(captureLabel);
     if (managed.state.enabled) {
-      saveOnly = button('Save without running', () => {
+      saveOnly = iconButton(icons.save, 'Save without running', () => {
         void save(false);
       });
-      saveOnly.dataset.tip = 'Save the comment and run the agent later';
-      actions.prepend(saveOnly);
-      captureLabel.before(session.node);
+      actions.append(saveOnly);
     }
-    actions.before(runHint);
+    actions.append(queue);
+    panel.append(input);
+    if (managed.state.enabled) panel.append(session.node);
+    panel.append(runHint, error, actions);
     updateComposerReadiness();
     input.focus();
     async function save(run = managed.state.enabled) {
@@ -765,7 +783,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       const anchor = anchorFor(selected);
       busy = true;
       queue.disabled = true;
-      cancel.disabled = true;
       try {
         const target = selected;
         const annotation =
@@ -802,7 +819,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       } finally {
         busy = false;
         updateComposerReadiness?.();
-        cancel.disabled = false;
       }
     }
   }
@@ -1039,11 +1055,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       followup.setAttribute('aria-label', 'Follow-up request');
       followup.placeholder = 'What needs another pass?';
       const actions = node('div', undefined, 'actions');
-      followup.style.minHeight = '56px';
       const accept = button('Accept', () => {
         void review('accept');
       });
-      const revise = button('Request changes', () => {
+      accept.innerHTML = icons.check; // static icon markup
+      accept.append('Accept');
+      const revise = iconButton(icons.send, 'Request changes', () => {
         void review('request-changes');
       });
       accept.classList.add('primary');
@@ -1052,9 +1069,15 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         revise.disabled =
           busy || !commentSchema.safeParse(followup.value).success;
       });
-      actions.append(accept, revise);
-      panel.append(followup, error, actions);
-      if (managed.state.enabled) actions.before(session.node);
+      submitOnEnter(followup, () => {
+        if (!revise.disabled) revise.click();
+      });
+      const reviseRow = node('div', undefined, 'review-row');
+      reviseRow.append(followup, revise);
+      actions.append(accept);
+      panel.append(actions);
+      if (managed.state.enabled) panel.append(session.node);
+      panel.append(reviseRow, error);
       async function review(action: 'accept' | 'request-changes') {
         if (busy) return;
         busy = true;

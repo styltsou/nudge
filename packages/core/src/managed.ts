@@ -6,6 +6,7 @@ import {
 } from '../../shared/src/runs';
 import { BridgeClient } from './client';
 import { spinner } from './spinner';
+import { icons, setIcon, submitOnEnter } from './icons';
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text = '') {
   const el = document.createElement(tag);
@@ -117,9 +118,17 @@ export class ManagedControls {
     const error = element('p');
     error.className = 'error';
     error.setAttribute('role', 'alert');
-    const action = (text: string, callback: () => Promise<unknown>) => {
+    const action = (
+      text: string,
+      callback: () => Promise<unknown>,
+      icon?: string,
+    ) => {
       const button = element('button', text);
       button.type = 'button';
+      if (icon) {
+        setIcon(button, icon, text);
+        button.className = 'icon';
+      }
       button.onclick = async () => {
         button.disabled = true;
         try {
@@ -159,8 +168,10 @@ export class ManagedControls {
       row.append(status);
       if (activeRun(run))
         row.append(
-          action('Stop agent', () =>
-            this.client.request(`/runs/${run.id}/stop`, {}),
+          action(
+            'Stop agent',
+            () => this.client.request(`/runs/${run.id}/stop`, {}),
+            icons.stop,
           ),
         );
       box.append(row);
@@ -198,24 +209,34 @@ export class ManagedControls {
             box.append(label);
             inputs.set(q.id, input);
           }
-          box.append(
-            action('Send answer', () =>
+          const send = action(
+            'Send answer',
+            () =>
               this.client.request(`/runs/${run.id}/answer`, {
                 interactionId,
                 answers: Object.fromEntries(
                   [...inputs].map(([id, input]) => [id, input.value]),
                 ),
               }),
-            ),
+            icons.send,
           );
+          send.classList.add('primary');
+          for (const input of inputs.values())
+            submitOnEnter(input, () => send.click());
+          const row = element('div');
+          row.className = 'actions';
+          row.append(send);
+          box.append(row);
         }
       }
     }
     if (a.status === 'queued' && (!run || !activeRun(run))) {
       const session = this.selector();
       const requestId = crypto.randomUUID();
-      const runButton = action(run ? 'Retry agent' : 'Run agent', () =>
-        this.dispatch(a, session.value(), requestId),
+      const runButton = action(
+        run ? 'Retry agent' : 'Run agent',
+        () => this.dispatch(a, session.value(), requestId),
+        run ? icons.refresh : icons.send,
       );
       runButton.disabled = !this.canRun();
       runButton.classList.add('primary');
