@@ -1,0 +1,346 @@
+---
+import SampleDashboard from './SampleDashboard.astro';
+---
+
+<section
+  class="walkthrough"
+  id="walkthrough"
+  aria-labelledby="walkthrough-heading"
+  data-walkthrough
+>
+  <div class="walkthrough-top">
+    <h2 id="walkthrough-heading">Try a nudge</h2>
+    <span class="sample-label">
+      orbit.local / overview · Interactive example
+    </span>
+    <button type="button" class="demo-playback" data-playback>
+      Play demo
+    </button>
+  </div>
+  <div class="walkthrough-body">
+    <SampleDashboard />
+    <div class="nudge-example-pane">
+      <div class="example-pane-title">
+        <strong>Nudge</strong>
+        <span>Selected element · button</span>
+        <button type="button" class="demo-playback" data-comment-dock>
+          Open in side panel
+        </button>
+      </div>
+      <section
+        role="region"
+        id="step-panel-0"
+        aria-label="Describe the change"
+        tabindex="-1"
+        data-panel="0"
+      >
+        <label for="sample-request" class="sample-field-label">
+          What should change?
+        </label>
+        <textarea
+          id="sample-request"
+          rows="2"
+          maxlength="2000"
+        >Give this button more breathing room.</textarea>
+        <div class="sample-action-row">
+          <span>Element + request + optional snapshot</span>
+          <button type="button" class="sample-primary" data-queue>
+            Queue example
+          </button>
+        </div>
+      </section>
+      <section
+        role="region"
+        id="step-panel-1"
+        aria-label="Request queued"
+        tabindex="-1"
+        data-panel="1"
+        hidden
+      >
+        <div class="queued-request">
+          <span class="sample-status" data-queued-status>
+            Queued for agent
+          </span>
+          <p class="sample-comment" data-request-copy>
+            Give this button more breathing room.
+          </p>
+          <p class="sample-context">
+            <code>#publish-button</code>{' '}
+            <span>
+              Revision <span data-revision-copy>1</span>
+            </span>
+          </p>
+        </div>
+        <div class="agent-handoff">
+          <div>
+            <h3>The context is ready.</h3>
+            <p>
+              Ask your agent to read Nudge annotations. It fetches the element
+              context through MCP and edits with its usual tools.
+            </p>
+          </div>
+        </div>
+        <div class="tool-call">
+          <span>Available to your agent</span>
+          <code>list_annotations → get_annotation</code>
+        </div>
+        <div class="sample-action-row">
+          <span>Queueing doesn’t send an agent message.</span>
+          <button type="button" class="sample-primary" data-next="2">
+            Preview implementation
+          </button>
+        </div>
+      </section>
+      <section
+        role="region"
+        id="step-panel-2"
+        aria-label="Review the change"
+        tabindex="-1"
+        data-panel="2"
+        hidden
+      >
+        <div class="review-heading">
+          <span class="sample-status review-status" data-review-status>
+            Ready for review
+          </span>
+          <span class="sample-context">
+            Revision <span data-revision-copy>1</span>
+          </span>
+        </div>
+        <div class="sample-comparison">
+          {['Before', 'After'].map((label, index) => (
+            <figure>
+              <figcaption>{label}</figcaption>
+              <div
+                class:list={[
+                  'button-comparison',
+                  { 'button-comparison-after': index === 1 },
+                ]}
+              >
+                <span>Publish update</span>
+              </div>
+            </figure>
+          ))}
+        </div>
+        <p class="implementation-summary">
+          Increased the button's horizontal and vertical padding.
+        </p>
+        <p class="review-reminder">
+          Your agent reports the change. You decide whether it’s right.
+        </p>
+        <label for="sample-followup" class="sample-field-label">
+          Need another pass?
+        </label>
+        <input
+          id="sample-followup"
+          placeholder="Describe what still needs work"
+          maxlength="2000"
+        />
+        <div class="sample-review-actions">
+          <button type="button" class="sample-accept" data-accept>
+            Accept example
+          </button>
+          <button type="button" class="sample-secondary" data-revise disabled>
+            Queue another pass
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="walkthrough-footer">
+    <p>Sample data. No agent or bridge connection.</p>
+    <button type="button" data-reset>
+      Start over
+    </button>
+  </div>
+  <p
+    class="sr-only"
+    role="status"
+    aria-live="polite"
+    data-walkthrough-status
+  ></p>
+</section>
+<script>
+  import { animate } from 'motion/mini';
+  const root = document.querySelector<HTMLElement>('[data-walkthrough]');
+  if (root) {
+    const panels = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-panel]'),
+    );
+    const request = root.querySelector<HTMLTextAreaElement>('#sample-request')!;
+    const followup = root.querySelector<HTMLInputElement>('#sample-followup')!;
+    const queue = root.querySelector<HTMLButtonElement>('[data-queue]')!;
+    const revise = root.querySelector<HTMLButtonElement>('[data-revise]')!;
+    const accept = root.querySelector<HTMLButtonElement>('[data-accept]')!;
+    const status = root.querySelector<HTMLElement>('[data-review-status]')!;
+    const announcement = root.querySelector<HTMLElement>(
+      '[data-walkthrough-status]',
+    )!;
+    let revision = 1;
+    let currentStep = 0;
+    let playing = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let motion: ReturnType<typeof animate> | undefined;
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const playback = root.querySelector<HTMLButtonElement>('[data-playback]')!;
+    function pause() {
+      playing = false;
+      clearTimeout(timer);
+      motion?.stop();
+      if (panels[currentStep]) {
+        panels[currentStep]!.style.opacity = '1';
+        panels[currentStep]!.style.transform = 'none';
+      }
+      playback.textContent = currentStep === 2 ? 'Replay demo' : 'Play demo';
+    }
+    const select = (step: number, focus = false) => {
+      currentStep = step;
+      root.dataset.step = String(step);
+      motion?.stop();
+      panels.forEach((panel, index) => {
+        panel.hidden = index !== step;
+        panel.style.opacity = '1';
+        panel.style.transform = 'none';
+      });
+      if (focus) panels[step]?.focus({ preventScroll: true });
+      if (playing && !reduceMotion.matches) {
+        motion = animate(
+          panels[step]!,
+          {
+            opacity: [0, 1],
+            transform: ['translateY(4px)', 'translateY(0px)'],
+          },
+          { duration: 0.2, ease: [0.23, 1, 0.32, 1] },
+        );
+      }
+    };
+    const updateRequest = (text: string) =>
+      root
+        .querySelectorAll<HTMLElement>('[data-request-copy]')
+        .forEach((node) => {
+          node.textContent = text;
+        });
+    const resetReview = () => {
+      status.textContent = 'Ready for review';
+      status.classList.remove('is-accepted');
+      accept.disabled = false;
+      followup.value = '';
+      revise.disabled = true;
+    };
+    function advance() {
+      if (!playing) return;
+      if (currentStep === 2) {
+        pause();
+        playback.textContent = 'Replay demo';
+        return;
+      }
+      updateRequest(request.value.trim());
+      resetReview();
+      select(currentStep + 1);
+      timer = setTimeout(advance, currentStep === 1 ? 2800 : 5000);
+    }
+    function play() {
+      pause();
+      resetReview();
+      playing = true;
+      playback.textContent = 'Pause demo';
+      select(0);
+      timer = setTimeout(advance, 3500);
+    }
+    playback.addEventListener('click', () => (playing ? pause() : play()));
+    const pane = root.querySelector<HTMLElement>('.nudge-example-pane')!;
+    const dock = root.querySelector<HTMLButtonElement>('[data-comment-dock]')!;
+    dock.addEventListener('click', () => {
+      const sidebar = root.dataset.commentLayout !== 'sidebar';
+      root.dataset.commentLayout = sidebar ? 'sidebar' : 'pinned';
+      dock.textContent = sidebar ? 'Pin to element' : 'Open in side panel';
+    });
+    root.querySelector('[data-comment-pin]')!.addEventListener('click', () => {
+      pause();
+      root.dataset.commentLayout = 'pinned';
+      dock.textContent = 'Open in side panel';
+      pane
+        .querySelector<HTMLElement>('[data-panel]:not([hidden])')
+        ?.focus({ preventScroll: true });
+    });
+    pane.addEventListener('pointerdown', pause);
+    pane.addEventListener('focusin', pause);
+    reduceMotion.addEventListener('change', pause);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause();
+    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !reduceMotion.matches) {
+          play();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(root);
+    request.addEventListener('input', () => {
+      queue.disabled = !request.value.trim();
+    });
+    queue.addEventListener('click', () => {
+      if (!request.value.trim()) return;
+      updateRequest(request.value.trim());
+      resetReview();
+      select(1, true);
+      announcement.textContent =
+        'Example queued. Ask your agent to fetch annotations in the real app.';
+    });
+    root
+      .querySelector<HTMLButtonElement>('[data-next]')
+      ?.addEventListener('click', () => {
+        resetReview();
+        select(2, true);
+        announcement.textContent =
+          'Sample implementation reported. Review before accepting.';
+      });
+    accept.addEventListener('click', () => {
+      status.textContent = 'Accepted';
+      status.classList.add('is-accepted');
+      accept.disabled = true;
+      revise.disabled = true;
+      announcement.textContent =
+        'Accepted in this walkthrough. No real annotations were changed.';
+    });
+    followup.addEventListener('input', () => {
+      revise.disabled = accept.disabled || !followup.value.trim();
+    });
+    revise.addEventListener('click', () => {
+      if (!followup.value.trim() || accept.disabled) return;
+      updateRequest(followup.value.trim());
+      request.value = followup.value.trim();
+      revision++;
+      root
+        .querySelectorAll<HTMLElement>('[data-revision-copy]')
+        .forEach((node) => {
+          node.textContent = String(revision);
+        });
+      root.dataset.revision = String(revision);
+      resetReview();
+      select(1, true);
+      announcement.textContent = `Example revision ${revision} queued with your follow-up.`;
+    });
+    root
+      .querySelector<HTMLButtonElement>('[data-reset]')
+      ?.addEventListener('click', () => {
+        pause();
+        revision = 1;
+        root.dataset.revision = '1';
+        request.value = 'Give this button more breathing room.';
+        queue.disabled = false;
+        updateRequest(request.value);
+        root
+          .querySelectorAll<HTMLElement>('[data-revision-copy]')
+          .forEach((node) => {
+            node.textContent = '1';
+          });
+        resetReview();
+        select(0, true);
+        announcement.textContent = 'Walkthrough reset.';
+      });
+  }
+</script>

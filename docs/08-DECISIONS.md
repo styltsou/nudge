@@ -2,7 +2,51 @@
 
 Keep this updated when an implementation decision materially affects the product or public contracts.
 
+Current status is recorded in the latest ACP decisions and session log. Historical
+entries below describe the state at their original phase; later decisions
+supersede earlier deferrals of snapshots and managed agent execution.
+
 ## Accepted defaults
+
+- **Onboarding readiness:** the browser offers an explicit Agent setup dialog;
+  the trusted runner alone probes the selected native CLI and posts bounded
+  adapter/sign-in/billing enums. Bridge/browser never execute setup commands.
+  CLI `init` defaults to managed ACP; `--external` opts into MCP and
+  `--skip-agent` preserves existing selection. Run controls wait for a fresh
+  adapter check and online runner; unknown native sign-in is not a fabricated
+  failure or success. Save without running preserves requests during setup.
+  Local readiness does not prove model availability or actual run billing.
+
+- **ACP unification (supersedes direct provider adapters):** all managed agents
+  use one ACP v1 client over private stdio. CLI setup manages maintained Codex and
+  Claude adapter packages in ignored `.nudge/agents/`; OpenCode speaks ACP itself.
+  Remove direct app-server/Agent SDK code and the SDK peer dependency from Nudge.
+  Adapter-native sign-in owns billing; choosing subscription login is distinct
+  from API-key billing. Pinned private installs and existing PATH adapters are
+  supported. No package installation occurs during browser dispatch and no
+  app manifest is modified for these adapters. Real package and authenticated
+  provider validation are still open because registry/profile access is restricted.
+
+- **Additional managed providers:** Claude uses the official Agent SDK as an
+  optional dependency installed in the target project, resolved from that project
+  at runtime so its native binary remains external to the release bundle. Settings
+  sources load normally; no permission bypass or auto-approved tool list is added.
+  OpenCode uses ACP protocol v1 through a private stdio process, with explicit
+  session loading and one-time permission options. It does not attach to an
+  existing shared server. Provider selection is trusted local config; sessions
+  from a different provider are rejected. Browser fixtures exercise all providers;
+  live authentication and SDK-version validation remain explicit open gates.
+
+- **Managed Codex preview:** separate supervised runner and capability, app-server
+  JSONL protocol verified from installed 0.169.0 bindings; project records persist
+  run/session identity independently of annotations. Dispatch is idempotent and
+  editing runs serialize. Existing session reuse is explicit. Provider model and
+  sandbox/approval configuration are inherited, never weakened. Bounded activity
+  categories replace raw process logs; supported one-time permissions/questions
+  reach the UI. Unknown requests, secret questions and file-root expansions fail
+  closed. Structured reports trigger existing review; exit alone does not.
+  Deterministic tests pass; live initialization is blocked by user-profile SQLite
+  permissions in the current sandbox. This supersedes the earlier auto-send deferral.
 
 - **D-001 Local-first:** SQLite bridge on loopback, no backend SaaS or login for MVP.
 - **D-002 Agent-agnostic:** MCP stdio server; agent owns editing and approvals.
@@ -74,7 +118,79 @@ Images use strict PNG-only validation (2 MiB, 2048×2048, 8-bit RGB/RGBA, non-in
 
 Playwright's shell-managed web-server teardown hung under Bun/Windows after passing tests. Tests now own Vite/Fastify servers in global setup and close them directly. Ports 5174/4748 and `.nudge/e2e` isolate browser tests from the normal demo. Installed Windows Chrome is a fallback when bundled Chromium is absent; CI downloads Chromium normally. CI now freezes the real Bun lockfile. Browser tests demonstrate the happy path, two-revision immutable evidence, unavailable capture, missing/ambiguous recovery and inert text; this does not substitute for human visual approval or Firefox/Safari checks.
 
+## Public website
+
+### D-019 Public website and documentation (2026-11-14)
+
+Accepted at the user's request: add `apps/website` as private workspace package
+`@usenudge/website`, using Astro 7, Tailwind CSS 4 and Starlight. The homepage is a
+custom Astro page, while user-facing Markdown/MDX lives in
+`src/content/docs/docs/` and routes under `/docs/`. Internal root `docs/` and
+`tasks/` remain contributor/agent material and are not imported into the public
+site. The site is static and independent of the local bridge/SDK; it reads no
+credentials and contacts no local tool ports. No domain ownership or hosting
+account is assumed. A canonical URL is optional via `NUDGE_WEBSITE_URL`; sitemap
+generation is skipped until it is configured.
+
+Design follows the user's three image references: dark technical framing with
+rounded panels, navigation and code blocks. The explicit canvas preference is
+pure white / pure black. Cyan in dark mode and deep teal in light mode are the
+initial accent direction, centralized for easy revision. Homepage and docs share
+Public Sans, palette tokens and Starlight's theme preference. The homepage example
+is clearly labeled sample data and supports queue/revise/accept interactions
+without changing real annotations. The published review screenshot is an actual
+existing isolated test artifact; reference screenshots are not shipped as assets.
+
+Use root `website:*` scripts with Bun, and Astro check for `.astro` files in the
+website's own TS configuration. Root TypeScript still checks SDK/demo/tests;
+root workspace builds include the static website. Browser tests preview the
+production build on port 4322 so Pagefind search is real, and they validate theme
+persistence, keyboard operation, responsive layouts, links and source isolation.
+Astro telemetry is disabled by the package scripts; fonts and search are self-hosted.
+
+### D-020 Website design revision (2026-11-14)
+
+The user rejected the initial blended/rounded marketing design and explicitly
+selected the dark technical references. This supersedes D-019's blended aesthetic;
+the stack, public/internal content boundary and behavior contracts remain intact.
+Use a compact header, continuous alignment rails, neutral pure black/white
+canvases, lighter display typography and restrained cyan/teal. Replace the generic
+chart mockup with an element-selection example and remove repeated promotional
+sections. Keep the authentic review screenshot, sample-data labeling, accessible
+interactions and full light mode. Shared docs receive the same tighter geometry
+and neutral palette. The accent remains provisional pending visual review.
+
 ## Remaining architecture risks
+
+### D-021 Nudge is the agent interface (2026-11-14)
+
+Accepted from explicit user clarification: submitting a request in Nudge should
+start a background coding agent, show real progress/required approvals, and return
+to human review without requiring a separate agent terminal/app. Treat this as
+the primary workflow. The implemented external MCP queue remains an optional
+integration and foundation, not completion of the intended product.
+
+This supersedes earlier deferral of managed dispatch in the product scope and
+roadmap. A separate local runner owns provider lifecycle; bridge/overlay do not
+gain arbitrary shell execution. Preserve sandbox/approvals, project boundaries,
+separate credentials and human-only acceptance. Do not claim zero model-provider
+egress. Provider selection and implementation remain open. See doc 09 and the
+new authoritative checklist; no runtime change is implied by this decision.
+
+### D-022 Fresh session per prompt, explicit continuation (2026-11-14)
+
+Accepted from user clarification: every submitted prompt starts a fresh agent
+session by default, including a follow-up in an item. The composer may explicitly
+select an existing compatible session in this project, including for a newly
+selected element. Reset the next submission to New session. Never silently reuse
+the last session or assume one session per annotation/project.
+
+Runs associate revisions with sessions. Sessions may receive requests from
+multiple annotations; an annotation may have runs in different sessions. Keep
+review evidence separate and validate routing/project ownership. Explain busy,
+missing or incompatible selections without silent fallback. Idempotent dispatch
+includes session creation. This replaces the previous suggestion of implicit
+follow-up reuse. Managed execution remains planned, not implemented.
 
 - Browser token is readable by scripts on the trusted dev origin; origin allowlist and loopback do not provide a full compromise boundary.
 - `html-to-image` cannot guarantee accurate capture for all DOM/CSS/iframe/canvas content.
@@ -82,6 +198,67 @@ Playwright's shell-managed web-server teardown hung under Bun/Windows after pass
 - Source mapping across frameworks has different tooling and cannot be promised generically.
 - A local coding agent may not support MCP or may not fetch tools automatically; provide explicit prompts/manual path.
 - Reviews are human-confirmed; screenshot differences alone do not prove intended outcomes.
+
+### D-023 Element-pinned comments are the default (2026-11-15)
+
+Status: Accepted by user direction.
+
+Selection and submission open the prompt beside its element. Saved requests
+remain numbered pins, like Figma comments. The side panel is an explicit
+per-comment presentation option, never the default. The website demonstration
+must show this interaction. Keep comments accessible in Feedback if attachment
+is missing or ambiguous; do not invent a replacement anchor or pin to stale
+coordinates. Direct live element references may preserve pins within the same
+mount; persistent reattachment uses the existing confident-anchor rules.
+
+### D-025 Existing-project installation and publication setup (2026-11-15)
+
+Accepted from the user's correction: remove the demo workspace and public
+test-drive generator. Root dev serves the website. Use temporary test consumers
+to prove the installed workflow; the product is installed in an existing app.
+This supersedes D-024's public launcher and earlier demo-startup requirements.
+
+Default init only creates self-ignored `.nudge/` state. `usenudge dev` resolves
+Vite from the consumer, loads its config and injects the serve-only plugin at
+runtime. App components, normal dev/build scripts and Vite config stay unchanged.
+Installing a dev dependency changes manifest/lockfile normally. A separate CLI
+process owns server/runner cleanup; the browser/bridge cannot launch arbitrary
+executables. The setup skill guides staged-change review without Git writes.
+
+`init --integrate` explicitly opts into the prior wrapper/dev-script integration.
+Its portable generated wrapper must be committed with those script changes, rather
+than ignored: otherwise a fresh clone's normal dev command would reference a
+missing file. Source-checkout absolute imports must not be committed in consumers.
+
+Ship one bundled `usenudge` package, keeping internal workspaces private.
+`package.release.json` owns version/metadata and preview tag; include a package
+README, changelog, user-approved MIT license, actual bundled dependency notices
+and canonical setup skill. Allowlist/check the actual archive. The manual tagged
+GitHub workflow verifies first and publishes the same artifact with npm OIDC;
+Bun remains the install/build tool. No package publication or remote configuration
+is authorized by merely preparing this setup. Ownership, upstream-license review,
+live authenticated providers and Linux remain explicit release gates.
+
+### D-024 Installed-preview test drive (2026-11-15; superseded by D-025)
+
+Use `bun run try` to exercise the unpublished archive in an editable Vite app
+under ignored `.nudge/test-drive`, rather than requiring changes to the contributor
+demo. Seed once and preserve app files, requests and agent choices on reruns.
+Local agent instructions scope edits to that sample app and replace the parent
+repository's contributor workflow. No fixture agent is installed by the launcher.
+
+Rebuild the archive and use `bun add -d <archive>` on reruns: Bun 1.4.4's plain
+`install` retained the previous contents for an unchanged tarball path/version;
+an archive-refresh regression test verifies the updated dependency and preserved
+app edits. Own Vite's installed entry process directly in the launcher and browser
+test, avoiding a package-manager shell whose termination can leave child processes
+behind on Windows. The generated app still supports its ordinary dev command.
+
+The package and CLI share one preview version. Help/version commands do not
+provision state. Installed-package browser coverage uses a deterministic ACP
+fixture, edits real app CSS, observes HMR and requires persisted human acceptance.
+Live authenticated providers, real registry resolution and Linux validation remain
+separate release gates; an offline fixture does not establish those guarantees.
 
 ## ADR template
 
@@ -93,3 +270,17 @@ Decision:
 Alternatives:
 Consequences:
 ```
+
+# Standalone preview and guided external-agent setup
+
+The first distributable is a private `usenudge` archive containing bundled CLI,
+Vite adapter, bridge/browser and MCP runtime, with a Vite declaration entry.
+Installed apps reference their own package for MCP, never a temporary bunx cache.
+The adapter still requires Bun and only applies during development. Registry
+publication, ownership/licensing checks and broader compatibility remain pending.
+
+Guided setup probes official CLI version/login commands without starting a coding
+session, prints only sanitized readiness, and configures a host only after explicit
+selection. Codex uses project TOML; Claude uses project MCP JSON. Neither global
+permissions nor credentials are changed. This is the setup foundation for future
+managed sessions, not automatic dispatch.

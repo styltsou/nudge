@@ -1,0 +1,33 @@
+{
+  "name": "usenudge",
+  "version": "0.1.0-preview.1",
+  "description": "Request UI changes and review coding-agent edits in your browser",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/styltsou/nudge.git"
+  },
+  "homepage": "https://github.com/styltsou/nudge#readme",
+  "bugs": { "url": "https://github.com/styltsou/nudge/issues" },
+  "keywords": ["coding-agent", "visual-feedback", "vite", "acp", "mcp"],
+  "bin": { "usenudge": "./dist/cli.js" },
+  "exports": {
+    "./vite": { "types": "./dist/vite.d.ts", "import": "./dist/vite.js" }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md",
+    "skills"
+  ],
+  "engines": { "bun": ">=1.4.4" },
+  "peerDependencies": { "vite": "^8.3.7" },
+  "publishConfig": {
+    "access": "public",
+    "tag": "preview",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

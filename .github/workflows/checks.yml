@@ -15,6 +15,9 @@ jobs:
       - run: bun run build
       - run: bun --bun playwright install --with-deps chromium
       - run: bun run test:e2e
+      - run: bun run website:test
+      - run: bun run package:release
+      - run: bun run package:check
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

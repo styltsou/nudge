@@ -1,0 +1,207 @@
+---
+const managers = [
+  { name: 'Bun', command: 'bun add -d usenudge@preview' },
+  { name: 'npm', command: 'npm install -D usenudge@preview' },
+  { name: 'pnpm', command: 'pnpm add -D usenudge@preview' },
+];
+---
+
+<div class="install-box" data-install-box>
+  <div class="install-header">
+    <div role="tablist" aria-label="Choose your package manager">
+      {managers.map((manager, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={`install-tab-${index}`}
+          aria-controls={`install-panel-${index}`}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? 0 : -1}
+        >
+          {manager.name}
+        </button>
+      ))}
+    </div>
+  </div>
+  <p class="install-availability">
+    Registry commands apply after publication.{' '}
+    <a href="/docs/getting-started/">Use the preview archive now.</a> Bun is
+    required to run Nudge.
+  </p>
+  {managers.map((manager, index) => (
+    <div
+      class="install-command"
+      role="tabpanel"
+      id={`install-panel-${index}`}
+      aria-labelledby={`install-tab-${index}`}
+      hidden={index !== 0}
+    >
+      <span class="prompt" aria-hidden="true">
+        $
+      </span>
+      <code>{manager.command}</code>
+      <button
+        type="button"
+        class="install-copy"
+        aria-label={`Copy ${manager.name} install command`}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <rect x="8" y="8" width="12" height="12" />
+          <path d="M16 8V4H4v12h4" />
+        </svg>
+      </button>
+    </div>
+  ))}
+  <span
+    class="sr-only"
+    role="status"
+    aria-live="polite"
+    data-copy-status
+  ></span>
+</div>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>('[data-install-box]')
+    .forEach((box) => {
+      const tabs = Array.from(
+        box.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+      );
+      const panels = Array.from(
+        box.querySelectorAll<HTMLElement>('[role="tabpanel"]'),
+      );
+      const status = box.querySelector<HTMLElement>('[data-copy-status]')!;
+      function select(index: number, focus = false) {
+        tabs.forEach((tab, i) => {
+          tab.setAttribute('aria-selected', String(i === index));
+          tab.tabIndex = i === index ? 0 : -1;
+          panels[i]!.hidden = i !== index;
+        });
+        status.textContent = '';
+        if (focus) tabs[index]!.focus();
+      }
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => select(index));
+        tab.addEventListener('keydown', (event) => {
+          const next =
+            event.key === 'ArrowRight'
+              ? (index + 1) % tabs.length
+              : event.key === 'ArrowLeft'
+                ? (index + tabs.length - 1) % tabs.length
+                : event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? tabs.length - 1
+                    : undefined;
+          if (next === undefined) return;
+          event.preventDefault();
+          select(next, true);
+        });
+      });
+      panels.forEach((panel) => {
+        panel.querySelector('button')!.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(
+              panel.querySelector('code')!.textContent ?? '',
+            );
+            status.textContent = 'Command copied.';
+          } catch {
+            status.textContent =
+              'Copy unavailable. Select the command to copy it manually.';
+          }
+        });
+      });
+    });
+</script>
+
+<style>
+  .install-box {
+    width: min(100%, 480px);
+    margin: 32px auto 0;
+    border: 1px solid var(--line);
+    text-align: left;
+    background: var(--surface);
+  }
+  .install-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  [role='tablist'] {
+    display: flex;
+  }
+  [role='tab'] {
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid transparent;
+    margin-bottom: -1px;
+    background: transparent;
+    color: var(--muted);
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--canvas);
+  }
+  [role='tab']:hover,
+  .install-copy:hover {
+    color: var(--accent);
+  }
+  .install-command {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px;
+  }
+  .prompt {
+    color: var(--muted);
+    font: 13px var(--font-mono);
+  }
+  code {
+    font-size: 13px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .install-copy {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    border: 0;
+    padding: 6px;
+    color: var(--muted);
+    background: transparent;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @media (max-width: 520px) {
+    [role='tab'] {
+      padding: 12px;
+    }
+    code {
+      font-size: 11px;
+    }
+    .install-command {
+      gap: 8px;
+      padding-inline: 12px;
+    }
+  }
+</style>

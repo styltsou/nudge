@@ -170,7 +170,7 @@ describe('authenticated local persistence and human review', () => {
     await action('implementation', browser, { summary: 'Done' }, 403);
     await action('implementation', mcp, {
       summary: 'Taller chart',
-      changedFiles: ['apps/demo/src/style.css'],
+      changedFiles: ['styles.css'],
     });
     const original = structuredClone(a.revisions[0]);
     await action('request-changes', mcp, { comment: 'More space' }, 403);

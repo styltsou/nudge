@@ -2,6 +2,15 @@
 
 ## Decision summary
 
+Managed sessions now use ACP as the common runner-to-agent protocol. The separate
+runner starts a maintained Codex/Claude ACP adapter or native `opencode acp`, owns
+the stdio transport and reports bounded events to the bridge. Nudge CLI setup
+installs versioned adapters under ignored `.nudge/agents/`; app dependencies do
+not include a Claude SDK. The Claude adapter may use the SDK internally and the
+Codex adapter may use app-server internally. Native agent authentication owns
+subscription/API billing. Session/revision ownership and human review remain in
+Nudge; MCP remains an optional external-agent mode.
+
 TypeScript monorepo with Bun as package manager and runtime, no Python service in MVP: local workflow needs a lightweight bridge near JS tooling. Keep packages separated so a future hosted Python/FastAPI backend could consume the same shared protocol without rewriting the browser SDK.
 
 ## Monorepo
@@ -12,7 +21,7 @@ nudge/
   README.md
   docs/
   tasks/
-  apps/demo/               # Vite + React + demo pages, playground
+  apps/website/            # Astro + Tailwind + Starlight public site and user docs
   packages/shared/         # Zod schemas, DTOs, constants, protocol
   packages/core/           # vanilla TS DOM overlay, anchor and capture
   packages/react/          # dev-only React convenience component
@@ -44,11 +53,18 @@ If an npm name is unavailable, keep local workspace naming and seek user approva
 - `react` → `core`: lifecycle wrapper, React as peer dependency.
 - `bridge` → `shared`: Fastify, built-in `bun:sqlite`, SSE endpoint, local disk only.
 - `mcp` → `shared`: official MCP TypeScript SDK, authenticated local HTTP client.
-- `demo` → `react` (or core SDK directly for testing) and dev bridge.
+- Temporary browser-test consumers exercise core and the installed package; no demo workspace is maintained.
 
 Keep payload type contracts independent of storage implementation.
 
 ## Processes
+
+The processes below describe the implemented MCP foundation. The clarified
+primary workflow also requires a separate local agent runner, started by Nudge
+and controlled through its UI; see [managed runs](09-MANAGED-AGENT-RUNS.md).
+The separate ACP runner and browser controls are implemented as a preview;
+real provider validation is still open. The bridge remains a storage/control boundary
+without direct shell execution. External MCP remains optional.
 
 - **Dev app** (example `http://localhost:5173`): product being edited, with overlay SDK mounted in dev.
 - **Bridge** (`http://127.0.0.1:4747` by default): stores annotation records and pushes state events via SSE.
@@ -95,9 +111,9 @@ flowchart TD
 
 ## Local dev ergonomics
 
-- Root `bun run dev` starts demo and bridge (e.g. `concurrently` / `turbo`); bridge prints its URL and how to configure token safely.
+- Root `bun run dev` starts the website. Installed `usenudge dev` loads the consumer Vite config, injects the serve-only plugin and owns bridge/runner cleanup. Default init only creates self-ignored `.nudge/` state; `--integrate` explicitly opts into a portable config wrapper/dev-script change.
 - Bridge should provision a random token on first boot and store it in a gitignored state/config file with restricted permissions where possible.
-- Demo's SDK gets bridge URL and token via a **dev-only** Vite configuration. Because any token inside the browser is observable, token alone is not a protection against same-origin injected code: enforce origin restrictions and keep tool local; document trust assumption.
+- The injected SDK gets its bridge URL/token through **development-only** Vite middleware. Because any token inside the browser is observable, token alone is not a protection against same-origin injected code: enforce origin restrictions and keep tool local; document trust assumption.
 - CLI health check (`bun run bridge:doctor` is fine) verifies bridge reachable, auth working, persistence writable.
 - MCP agent config example uses environment variables for local bridge URL and token; provide host-specific examples only after validation against current documentation.
 

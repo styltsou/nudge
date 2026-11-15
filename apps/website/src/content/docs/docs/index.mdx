@@ -1,0 +1,74 @@
+---
+title: Meet Nudge
+description: Select something in your running app, ask your coding agent to change it, and review the result in place.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+**Nudge lets you ask for UI changes directly on your running app.**
+
+Click a button, card, chart, or other element and leave a pinned comment explaining
+what you want. Start your coding agent from Nudge, follow its progress, and review
+the change in the same browser.
+
+For example: select a cramped button and write, “Give this more padding and match
+the height of the other buttons.” Your agent gets the request and context about
+the selected element, edits the project, and reports what changed.
+
+## From a comment to a reviewed change
+
+1. **Point.** Select the element you want to change.
+2. **Describe.** Write a request in the comment beside it.
+3. **Run.** Nudge starts an agent session and shows activity, supported questions and approval requests.
+4. **Review.** Inspect the running app, then accept the result or ask for another pass.
+
+Comments stay pinned to the page and survive refresh. You can open a comment in
+a side panel when you want more room. Optional screenshots are available under
+**View comparison**; the actual app remains your main review surface.
+
+<Aside title="Development preview">
+  The annotation, agent-session and review flows have automated process/browser
+  coverage. Real ACP adapter installation and live authenticated agent edits
+  still need validation. Packages are not published to npm yet. [Getting
+  started](/docs/getting-started/) shows the available local setup.
+</Aside>
+
+## Bring your coding agent
+
+Nudge connects to **Codex, Claude, and OpenCode** through ACP, a protocol for
+communicating with agent processes. Your agent keeps its model, tools,
+permissions, authentication and billing. Nudge supplies the visual request
+and review interface.
+
+Use the agent's native subscription sign-in to use your existing plan where
+supported. API-key credentials can select API billing instead. You do not need
+to add a Claude SDK dependency to your app.
+
+Every request starts a **New session** by default, including follow-ups.
+Select an existing compatible session explicitly when you want to continue its
+conversation. Only one editing run is allowed per project at a time.
+
+[Connect your agent and understand billing →](/docs/agents/)
+
+## What “local-first” means
+
+Nudge runs alongside your dev server. Requests, history and optional images are
+stored in your project's ignored `.nudge/` directory. There is no Nudge cloud
+account or hosted dashboard.
+
+Your coding agent can still send request and project context to its model provider.
+Local storage does not mean offline inference. [Read the privacy guide](/docs/privacy/).
+
+## Where to start
+
+| You want to…                                | Read                                         |
+| ------------------------------------------- | -------------------------------------------- |
+| Try Nudge or add it to a Vite app           | [Getting started](/docs/getting-started/)    |
+| Connect Codex, Claude, or OpenCode          | [Agent setup](/docs/agents/)                 |
+| Understand sessions, Stop and review        | [Annotation and review](/docs/workflow/)     |
+| Work from an existing agent terminal or IDE | [Optional MCP integration](/docs/mcp-setup/) |
+| Fix a setup or run problem                  | [Troubleshooting](/docs/troubleshooting/)    |
+
+The current installer supports standalone local HTTP Vite apps. Universal
+source-file mapping, hosted collaboration and automatic visual correctness
+grading are outside this preview. An agent report always needs your review.

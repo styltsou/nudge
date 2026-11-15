@@ -2,6 +2,21 @@
 
 Ship in vertical slices; each phase should leave the repo runnable. Don't overbuild abstractions before the main loop works.
 
+## Current preview and next validation gate — managed agent sessions
+
+The user clarified that Nudge must start and supervise coding-agent sessions from
+its own UI. This supersedes treating session adapters as a later convenience.
+The implemented manual MCP loop is the foundation; the primary product is not
+complete until users can request, run and review without an external agent
+terminal/app. See [the target contract](09-MANAGED-AGENT-RUNS.md) and the open
+managed-run checklist. Implement this before further showcase work.
+
+**Gate:** After one-time agent setup, annotate → run → real progress/required
+approvals → implementation → review → follow-up works entirely in Nudge. Include
+stop, restart/retry, provider/auth failures and duplicate-dispatch tests. The
+runner preserves real agent permissions and human acceptance. The ACP preview
+implements this flow with fixtures; live authenticated validation remains open.
+
 ## Phase 0 — Skeleton and contracts
 
 - Monorepo scaffolding, toolchain, workspace scripts, lint/typecheck/tests.
@@ -9,14 +24,14 @@ Ship in vertical slices; each phase should leave the repo runnable. Don't overbu
 - Demo page and bridge stub with health route.
 - Short README quick start, gitignore, CI starter.
 
-**Gate:** `bun install`, `bun run dev`, `bun run build`, `bun run typecheck`, `bun run test` succeed; demo and bridge run.
+**Gate:** `bun install`, `bun run dev`, `bun run build`, `bun run typecheck`, `bun run test` succeed; website and installed consumer checks run.
 
 ## Phase 1 — Annotation to durable queue
 
 - Framework-neutral overlay toggle, highlight, selection composer, DOM metadata.
 - Secure bridge auth/origin rules and SQLite persistence.
 - Create/list/get annotation API, local per-project storage.
-- React wrapper and demo integration.
+- React wrapper and installed-app Vite integration.
 
 **Gate:** developer annotates, queues, reloads and sees persisted annotation; app functions normally after overlay disabled.
 
@@ -45,14 +60,14 @@ Ship in vertical slices; each phase should leave the repo runnable. Don't overbu
 - Error states, accessibility, responsive behavior and security hardening.
 - Changelog, package metadata, release guide.
 
-**Gate:** a fresh Vite React repo can integrate via documented steps; another developer can reproduce the demo without privileged context.
+**Gate:** a fresh Vite React repo can integrate via documented steps; another developer can install and run Nudge without a demo or privileged context.
 
 ## Later, only after MVP validated
 
 1. **Source-aware mapping** via dev-only Vite transform (accurate file/line where feasible).
 2. **Framework adapters** Vue, Astro, Svelte; zero-install script injection / proxy.
 3. **Bug reproduction**: clicks, console errors, network traces with strict redaction.
-4. **Session-aware agent adapters** for verified auto-send into named agent sessions (explicit opt-in, avoid arbitrary agent invocation).
+4. **Additional agent adapters** beyond the managed-session baseline; arbitrary injection into already-open third-party conversations remains excluded.
 5. **Git-aware review** file diff links and branching metadata; never let overlay directly commit code.
 6. **Collaborative feedback** optional hosted sync, access controls and retention.
 

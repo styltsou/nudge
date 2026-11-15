@@ -22,7 +22,7 @@ export class RepositoryError extends Error {
   }
 }
 export class Repository {
-  private db: Database;
+  readonly db: Database;
   constructor(
     filename: string,
     private projectId: string,

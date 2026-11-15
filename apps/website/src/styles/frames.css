@@ -1,0 +1,125 @@
+:root {
+  --nudge-frame-paint:
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary)),
+    linear-gradient(var(--nudge-primary), var(--nudge-primary));
+}
+
+/* Low-specificity defaults allow the denser sidebar to use smaller corners. */
+:where(.site-header, header.header, .sidebar-content)
+  :where(a, button, summary),
+:where(.sl-menu-button) {
+  --frame-inset: 6px;
+  --frame-length: 7px;
+  --frame-stroke: 1px;
+}
+
+:where(mobile-starlight-toc .toggle, mobile-starlight-toc .dropdown a) {
+  --frame-inset: 6px;
+  --frame-length: 7px;
+  --frame-stroke: 1px;
+}
+
+/* Paint only short corner strokes; preserve the full-height structural borders. */
+:is(
+  .site-header > .brand,
+  .site-header .nav-link,
+  .theme-toggle,
+  header.header .site-title,
+  header.header .social-icons a,
+  header.header button[data-open-modal],
+  .sl-menu-button,
+  .sidebar-content a,
+  .sidebar-content summary,
+  mobile-starlight-toc .toggle,
+  mobile-starlight-toc .dropdown a
+) {
+  background-repeat: no-repeat;
+  background-size:
+    var(--frame-length) var(--frame-stroke),
+    var(--frame-stroke) var(--frame-length),
+    var(--frame-length) var(--frame-stroke),
+    var(--frame-stroke) var(--frame-length),
+    var(--frame-length) var(--frame-stroke),
+    var(--frame-stroke) var(--frame-length),
+    var(--frame-length) var(--frame-stroke),
+    var(--frame-stroke) var(--frame-length);
+  background-position:
+    left var(--frame-inset) top var(--frame-inset),
+    left var(--frame-inset) top var(--frame-inset),
+    right var(--frame-inset) top var(--frame-inset),
+    right var(--frame-inset) top var(--frame-inset),
+    left var(--frame-inset) bottom var(--frame-inset),
+    left var(--frame-inset) bottom var(--frame-inset),
+    right var(--frame-inset) bottom var(--frame-inset),
+    right var(--frame-inset) bottom var(--frame-inset);
+
+  &:is(:hover, :focus-visible) {
+    background-image: var(--nudge-frame-paint);
+    color: var(--nudge-accent);
+  }
+  &:focus-visible {
+    --frame-stroke: 2px;
+    outline: none;
+  }
+}
+
+.sidebar-content :is(a, summary) {
+  --frame-inset: 2px;
+  --frame-length: 5px;
+  border-radius: 0;
+}
+.sidebar-content a[aria-current='page'] {
+  background-color: transparent;
+  background-image: var(--nudge-frame-paint);
+  color: var(--nudge-accent);
+}
+.sidebar-content summary:is(:hover, :focus-visible) .large {
+  color: inherit;
+}
+
+/* Dashed connecting edges are for the sidebar; the header has structural rails. */
+.sidebar-content .top-level :is(a, summary) {
+  position: relative;
+}
+.sidebar-content .top-level :is(a, summary)::after {
+  content: '';
+  position: absolute;
+  inset: var(--frame-inset);
+  border: 1px dashed var(--nudge-primary);
+  opacity: 0;
+  pointer-events: none;
+}
+.sidebar-content
+  .top-level
+  :is(a, summary):is(:hover, :focus-visible, [aria-current='page'])::after {
+  opacity: 0.45;
+}
+
+@media (forced-colors: active) {
+  :is(
+    .site-header > .brand,
+    .site-header .nav-link,
+    .theme-toggle,
+    header.header .site-title,
+    header.header .social-icons a,
+    header.header button[data-open-modal],
+    .sl-menu-button,
+    .sidebar-content a,
+    .sidebar-content summary,
+    mobile-starlight-toc .toggle,
+    mobile-starlight-toc .dropdown a
+  ):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+  .sidebar-content a[aria-current='page'] {
+    outline: 1px solid Highlight;
+    outline-offset: -2px;
+  }
+}

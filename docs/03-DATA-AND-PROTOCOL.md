@@ -4,6 +4,16 @@ This document defines the **public semantics** that tests and code must honor. I
 
 ## Core types
 
+The existing annotation/MCP contract below remains implemented and valid.
+Managed-agent runs have a separate implemented run/job lifecycle and event
+contract; see [doc 09](09-MANAGED-AGENT-RUNS.md) and the managed-run protocol
+addition below. Provider errors do not overload human review states.
+
+Runs distinguish new-session intent (default) from explicit continuation.
+A run links one annotation revision and one resolved session; a session may
+contain runs from different annotations. Validate project/provider ownership and
+idempotent creation server-side. The additive payloads are implemented and tested.
+
 ```ts
 type AnnotationStatus =
   'queued' | 'in_progress' | 'ready_for_review' | 'accepted';
@@ -119,7 +129,7 @@ Use explicit role/authority separation on mutations: MCP token or channel can cl
 ```json
 {
   "summary": "Increased chart min-height and adjusted card spacing.",
-  "changedFiles": ["apps/demo/src/components/AnalyticsChart.tsx"]
+  "changedFiles": ["src/components/AnalyticsChart.tsx"]
 }
 ```
 
@@ -162,3 +172,23 @@ The agent is **not permitted to accept or request changes on behalf of the human
 The first implementation supports PNG only, with 2 MiB encoded image bytes, 2048×2048 dimensions, RGB/RGBA 8-bit non-interlaced pixels, CRC validation and bounded inflation. JPEG remains reserved in the common reference type. Reads use a generated snapshot UUID and require the same project capability; images are served as `image/png` with no-store, nosniff and a restrictive CSP. Browsers fetch bytes using Authorization and render local object URLs, never credential-bearing URLs.
 
 UUID IDs; timestamps UTC ISO8601; integer version increments per mutation; latest revision ordinal monotonically increasing; ensure one active revision per annotation; all state transitions transactional. Snapshot MIME check includes magic-byte detection and size/dimension limits. Do not use filename from client as storage path.
+
+# Managed-run protocol addition
+
+The existing five MCP tools and annotation/revision semantics are unchanged.
+`GET /api/v1/managed` returns browser-safe run/session status. Browser capability
+can `POST /api/v1/runs` with annotationId, revisionId, requestId and optional local
+sessionId; omission means a new session. Replaying requestId is idempotent.
+`POST /api/v1/runs/:id/stop` requests cancellation and `/answer` answers the
+currently pending interaction. Explicit reuse validates project ownership and
+availability; one editing run per project is allowed.
+
+A distinct runner capability, forbidden on browser/MCP routes and forbidden with
+Origin, can use `POST /api/v1/runner/claim` and `/:id/update`. Claims return a
+per-run lease; updates require it. The browser never receives this lease, runner
+credential or provider session identifier. Generic annotation transitions are
+blocked while a managed run owns its revision. Structured completion reports
+reuse the existing implementation transition; acceptance remains human-only.
+Runs/session records and bounded activity are persisted in project-scoped SQLite
+records. Restart/heartbeat expiry interrupts work, releases the annotation and
+requires explicit retry. SSE run notifications trigger a state refetch.

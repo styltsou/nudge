@@ -2,9 +2,22 @@
 
 ## Core experience and UI regions
 
+The primary target is now **Run agent** from the composer, live run activity,
+in-UI questions/required approvals, stop/retry and human review without using
+another agent terminal/app. See [managed agent runs](09-MANAGED-AGENT-RUNS.md).
+This is implemented as an ACP preview with fixture coverage; live provider
+validation is open. Queue/pull controls below describe optional external MCP mode;
+preserve truthful mode-specific copy.
+
+Managed mode exposes **New session** (default) and **Existing session** with a
+project-scoped picker. Reset to New session for each submission, including
+follow-ups. Show the chosen session in run detail. Explicitly routed requests
+for different elements may share a conversation while keeping review histories
+separate. Explain busy/missing/incompatible selections; never silently switch.
+
 1. **Compact floating toggle** at bottom-right, draggable/position-preserving only if simple. Show annotation count.
 2. **Hover outline** and minimal tooltip (tag, accessible name/test ID when safe).
-3. **Selection composer** anchored near clicked element; comment text area, cancel, queue button, privacy notice for optional screenshots.
+3. **Pinned comments by default**: selection opens a composer beside the element. Saved requests remain numbered pins; clicking a pin opens the prompt, history and review beside that element. Never automatically dock a chat on selection or submission. Offer **Open in side panel** explicitly, and **Pin to element** to return. Keep the comment attached during scrolling, resizing and DOM changes; use only confident stable anchors after reload. If the element is missing/ambiguous, hide its pin and explain that attachment is unavailable. Retain the feedback list as a recovery path.
 4. **Review tray** for pending/in-progress/ready/accepted annotations on current page.
 5. **Review detail**: original request, agent summary, changed files, before/after images if available, accept / request changes actions.
 
@@ -34,6 +47,12 @@ Use Shadow DOM style isolation. Respect dark/light preference and keyboard focus
 Never label `queued` “Sent to Codex” unless a future verified adapter actually submits to a live session.
 
 ## Screenshot review presentation
+
+The default comment prioritizes request, status, agent reply and human review
+actions. Put before/after images, comparison warnings and capture/retry controls
+inside a closed **View comparison** disclosure. Fetch images only when opened.
+Keep evidence available for optional inspection without requiring users to view
+it before accepting; the running app itself is the primary review surface.
 
 - Side-by-side images or a simple before/after toggle.
 - Show timestamps and exact capture confidence / failure state.

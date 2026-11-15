@@ -1,0 +1,51 @@
+---
+import TocLinks from './TocLinks.astro';
+const { toc } = Astro.locals.starlightRoute;
+const label = Astro.locals.t('tableOfContents.onThisPage');
+---
+
+{toc && (
+  <mobile-starlight-toc data-nudge-toc>
+    <nav aria-labelledby="starlight__on-this-page--mobile">
+      <details id="starlight__mobile-toc">
+        <summary id="starlight__on-this-page--mobile" class="sl-flex">
+          <span class="toggle sl-flex">
+            {label}
+            <svg
+              class="caret"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              aria-hidden="true"
+            >
+              <path d="m9 5 7 7-7 7" />
+            </svg>
+          </span>
+          <span class="display-current">{toc.items[0]?.text}</span>
+        </summary>
+        <div class="dropdown">
+          <TocLinks items={toc.items} />
+        </div>
+      </details>
+    </nav>
+  </mobile-starlight-toc>
+)}
+
+<script>
+  import { attachToc } from '../scripts/toc';
+  class NudgeMobileToc extends HTMLElement {
+    private cleanup?: () => void;
+    connectedCallback() {
+      this.cleanup ??= attachToc(this);
+    }
+    disconnectedCallback() {
+      this.cleanup?.();
+      this.cleanup = undefined;
+    }
+  }
+  if (!customElements.get('mobile-starlight-toc'))
+    customElements.define('mobile-starlight-toc', NudgeMobileToc);
+</script>

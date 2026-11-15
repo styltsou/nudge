@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './context';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Annotation } from '../../packages/shared/src/index';
@@ -10,7 +10,7 @@ test('select, queue, reload, report, revise and accept with honest unavailable e
   const uniqueComment = `Make the button clearer ${Date.now()}`;
   await page.goto('/');
   const host = page.locator('[data-nudge-host]');
-  await expect(host).toHaveCount(1); // React Strict Mode has settled.
+  await expect(host).toHaveCount(1);
   const normal = page.getByTestId('normal-control');
   await normal.click();
   await expect(normal).toHaveText('Clicked 1 times');
@@ -28,8 +28,53 @@ test('select, queue, reload, report, revise and accept with honest unavailable e
   const comment = host.getByRole('button', {
     name: new RegExp(`Queued for agent.*${uniqueComment}`),
   });
-  await expect(comment).toBeVisible();
+  await expect(
+    host.getByRole('heading', { name: 'Queued for agent', exact: true }),
+  ).toBeVisible();
+  await expect(host.locator('.panel')).toHaveClass(/pinned/);
+  await normal.evaluate((element) => {
+    element.style.transform = 'translateX(-40px)';
+  });
+  const pin = host.getByRole('button', {
+    name: new RegExp(`Open comment:.*${uniqueComment}`),
+  });
+  await expect
+    .poll(async () => {
+      const target = await normal.boundingBox();
+      const marker = await pin.boundingBox();
+      return target && marker
+        ? Math.abs(
+            marker.x -
+              Math.min(1280 - 32, Math.max(4, target.x + target.width - 12)),
+          )
+        : Infinity;
+    })
+    .toBeLessThan(2);
+  await normal.evaluate((element) => {
+    element.style.transform = '';
+  });
+  await host
+    .getByRole('button', { name: 'Open in side panel', exact: true })
+    .click();
+  await expect(host.locator('.panel')).toHaveClass(/docked/);
+  await host
+    .getByRole('button', { name: 'Pin to element', exact: true })
+    .click();
+  await host
+    .getByRole('button', { name: 'Close comment', exact: true })
+    .click();
+  await host
+    .getByRole('button', {
+      name: new RegExp(`Open comment:.*${uniqueComment}`),
+    })
+    .click();
+  await expect(host.locator('.panel')).toHaveClass(/pinned/);
   await page.reload();
+  await expect(
+    host.getByRole('button', {
+      name: new RegExp(`Open comment:.*${uniqueComment}`),
+    }),
+  ).toBeVisible();
   await host.getByRole('button', { name: /Feedback \(/ }).click();
   await expect(comment).toBeVisible();
   const saved = JSON.parse(
@@ -39,7 +84,7 @@ test('select, queue, reload, report, revise and accept with honest unavailable e
     ),
   ) as { mcpToken: string };
   const headers = { Authorization: `Bearer ${saved.mcpToken}` };
-  const base = 'http://127.0.0.1:4748/api/v1';
+  const base = process.env.NUDGE_E2E_BRIDGE_URL + '/api/v1';
   const all = await request.get(`${base}/annotations`, { headers });
   expect(all.ok()).toBe(true);
   const annotation = ((await all.json()) as Annotation[]).find((a) =>
@@ -68,7 +113,7 @@ test('select, queue, reload, report, revise and accept with honest unavailable e
     .click();
   await expect(
     host.getByText('Comparison unavailable', { exact: true }),
-  ).toBeVisible();
+  ).not.toBeVisible();
   await expect(
     page.locator('script').filter({ hasText: 'window.__nudgeXss=true' }),
   ).toHaveCount(0);

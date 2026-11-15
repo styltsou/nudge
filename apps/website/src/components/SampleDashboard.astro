@@ -1,0 +1,95 @@
+<div class="sample-app" aria-label="Sample analytics application">
+  <aside class="sample-app-nav" aria-hidden="true">
+    <strong>
+      Orbit<span> / workspace</span>
+    </strong>
+    <div class="app-nav-active">Overview</div>
+    <div>Analytics</div>
+    <div>Customers</div>
+    <div>Reports</div>
+    <span class="app-nav-bottom">Settings</span>
+  </aside>
+  <div class="sample-app-main">
+    <div class="app-breadcrumb">
+      Workspace <span>/</span> Overview
+    </div>
+    <div class="app-title-row">
+      <div>
+        <p>Monday, November 16</p>
+        <h3>Workspace overview</h3>
+      </div>
+      <div class="selected-element">
+        <button
+          type="button"
+          class="sample-comment-pin"
+          aria-label="Open pinned comment"
+          data-comment-pin
+        >
+          1
+        </button>
+        <span class="selection-anchor">#publish-button</span>
+        <span class="example-button">Publish update</span>
+        <i class="handle handle-tl" aria-hidden="true"></i>
+        <i class="handle handle-tr" aria-hidden="true"></i>
+        <i class="handle handle-bl" aria-hidden="true"></i>
+        <i class="handle handle-br" aria-hidden="true"></i>
+        <svg
+          class="selection-cursor"
+          width="29"
+          height="34"
+          viewBox="0 0 30 38"
+          aria-hidden="true"
+        >
+          <path
+            d="M3 2v28l8-8 6 12 7-3-7-11 11-2Z"
+            fill="var(--ink)"
+            stroke="var(--canvas)"
+            stroke-width="2"
+          />
+        </svg>
+      </div>
+    </div>
+    <div class="app-metrics">
+      <div>
+        <span>Revenue</span>
+        <strong>$24,860</strong>
+        <small>+12.8% this month</small>
+      </div>
+      <div>
+        <span>Active customers</span>
+        <strong>1,482</strong>
+        <small>+8.2% this month</small>
+      </div>
+      <div>
+        <span>Conversion</span>
+        <strong>4.28%</strong>
+        <small>+0.6% this month</small>
+      </div>
+    </div>
+    <div class="app-chart">
+      <div class="app-chart-heading">
+        <strong>Revenue over time</strong>
+        <span>Last 7 days</span>
+      </div>
+      <div class="app-bars" aria-label="Sample revenue chart">
+        {[35, 52, 43, 67, 58, 82, 73].map((height, index) => (
+          <div>
+            <span style={`height:${height}%`}></span>
+            <small>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][index]}</small>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="app-activity">
+      <strong>Recent activity</strong>
+      <div>
+        <span>Pro subscription renewed</span>
+        <small>2 min ago</small>
+      </div>
+      <div>
+        <span>Monthly report generated</span>
+        <small>18 min ago</small>
+      </div>
+    </div>
+  </div>
+</div>

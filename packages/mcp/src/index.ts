@@ -31,7 +31,24 @@ if (!token) {
 if (!token || !/^[a-f0-9]{64}$/.test(token))
   throw new Error('Invalid local MCP credential');
 const config = {
-  url: process.env.NUDGE_BRIDGE_URL ?? 'http://127.0.0.1:4747',
+  url:
+    process.env.NUDGE_BRIDGE_URL ??
+    (() => {
+      try {
+        return JSON.parse(
+          readFileSync(
+            resolve(
+              process.env.NUDGE_PROJECT_ROOT ?? process.cwd(),
+              process.env.NUDGE_STATE_DIR ?? '.nudge',
+              'connection.json',
+            ),
+            'utf8',
+          ),
+        ).bridgeUrl as string;
+      } catch {
+        return 'http://127.0.0.1:4747';
+      }
+    })(),
   token,
 };
 const handle = serveStdio(() => createMcpServer(config));

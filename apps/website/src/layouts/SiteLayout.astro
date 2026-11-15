@@ -1,0 +1,61 @@
+---
+import '../styles/home.css';
+import Brand from '../components/Brand.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import ThemeProvider from '../components/ThemeProvider.astro';
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonical = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site)
+  : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{title}</title>
+    <ThemeProvider />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">
+      Skip to content
+    </a>
+    <header class="site-header shell">
+      <Brand />
+      <nav aria-label="Main navigation" class="header-nav">
+        <a href="/docs/" class="nav-link">
+          Docs
+        </a>
+        <a href="https://github.com/styltsou/nudge" class="nav-link">
+          GitHub
+        </a>
+        <ThemeToggle />
+      </nav>
+    </header>
+    <main id="main-content">
+      <slot />
+    </main>
+    <footer class="site-footer shell">
+      <div>
+        <Brand />
+        <p>Visual feedback for coding agents.</p>
+      </div>
+      <nav aria-label="Footer navigation">
+        <a href="/docs/getting-started/">Getting started</a>
+        <a href="/docs/privacy/">Privacy &amp; security</a>
+        <a href="https://github.com/styltsou/nudge">Source code</a>
+      </nav>
+    </footer>
+  </body>
+</html>

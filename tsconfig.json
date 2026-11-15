@@ -5,5 +5,5 @@
     "allowImportingTsExtensions": true,
     "types": ["bun", "node", "vite/client"]
   },
-  "include": ["packages", "apps", "scripts", "tests", "*.ts"]
+  "include": ["packages", "scripts", "tests", "*.ts"]
 }

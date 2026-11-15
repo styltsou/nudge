@@ -1,0 +1,37 @@
+---
+interface Entry {
+  slug: string;
+  text: string;
+  children: Entry[];
+}
+interface Props {
+  items: Entry[];
+  depth?: number;
+}
+const { items, depth = 0 } = Astro.props;
+---
+
+<ul style={`--toc-depth:${depth}`}>
+  {items.map((item) => (
+    <li>
+      <a href={`#${item.slug}`}>
+        <span>{item.text}</span>
+        <svg
+          class="toc-current-mark"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <path d="m5 12 4 4 10-10" />
+        </svg>
+      </a>
+      {item.children.length > 0 && (
+        <Astro.self items={item.children} depth={depth + 1} />
+      )}
+    </li>
+  ))}
+</ul>

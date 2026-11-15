@@ -1,0 +1,27 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  title="Page not found — Nudge"
+  description="This address does not point to a Nudge page."
+>
+  <section class="shell" style="padding-block: 100px 140px;">
+    <p class="availability">404</p>
+    <h1 style="font-size: clamp(36px, 5vw, 64px); letter-spacing: -0.05em; margin-bottom: 20px;">
+      That page isn’t here.
+    </h1>
+    <p class="hero-description">
+      The address may have changed. You can return to the homepage or find what
+      you need in the documentation.
+    </p>
+    <div class="hero-actions">
+      <a class="button-primary" href="/">
+        Nudge homepage
+      </a>
+      <a class="button-text" href="/docs/">
+        Open documentation
+      </a>
+    </div>
+  </section>
+</SiteLayout>

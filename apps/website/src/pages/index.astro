@@ -1,0 +1,200 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Walkthrough from '../components/Walkthrough.astro';
+import InstallCommands from '../components/InstallCommands.astro';
+const commands =
+  'bun add -d /path/to/usenudge.tgz\nbunx --bun usenudge init --agent codex\nbunx --bun usenudge dev';
+---
+
+<SiteLayout
+  title="Nudge — visual context for your coding agent"
+  description="Select an element in your running app, attach a request, and let your coding agent fetch the context through MCP. Review the change before accepting."
+>
+  <div class="page-frame shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="availability">Local-first visual feedback</p>
+        <h1 id="hero-title">
+          Show your agent
+          <br />
+          what you mean.
+        </h1>
+        <p class="hero-description">
+          Point at an element in your app. Attach a request. Your coding agent
+          gets the context, and you get a change to review.
+        </p>
+        <InstallCommands />
+        <div class="hero-actions">
+          <a href="/docs/getting-started/" class="button-primary">
+            Get started
+          </a>
+          <a href="/docs/mcp-setup/" class="button-secondary">
+            Connect your agent
+          </a>
+        </div>
+        <p class="hero-footnote">
+          Open source. Runs in your project.{' '}
+          <a href="/docs/getting-started/#ask-your-coding-agent-to-set-up-nudge">
+            Set up with your agent
+          </a>
+        </p>
+      </div>
+    </section>
+    <section class="hero-demo" aria-label="Explore Nudge">
+      <Walkthrough />
+    </section>
+
+    <ol class="workflow-rail" aria-label="The Nudge workflow">
+      <li>
+        <span class="rail-icon" aria-hidden="true">
+          ⌖
+        </span>
+        <div>
+          <strong>Select in the browser</strong>
+          <span>Element, request, DOM context</span>
+        </div>
+      </li>
+      <li>
+        <span class="rail-icon" aria-hidden="true">
+          ↔
+        </span>
+        <div>
+          <strong>Hand off through MCP</strong>
+          <span>Your existing coding agent</span>
+        </div>
+      </li>
+      <li>
+        <span class="rail-icon" aria-hidden="true">
+          ✓
+        </span>
+        <div>
+          <strong>Review the result</strong>
+          <span>Accept or request another pass</span>
+        </div>
+      </li>
+    </ol>
+
+    <section class="review-section" aria-labelledby="review-heading">
+      <div class="review-copy">
+        <h2 id="review-heading">
+          The change is done.
+          <br />
+          The review is yours.
+        </h2>
+        <p>
+          An agent's implementation report brings the request back to you. Check
+          the summary, compare before and after, and decide whether it needs
+          another pass.
+        </p>
+        <dl class="review-details">
+          <div>
+            <dt>Context stays attached</dt>
+            <dd>
+              The original request and revision history stay with the element.
+            </dd>
+          </div>
+          <div>
+            <dt>Evidence, when available</dt>
+            <dd>
+              Optional snapshots. Clear recovery when an element moves or
+              capture fails.
+            </dd>
+          </div>
+          <div>
+            <dt>You close the loop</dt>
+            <dd>
+              Acceptance is a human decision. Another pass keeps the history.
+            </dd>
+          </div>
+        </dl>
+        <a href="/docs/workflow/" class="button-text">
+          Read about annotation and review
+        </a>
+      </div>
+      <figure class="real-review-image">
+        <div class="evidence-header">
+          <span>From the working demo</span>
+          <a href="/images/review.png">View full image</a>
+        </div>
+        <a
+          href="/images/review.png"
+          aria-label="Open full Nudge review screenshot"
+        >
+          <img
+            src="/images/review.png"
+            width="1280"
+            height="1242"
+            loading="lazy"
+            decoding="async"
+            alt="Actual Nudge demo with a chart, before/after evidence, and human Accept and Request changes controls."
+          />
+        </a>
+        <figcaption>Actual browser capture with isolated test data.</figcaption>
+      </figure>
+    </section>
+
+    <section class="local-section" aria-labelledby="local-heading">
+      <h2 id="local-heading">
+        Your project.
+        <br /> Your tools.
+      </h2>
+      <div>
+        <p>
+          Annotations and snapshots live in your local <code>.nudge/</code>{' '}
+          folder. Your agent reads requests through a local MCP server. Queuing
+          saves the request; it doesn't send an agent message.
+        </p>
+        <div class="inline-links">
+          <a href="/docs/privacy/">Privacy and security</a>
+          <a href="/docs/reference/mcp-tools/">MCP reference</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="setup-section" aria-labelledby="setup-heading">
+      <div class="setup-copy">
+        <h2 id="setup-heading">Use it in your project.</h2>
+        <p>Install the preview in your Vite app. App source stays untouched.</p>
+        <a href="/docs/getting-started/" class="button-text">
+          Read the setup guide
+        </a>
+        <p class="setup-note">
+          Workspace preview · Bun 1.4.4+
+          <br />
+          npm packages are not published yet.
+        </p>
+      </div>
+      <div class="setup-terminal">
+        <div class="terminal-header">
+          <span>Terminal</span>
+          <button
+            type="button"
+            id="copy-commands"
+            aria-label="Copy setup commands"
+          >
+            Copy
+          </button>
+        </div>
+        <pre><code id="setup-commands">{commands}</code></pre>
+        <p role="status" aria-live="polite" id="copy-status"></p>
+      </div>
+    </section>
+  </div>
+</SiteLayout>
+<script>
+  const copy = document.querySelector<HTMLButtonElement>('#copy-commands');
+  const status = document.querySelector<HTMLElement>('#copy-status');
+  copy?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(
+        document.querySelector('#setup-commands')?.textContent ?? '',
+      );
+      if (status) status.textContent = 'Setup commands copied.';
+      copy.textContent = 'Copied';
+    } catch {
+      if (status)
+        status.textContent =
+          'Copy is unavailable. Select the commands above to copy them manually.';
+    }
+  });
+</script>

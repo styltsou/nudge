@@ -1,0 +1,54 @@
+name: Publish preview package
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing v-prefixed Git tag's version (for example 0.1.0-preview.1)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: publish-preview
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: bun install --frozen-lockfile
+      - run: bun --bun playwright install --with-deps chromium
+      - run: bun run release:check
+      - run: npm publish ./dist/usenudge.tgz --dry-run --ignore-scripts --access public --tag preview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: usenudge-preview
+          path: dist/usenudge.tgz
+          if-no-files-found: error
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: usenudge-preview
+      - run: npm publish ./usenudge.tgz --access public --tag preview

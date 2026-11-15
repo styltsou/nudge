@@ -6,3 +6,7 @@ bun.lock
 coverage
 playwright-report
 test-results
+.astro
+.agents
+.claude
+skills-lock.json

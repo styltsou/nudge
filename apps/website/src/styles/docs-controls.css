@@ -1,0 +1,232 @@
+/* Flat search controls, matching the header cells instead of rounded inputs. */
+site-search button[data-open-modal] {
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--sl-color-gray-2);
+  align-items: center;
+  line-height: 1;
+}
+site-search button[data-open-modal] > kbd {
+  border-radius: 0;
+  border: 0;
+  background-color: transparent;
+  padding: 0;
+  gap: 4px;
+  color: var(--sl-color-gray-3);
+}
+site-search button[data-open-modal] kbd {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
+}
+@media (min-width: 50rem) {
+  site-search button[data-open-modal] {
+    height: 36px;
+    padding-inline: 12px;
+    border: 1px solid var(--sl-color-hairline);
+    font-size: 13px;
+  }
+  site-search button[data-open-modal] > span {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    line-height: 1;
+  }
+}
+@media (max-width: 49.999rem) {
+  site-search button[data-open-modal] > kbd {
+    display: none;
+  }
+  site-search button[data-open-modal] {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+site-search dialog {
+  border-radius: 0;
+  border-color: var(--sl-color-hairline);
+  background-color: var(--nudge-popover-bg);
+  box-shadow: none;
+}
+site-search dialog::backdrop {
+  background-color: #0009;
+  backdrop-filter: none;
+}
+site-search .dialog-frame {
+  padding: 20px;
+}
+#starlight__search {
+  --sl-search-corners: 0px;
+  --pagefind-ui-background: var(--sl-color-bg);
+  --pagefind-ui-border: var(--sl-color-hairline);
+  --pagefind-ui-border-radius: 0px;
+  --pagefind-ui-font: var(--font-sans);
+}
+#starlight__search .pagefind-ui__search-input {
+  border-radius: 0;
+  caret-color: var(--nudge-primary);
+  font-size: 16px;
+}
+#starlight__search .pagefind-ui__search-input:focus-visible {
+  outline: 1px solid var(--nudge-primary);
+  outline-offset: -1px;
+}
+#starlight__search
+  :is(.pagefind-ui__result-title, .pagefind-ui__result-nested):is(
+    :hover,
+    :focus-within
+  ) {
+  outline-color: var(--nudge-primary);
+}
+#starlight__search .pagefind-ui__result-link:is(:hover, :focus-visible) {
+  color: var(--nudge-accent);
+}
+
+/* Native details/anchors with a Motion-controlled panel presence lifecycle. */
+mobile-starlight-toc[data-nudge-toc] nav {
+  position: fixed;
+  z-index: var(--sl-z-index-toc);
+  top: calc(var(--sl-nav-height) - 1px);
+  inset-inline: 0;
+  border-top: 1px solid var(--sl-color-hairline);
+}
+@media (min-width: 50rem) {
+  mobile-starlight-toc[data-nudge-toc] nav {
+    inset-inline-start: var(--sl-content-inline-start, 0);
+  }
+}
+mobile-starlight-toc[data-nudge-toc] summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: var(--sl-mobile-toc-height);
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--sl-color-hairline);
+  font-size: 12px;
+  list-style: none;
+}
+mobile-starlight-toc[data-nudge-toc] summary::-webkit-details-marker {
+  display: none;
+}
+mobile-starlight-toc[data-nudge-toc] .toggle {
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1;
+  user-select: none;
+}
+mobile-starlight-toc[data-nudge-toc] .caret {
+  flex-shrink: 0;
+}
+mobile-starlight-toc[data-nudge-toc] summary[aria-expanded='true'] .caret,
+mobile-starlight-toc[data-nudge-toc] details[open]:not([data-state]) .caret {
+  transform: rotate(90deg);
+}
+mobile-starlight-toc[data-nudge-toc] .display-current {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+mobile-starlight-toc[data-nudge-toc] .dropdown {
+  margin-top: -1px;
+  border: 1px solid var(--sl-color-hairline);
+  max-height: calc(85dvh - var(--sl-nav-height) - var(--sl-mobile-toc-height));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform-origin: top left;
+}
+mobile-starlight-toc[data-nudge-toc] ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+mobile-starlight-toc[data-nudge-toc] li + li,
+mobile-starlight-toc[data-nudge-toc] li > ul {
+  border-top: 1px solid var(--sl-color-hairline);
+}
+mobile-starlight-toc[data-nudge-toc] .dropdown a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline: calc(16px + var(--toc-depth) * 12px) 16px;
+  text-decoration: none;
+}
+mobile-starlight-toc[data-nudge-toc] .toc-current-mark {
+  flex-shrink: 0;
+  visibility: hidden;
+}
+mobile-starlight-toc[data-nudge-toc] a[aria-current='true'] .toc-current-mark {
+  visibility: visible;
+}
+mobile-starlight-toc nav {
+  border-color: var(--sl-color-hairline);
+  background-color: var(--sl-color-bg);
+}
+mobile-starlight-toc summary {
+  cursor: pointer;
+}
+mobile-starlight-toc summary:focus-visible {
+  outline: none;
+}
+mobile-starlight-toc .toggle {
+  --frame-inset: 4px;
+  --frame-length: 5px;
+  height: 32px;
+  padding: 8px 10px;
+  gap: 12px;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--sl-color-gray-2);
+  font-size: 12px;
+}
+mobile-starlight-toc details[open] .toggle,
+mobile-starlight-toc summary:focus-visible .toggle {
+  background-image: var(--nudge-frame-paint);
+  border-color: var(--nudge-primary);
+  color: var(--nudge-accent);
+}
+mobile-starlight-toc summary:focus-visible .toggle {
+  --frame-stroke: 2px;
+}
+mobile-starlight-toc .display-current {
+  color: var(--sl-color-gray-3);
+}
+mobile-starlight-toc .dropdown {
+  border-color: var(--sl-color-hairline);
+  border-radius: 0;
+  background-color: var(--nudge-popover-bg);
+  box-shadow: none;
+}
+mobile-starlight-toc .dropdown a {
+  padding-block: 12px;
+  border-color: var(--sl-color-hairline);
+  color: var(--sl-color-gray-2);
+  font-size: 13px;
+}
+mobile-starlight-toc .dropdown a[aria-current='true'] {
+  color: var(--nudge-accent);
+  background-color: transparent;
+}
+starlight-toc a {
+  border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  mobile-starlight-toc .caret {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  mobile-starlight-toc summary:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: -3px;
+  }
+}

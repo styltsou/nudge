@@ -1,11 +1,42 @@
-# Paste this prompt into Codex / Claude Code
+# Continue work on Nudge
 
-You are the implementing engineer for this repo. First read `AGENTS.md`, then every linked document in `README.md`, including `tasks/IMPLEMENTATION.md`. Treat them as the source of truth.
+Read `AGENTS.md`, `README.md`, the linked contributor contracts in `docs/`,
+`tasks/IMPLEMENTATION.md`, and the latest entry in `tasks/SESSION-LOG.md` before
+editing. Inspect the existing implementation; do not restart completed phases.
 
-Build **Nudge** from scratch (intended CLI `usenudge`, workspace packages `@usenudge/*`, local state `.nudge/`): a local-first, framework-neutral visual annotation overlay, Bun local bridge, MCP adapter for existing coding agents, and human before/after review loop. Use Bun for workspace installation, runtime, builds and unit tests. The product should work with a Vite React demo, but the core overlay must not depend on React.
+Nudge lets a developer select an element in a running app, leave a pinned request,
+run their coding agent, and review the actual change in the same browser. Human
+acceptance closes the loop. Optional snapshots support review; they do not prove
+visual correctness.
 
-Start with Phase 0 and continue through Phase 1, moving through Phase 2 and Phase 3 as far as feasible in this session. Prioritize functional vertical slices, not merely scaffolding. Do not ask me to make routine technical choices already settled in the docs. Do not add hosted auth, browser extensions, auto-agent messaging or source-map instrumentation to MVP.
+Managed agent sessions use a separate local runner and a common ACP connection
+for Codex, Claude and OpenCode. Nudge setup manages Codex/Claude adapters in ignored
+`.nudge/agents/`; apps do not need a Claude SDK dependency. Adapters own their
+native authentication, model, tools, permissions and billing. Native subscription
+sign-in and API-key billing are different choices; do not copy credentials or
+promise subscription coverage without checking the provider's supported flow.
 
-Security and truthfulness matter: bind loopback, origin allowlist, capability-scoped tokens, redact DOM, store feedback locally, and accurately label queued vs implemented vs human-accepted. Use the current MCP SDK correctly. Use tests for important state transitions and browser behavior.
+Each prompt, including follow-ups, defaults to a fresh session. Explicit reuse
+must select a compatible session in the same project. Keep annotation revisions,
+runs and sessions separate. Preserve prior evidence and human-only acceptance.
 
-Run actual `bun run` checks as implementation proceeds. When you finish, update the backlog checkboxes and `tasks/SESSION-LOG.md`, summarize completed features, test command outcomes, blocking issues and exact next tasks. Do not report imagined successes.
+The annotation/review loop, durable run/session lifecycle, ACP client and browser
+controls are implemented with deterministic process/browser coverage. Real adapter
+installation and live authenticated edits remain open validation gates. The
+development sandbox could not reach the adapter registry or access some provider
+profile state. Fixture tests and bridge health are not proof of live agent editing.
+
+Work on the earliest relevant incomplete task, prioritizing live ACP validation
+over showcase polish. Implement working vertical slices and update the checklist.
+Use Bun and portable Linux/Windows scripts. There is no demo app: install the archive in an existing Vite project. Default init writes only ignored .nudge state; usenudge dev injects at runtime. Persistent dev-script/config changes require --integrate. Root dev starts the website. See docs/RELEASING.md for packaging; never publish as a validation step. The overlay remains framework-neutral,
+development-only and isolated in Shadow DOM. Keep bridge execution on loopback,
+validate exact origins and separate browser/MCP/runner capabilities. The browser
+and bridge never execute arbitrary shell commands from annotations.
+
+Optional external MCP mode is a separate workflow: users queue a request, then
+ask an existing agent terminal/IDE to fetch it. A saved queue record is not a
+dispatched run. Keep mode-specific labels and documentation truthful.
+
+Run the validation appropriate to the change and report actual results. Update
+`tasks/SESSION-LOG.md` with changes, checks, limitations and next steps. Do not
+publish packages or create external resources without explicit authorization.

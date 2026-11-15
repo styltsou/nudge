@@ -22,7 +22,21 @@ Solo frontend developer using VS Code/Codex/Claude Code/other MCP-capable coding
 
 ## Canonical experience
 
-1. Developer opens demo app with a small floating Nudge toggle.
+**Primary target, clarified by the user:** Submit the request in Nudge, which
+starts and supervises a background coding agent. Progress, questions, approvals,
+stop/retry and review all stay in Nudge. No separate agent terminal/app is needed
+to dispatch work. This is implemented as an ACP development preview, specified
+in [managed agent runs](09-MANAGED-AGENT-RUNS.md). Automated fixtures cover the
+flow; real adapter installation/live authenticated edits remain unvalidated.
+
+Every submitted prompt defaults to a fresh agent session. The composer can
+explicitly route a prompt, including one for a newly selected element, to an
+existing compatible session in this project. Follow-ups also default to fresh
+sessions. Agent sessions and annotation items have independent identities.
+
+### Implemented foundation / optional external MCP mode
+
+1. Developer starts their existing Vite app through `usenudge dev`, with a small floating Nudge toggle.
 2. Developer enables annotation mode: hovered element gets a non-invasive outline.
 3. On click, freeze anchor and show a composer attached near selected region.
 4. Developer enters comment, optionally captures element snapshot, clicks **Queue for agent**.
@@ -41,16 +55,17 @@ Solo frontend developer using VS Code/Codex/Claude Code/other MCP-capable coding
 - Stable-ish DOM anchor with metadata: URL path, tag, textual snippet (limited/redacted), test ID if present, reasonable CSS selector, bounding box, viewport and timestamp.
 - Best-effort element-region before snapshot with capture failure communicated clearly.
 - Local bridge with CRUD/read and state transitions and durable SQLite persistence.
-- MCP tools for listing/getting feedback and submitting implementation.
+- Managed local agent sessions: run from the UI, real progress, supported in-UI approvals/questions, stop/retry and review. See doc 09 for implemented preview behavior and open live-provider validation.
+- Optional MCP tools for existing external sessions to list/get feedback and submit implementation.
 - User-controlled accept / request changes and follow-up history.
 - Live state updates in browser via SSE or polling (choose SSE by default).
 - Before/after UI that refuses to claim verification if after capture is unavailable.
-- End-to-end demo and full setup instructions.
+- Installed-package end-to-end validation and existing-project setup instructions.
 
 ## Explicit non-goals in MVP
 
 - Browser extension and zero-install proxy
-- Auto-send into active agent conversation
+- Unverified prompt injection into arbitrary already-open agent conversations; supported managed sessions are in scope.
 - React Fiber introspection, precise source file/line detection, framework-specific compiler plugins
 - Multi-element/multi-step annotations and bug reproduction traces
 - AI visual scoring or autonomous repair

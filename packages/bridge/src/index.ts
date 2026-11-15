@@ -17,6 +17,15 @@ import type { Action, Annotation, Authority } from '@usenudge/shared';
 import type { BridgeConfig } from './config';
 import { Repository, RepositoryError } from './repository';
 import { SnapshotStore, validatePng } from './snapshots';
+import { RunStore } from './runs';
+import {
+  activeRun,
+  dispatchSchema,
+  answerSchema,
+  runUpdateSchema,
+  readinessSchema,
+  type Readiness,
+} from '../../shared/src/runs';
 
 function matches(actual: string, expected: string) {
   return (
@@ -36,8 +45,14 @@ export function createBridge(config: BridgeConfig) {
     config.projectId,
   );
   const snapshots = new SnapshotStore(config.stateDir);
+  const runs = new RunStore(repo, config.projectId, config.provider);
+  const recovery = setInterval(() => {
+    runs.recover();
+    notifyRuns();
+  }, 5000);
   const authorities = new WeakMap<object, Authority>();
   const clients = new Set<ServerResponse>();
+  let readiness: Readiness | undefined;
   let windowStart = Date.now();
   let requestCount = 0;
   app.setErrorHandler((error, _request, reply) => {
@@ -110,6 +125,28 @@ export function createBridge(config: BridgeConfig) {
       });
     const header = request.headers.authorization ?? '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+    if (
+      config.runnerToken &&
+      /^[a-f0-9]{64}$/.test(token) &&
+      matches(token, config.runnerToken)
+    ) {
+      if (
+        origin ||
+        !config.managed ||
+        !request.url.startsWith('/api/v1/runner/')
+      )
+        return reply.code(403).send({
+          error: { code: 'SCOPE_DENIED', message: 'Runner channel required' },
+        });
+      return;
+    }
+    if (request.url.startsWith('/api/v1/runner/'))
+      return reply.code(403).send({
+        error: {
+          code: 'SCOPE_DENIED',
+          message: 'Runner capability required',
+        },
+      });
     let authority: Authority | undefined;
     if (/^[a-f0-9]{64}$/.test(token)) {
       if (matches(token, config.browserToken)) authority = 'browser';
@@ -143,6 +180,77 @@ export function createBridge(config: BridgeConfig) {
     }
   }
   app.get('/health', async () => ({ ok: true, service: 'Nudge' }));
+  const notifyRuns = () => {
+    for (const c of clients) c.write('event: annotation.runs\ndata: {}\n\n');
+  };
+  app.get('/api/v1/managed', async (_request, _reply) => ({
+    ...runs.publicState(!!config.managed),
+    setupCommand: config.setupCommand ?? 'bunx --bun usenudge',
+    ...(readiness ? { readiness } : {}),
+  }));
+  app.post('/api/v1/runner/readiness', async (request, reply) => {
+    const input = readinessSchema.safeParse(request.body);
+    if (!input.success || input.data.provider !== (config.provider ?? 'codex'))
+      return reply
+        .code(400)
+        .send({ error: { message: 'Invalid readiness state' } });
+    readiness = input.data;
+    notifyRuns();
+    return { ok: true };
+  });
+  app.post('/api/v1/runs', async (request, reply) => {
+    if (!config.managed || authorities.get(request) !== 'browser')
+      return reply
+        .code(403)
+        .send({ error: { message: 'Managed browser mode required' } });
+    const input = dispatchSchema.safeParse(request.body);
+    if (!input.success)
+      return reply
+        .code(400)
+        .send({ error: { message: 'Invalid run request' } });
+    const run = runs.dispatch(input.data);
+    notifyRuns();
+    return { id: run.id };
+  });
+  for (const action of ['stop', 'answer'] as const)
+    app.post<{ Params: { id: string } }>(
+      `/api/v1/runs/:id/${action}`,
+      async (request, reply) => {
+        if (authorities.get(request) !== 'browser')
+          return reply
+            .code(403)
+            .send({ error: { message: 'Browser required' } });
+        if (action === 'stop') runs.stop(request.params.id);
+        else {
+          const input = answerSchema.safeParse(request.body);
+          if (!input.success)
+            return reply
+              .code(400)
+              .send({ error: { message: 'Invalid answer' } });
+          runs.answer(request.params.id, input.data);
+        }
+        notifyRuns();
+        return { ok: true };
+      },
+    );
+  app.post('/api/v1/runner/claim', async () => {
+    const job = runs.claim();
+    if (job) notifyRuns();
+    return job;
+  });
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/runner/:id/update',
+    async (request, reply) => {
+      const input = runUpdateSchema.safeParse(request.body);
+      if (!input.success)
+        return reply
+          .code(400)
+          .send({ error: { message: 'Invalid runner event' } });
+      const result = runs.update(request.params.id, input.data);
+      if (input.data.type !== 'heartbeat' || result.answer) notifyRuns();
+      return result;
+    },
+  );
   app.get('/api/v1/annotations', async (request, reply) => {
     const query = request.query as { status?: string };
     if (
@@ -199,6 +307,16 @@ export function createBridge(config: BridgeConfig) {
       `/api/v1/annotations/:id/${action}`,
       async (request, reply) => {
         const authority = authorities.get(request);
+        if (
+          runs
+            .runs()
+            .some((r) => r.annotationId === request.params.id && activeRun(r))
+        )
+          throw new RepositoryError(
+            409,
+            'MANAGED_RUN_ACTIVE',
+            'Stop or finish the managed run before changing this annotation.',
+          );
         if (!authority || !canAct(authority, action))
           return reply.code(403).send({
             error: {
@@ -333,6 +451,9 @@ export function createBridge(config: BridgeConfig) {
   app.addHook('preClose', async () => {
     for (const client of clients) client.end();
   });
-  app.addHook('onClose', async () => repo.close());
+  app.addHook('onClose', async () => {
+    clearInterval(recovery);
+    repo.close();
+  });
   return app;
 }

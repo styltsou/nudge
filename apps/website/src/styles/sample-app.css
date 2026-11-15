@@ -1,0 +1,359 @@
+/* A small working-context example, with Nudge beside the selected app element. */
+.demo-playback {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+  font-size: 10px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.demo-playback:is(:hover, :focus-visible) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.walkthrough-top .sample-label {
+  margin-left: auto;
+}
+.hero-demo .walkthrough-body {
+  overflow: hidden;
+}
+.hero-demo .app-activity {
+  display: none;
+}
+.hero-demo .walkthrough-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  padding: 0;
+}
+.hero-demo [data-panel] {
+  min-height: 0;
+}
+.nudge-example-pane {
+  position: absolute;
+  z-index: 2;
+  top: 134px;
+  right: 24px;
+  width: 310px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  background: var(--canvas);
+  min-width: 0;
+  overflow: visible;
+}
+.example-pane-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+.example-pane-title strong {
+  font-size: 15px;
+  font-weight: 550;
+}
+.example-pane-title span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.example-pane-title button {
+  align-self: flex-start;
+}
+.sample-comment-pin {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--canvas);
+  border-radius: 50% 50% 50% 2px;
+  background: var(--nudge-primary);
+  color: var(--nudge-primary-ink);
+  font-size: 10px;
+  z-index: 3;
+}
+.hero-demo .walkthrough[data-comment-layout='sidebar'] .walkthrough-body {
+  grid-template-columns: minmax(0, 1fr) 310px;
+}
+.walkthrough[data-comment-layout='sidebar'] .nudge-example-pane {
+  position: static;
+  width: auto;
+  border: 0;
+  border-left: 1px solid var(--line);
+}
+.walkthrough[data-step='2']:not([data-comment-layout='sidebar'])
+  .nudge-example-pane {
+  top: 16px;
+}
+.sample-app {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  min-width: 0;
+  background: var(--surface);
+  overflow: hidden;
+}
+.sample-app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 12px;
+  border-right: 1px solid var(--line);
+  font-size: 10px;
+  color: var(--muted);
+}
+.sample-app-nav strong {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+  margin-bottom: 24px;
+  padding-inline: 8px;
+}
+.sample-app-nav strong span {
+  display: block;
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.sample-app-nav > div {
+  padding: 9px 8px;
+}
+.app-nav-active {
+  background: var(--raised);
+  color: var(--ink);
+}
+.app-nav-bottom {
+  margin-top: auto;
+  padding: 12px 8px;
+}
+.sample-app-main {
+  min-width: 0;
+  padding: 24px;
+}
+.app-breadcrumb {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 34px;
+}
+.app-breadcrumb span {
+  padding-inline: 8px;
+}
+.app-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+.app-title-row p {
+  margin: 0 0 7px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.app-title-row h3 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+}
+.app-title-row .selected-element {
+  flex-shrink: 0;
+  padding: 4px;
+}
+.app-title-row .example-button {
+  font-size: 10px;
+  padding: 8px 10px;
+}
+.app-title-row .selection-anchor {
+  font-size: 8px;
+}
+.app-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.app-metrics > div {
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  padding: 14px;
+  min-width: 0;
+}
+.app-metrics span,
+.app-metrics small {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+}
+.app-metrics strong {
+  display: block;
+  font-size: 24px;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  margin: 14px 0 8px;
+}
+.app-chart {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+}
+.app-chart-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 10px;
+}
+.app-chart-heading strong {
+  font-weight: 500;
+}
+.app-chart-heading > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+.app-bars {
+  height: 135px;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  padding-top: 18px;
+}
+.app-bars > div {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 8px;
+}
+.app-bars span {
+  width: 100%;
+  max-width: 36px;
+  background: var(--line-strong);
+}
+.app-bars small {
+  color: var(--muted);
+  font-size: 8px;
+}
+.app-activity {
+  margin-top: 22px;
+  font-size: 10px;
+}
+.app-activity > strong {
+  font-weight: 500;
+}
+.app-activity > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.app-activity small {
+  font-size: 9px;
+}
+.walkthrough[data-step='2'] .app-title-row .example-button {
+  padding: 13px 16px;
+}
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--ink);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 550;
+}
+.button-secondary:is(:hover, :focus-visible) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+@media (max-width: 1100px) {
+  .sample-app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sample-app-nav {
+    display: none;
+  }
+  .app-metrics > div {
+    padding: 10px;
+  }
+  .app-metrics strong {
+    font-size: 20px;
+  }
+}
+@media (max-width: 800px) {
+  .walkthrough-top .sample-label {
+    display: none;
+  }
+  .hero-demo .walkthrough {
+    aspect-ratio: auto;
+  }
+  .hero-demo .walkthrough-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nudge-example-pane {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .hero-demo .walkthrough[data-comment-layout='sidebar'] .walkthrough-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .walkthrough[data-step='2']:not([data-comment-layout='sidebar'])
+    .nudge-example-pane {
+    top: auto;
+  }
+  .sample-app-main {
+    padding: 24px;
+  }
+  .app-breadcrumb {
+    margin-bottom: 30px;
+  }
+  .app-chart {
+    margin-top: 14px;
+  }
+  .app-bars {
+    height: 110px;
+  }
+  .app-activity {
+    display: none;
+  }
+}
+@media (max-width: 520px) {
+  .sample-app-main {
+    padding: 20px 14px;
+  }
+  .app-title-row {
+    gap: 18px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .app-title-row .selected-element {
+    align-self: flex-end;
+  }
+  .app-metrics {
+    gap: 6px;
+  }
+  .app-metrics strong {
+    font-size: 18px;
+  }
+  .app-metrics span,
+  .app-metrics small {
+    font-size: 8px;
+  }
+  .app-metrics > div {
+    padding: 9px 7px;
+  }
+  .button-secondary {
+    padding-inline: 13px;
+    font-size: 11px;
+  }
+}

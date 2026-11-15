@@ -1,0 +1,50 @@
+@theme {
+  --font-sans: 'Public Sans Variable', 'Public Sans', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Liberation Mono', monospace;
+  --color-ink: #15171a;
+  --color-muted: #626a73;
+  --color-nudge: var(--color-accent-500);
+  --color-frost: #f7f8fa;
+  --color-line: #e6e8eb;
+  --color-accept: #217454;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f4;
+  --color-gray-200: #e5e5e5;
+  --color-gray-300: #c5c5c5;
+  --color-gray-400: #939393;
+  --color-gray-500: #737373;
+  --color-gray-600: #656565;
+  --color-gray-700: #444;
+  --color-gray-800: #242424;
+  --color-gray-900: #181818;
+  --color-gray-950: #0a0a0a;
+  --color-accent-50: #fff5f3;
+  --color-accent-100: #ffe6e2;
+  --color-accent-200: #ffc7c1;
+  --color-accent-300: #ffa297;
+  --color-accent-400: #ef6b5e;
+  --color-accent-500: #e05246;
+  --color-accent-600: #c43d35;
+  --color-accent-700: #a8322b;
+  --color-accent-800: #8a2b26;
+  --color-accent-900: #712823;
+  --color-accent-950: #3b1210;
+}
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --nudge-popover-bg: #f4f4f4;
+  --nudge-primary: var(--color-accent-500);
+  --nudge-primary-ink: #000;
+  --nudge-accent: var(--color-accent-700);
+  --nudge-accent-soft: var(--color-accent-50);
+  --nudge-accent-ink: #fff;
+}
+
+:root[data-theme='dark'] {
+  --nudge-popover-bg: #101010;
+  --nudge-primary: var(--color-accent-400);
+  --nudge-accent: var(--color-accent-400);
+  --nudge-accent-soft: var(--color-accent-950);
+  --nudge-accent-ink: #000;
+}

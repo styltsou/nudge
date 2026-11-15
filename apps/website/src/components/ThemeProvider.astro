@@ -1,0 +1,19 @@
+<script is:inline>
+  (() => {
+    let saved;
+    try {
+      saved = localStorage.getItem('starlight-theme');
+    } catch {
+      /* Follow the system when storage is unavailable. */
+    }
+    const systemIsDark =
+      typeof matchMedia === 'function' &&
+      matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.theme =
+      saved === 'light' || saved === 'dark'
+        ? saved
+        : systemIsDark
+          ? 'dark'
+          : 'light';
+  })();
+</script>

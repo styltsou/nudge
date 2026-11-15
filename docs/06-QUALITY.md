@@ -2,7 +2,14 @@
 
 ## Definition of done for MVP
 
-A developer can run `bun run dev`, annotate an element in the demo, reload without losing the request, retrieve it from a registered MCP server, report implementation, see ready-for-review status update in the browser, review original and updated element snapshots (or explicit unavailable state), and accept or request changes. All documented checks run; failed tests are fixed or accurately reported.
+The user clarified an additional required gate: after one-time agent setup,
+request → managed agent run → progress/required approvals → implementation →
+review → follow-up must work entirely inside Nudge. Include cancellation,
+failure/retry, duplicate submission and restart recovery. See
+[the target contract](09-MANAGED-AGENT-RUNS.md). This gate is open; the implemented
+ACP fixture coverage does not replace live authenticated provider validation.
+
+A developer can install the archive in an existing Vite app, run `bunx --bun usenudge dev`, annotate an element, reload without losing the request, retrieve it from a registered MCP server, report implementation, see ready-for-review status update in the browser, review original and updated element snapshots (or explicit unavailable state), and accept or request changes. All documented checks run; failed tests are fixed or accurately reported.
 
 ## Automated tests
 
@@ -24,7 +31,7 @@ A developer can run `bun run dev`, annotate an element in the demo, reload witho
 - SSE emits events and reconnecting clients refetch state.
 - Unknown Origin / no auth / incorrect credential scope denied.
 
-### End-to-end (Playwright against demo)
+### End-to-end (Playwright against temporary consumer fixtures)
 
 1. App loads with a single toggle and annotation mode off; normal controls click normally.
 2. Enable annotation mode, hover card, see correct highlight, select without firing card action.
@@ -41,7 +48,7 @@ A developer can run `bun run dev`, annotate an element in the demo, reload witho
 
 ### Manual cross-checks
 
-Automated local verification currently covers 65 unit/integration tests and six installed-Chrome browser scenarios. Browser setup owns isolated Vite/Fastify instances, with direct teardown on Bun/Windows. Bundled Chromium remains the CI browser. See the session log for exact outcomes; automated execution and a captured screenshot do not count as developer manual acceptance of a real annotation.
+The current slice passed 91 unit/integration tests and 12 installed-Chrome tool browser scenarios. These include deterministic ACP processes and onboarding, not live model edits. Browser setup owns isolated Vite/Fastify instances and a unique state directory per suite, with direct teardown on Bun/Windows. Bundled Chromium remains the CI browser. Website checks run separately. See the session log for exact outcomes; automated execution and a captured screenshot do not count as developer manual acceptance of a real annotation.
 
 - Light/dark app theme contrast.
 - Scrolling and responsive width changes.
@@ -56,8 +63,8 @@ Automated local verification currently covers 65 unit/integration tests and six 
 - `bun run typecheck` across packages, TS strict (no casual `any`).
 - `bun run lint` Oxlint enforced.
 - `bun run test` unit/integration.
-- `bun run test:e2e` Playwright Chromium and small seeded demo.
-- `bun run build` all packages + demo.
+- `bun run test:e2e` Playwright Chromium and temporary consumer fixtures.
+- `bun run build` all packages + website.
 - `bun run format:check` if formatter selected.
 
 ## CI
@@ -67,6 +74,6 @@ On PRs: install with frozen lockfile, typecheck, lint, test, build and e2e. Cach
 ## Practical acceptance considerations
 
 - Do not assert pixel-perfect screenshots in environments with different font rendering; test presence, dimensions and state transitions, and use consistent rendering where needed.
-- Measure overlay impact in demo informally (no excessive pointer handlers or layout thrashing); document known limits.
+- Measure overlay impact in a consumer app informally (no excessive pointer handlers or layout thrashing); document known limits.
 - Prefer realistic E2E scenarios over snapshots of the UI alone.
 - Release only after local end-to-end test manually demonstrated.

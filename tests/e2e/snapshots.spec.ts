@@ -1,13 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './context';
 import type { APIRequestContext, Page } from '@playwright/test';
 import { readFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Annotation } from '../../packages/shared/src/index';
 
-const base = 'http://127.0.0.1:4748/api/v1';
+const base = process.env.NUDGE_E2E_BRIDGE_URL + '/api/v1';
 function auth() {
   const credentials = JSON.parse(
-    readFileSync(resolve('.nudge/e2e/credentials.json'), 'utf8'),
+    readFileSync(
+      resolve(process.env.NUDGE_STATE_DIR ?? '.nudge/e2e', 'credentials.json'),
+      'utf8',
+    ),
   ) as { mcpToken: string };
   return { Authorization: `Bearer ${credentials.mcpToken}` };
 }
@@ -39,9 +42,7 @@ async function queue(page: Page, request: APIRequestContext) {
     .getByRole('button', { name: 'Queue for agent', exact: true })
     .click();
   await expect(
-    host.getByRole('button', {
-      name: new RegExp(`Queued for agent.*${comment}`),
-    }),
+    host.getByRole('heading', { name: 'Queued for agent', exact: true }),
   ).toBeVisible({ timeout: 15000 });
   const response = await request.get(`${base}/annotations`, {
     headers: auth(),
@@ -50,8 +51,13 @@ async function queue(page: Page, request: APIRequestContext) {
     (a) => a.revisions[0]!.comment === comment,
   )!;
   expect(annotation).toBeDefined();
+  await expect(
+    host.getByRole('img', { name: 'Before snapshot', exact: true }),
+  ).toHaveCount(0);
   await host
-    .getByRole('button', { name: new RegExp(`Queued for agent.*${comment}`) })
+    .locator('summary')
+    .filter({ hasText: 'View comparison' })
+    .first()
     .click();
   return annotation;
 }
@@ -64,7 +70,7 @@ async function report(request: APIRequestContext, id: string) {
       data: {
         expectedVersion: a.version,
         summary: 'Adjusted chart height and spacing',
-        changedFiles: ['apps/demo/src/style.css'],
+        changedFiles: ['styles.css'],
       },
     },
   );
@@ -155,6 +161,11 @@ test('real before/after captures survive refresh and retain immutable history ac
   await expect(
     host.getByRole('heading', { name: 'Revision history' }),
   ).toBeVisible();
+  for (const summary of await host
+    .locator('summary')
+    .filter({ hasText: 'View comparison' })
+    .all())
+    await summary.click();
   await expect(
     host.getByRole('img', { name: 'After snapshot', exact: true }),
   ).toHaveCount(2);
