@@ -63,8 +63,13 @@ h2 { font-size: 13px; margin: 0 0 8px; font-weight: 600; } h3 { font-size: 12px;
 p { margin: 6px 0; overflow-wrap: anywhere; } small { color: var(--muted); font-size: 11px; }
 .actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .outline { position: fixed; pointer-events: none; border: 2px solid var(--accent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
-.item { display: flex; width: 100%; justify-content: flex-start; gap: 8px; text-align: left; margin: 0 0 4px; padding: 8px 10px; background: var(--surface); }
-.item-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: start; column-gap: 10px; width: 100%; min-height: 0; margin: 0; padding: 9px 10px; text-align: left; background: transparent; border: 0; border-radius: 8px; }
+.item:hover, .row[data-highlight=true] .item { background: var(--raised); }
+.item > .dot, .item > .spinner { margin-top: 5px; }
+.item-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.item-excerpt { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-meta { display: flex; align-items: center; gap: 6px; padding-top: 1px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.item-title { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
 .dot[data-state=review] { background: var(--accent); }
 .dot[data-state=accepted] { background: var(--accept); }
@@ -111,9 +116,12 @@ button[data-offline=true]::after { content: ''; position: absolute; top: 5px; ri
 @starting-style { .panel.sidebar { transform: translateX(100%); } }
 .panel.sidebar[data-closing=true] { transform: translateX(100%); }
 @media (prefers-reduced-motion: reduce) { .panel.sidebar { transition: none; } }
-.row { position: relative; display: flex; align-items: center; margin: 0 0 4px; }
-.row .item { margin: 0; padding-right: 10px; }
-.row-actions { position: absolute; right: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity .12s; background: var(--surface); border-radius: 8px; }
+.row { position: relative; display: flex; align-items: center; }
+.row .item { margin: 0; }
+.row-actions { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+.item-meta { transition: opacity .12s; }
+/* The actions take the meta's place instead of covering it. */
+.row:hover .item-meta, .row:focus-within .item-meta, .row[data-confirm=true] .item-meta { opacity: 0; }
 .row:hover .row-actions, .row:focus-within .row-actions, .row[data-confirm=true] .row-actions { opacity: 1; }
 .row-actions button.icon { width: 26px; height: 26px; }
 .row[data-archived=true] .item { opacity: .6; }
@@ -126,9 +134,10 @@ button[data-offline=true]::after { content: ''; position: absolute; top: 5px; ri
 button.danger { background: var(--danger); border-color: var(--danger); color: var(--bg); font-weight: 600; }
 .tray-filter { display: block; margin: 8px 0 0; font-size: 11px; color: var(--muted); background: none; border: 0; padding: 4px 0; min-height: 0; }
 .tray-filter:hover { color: var(--ink); }
-@media (hover: none) { .row-actions { opacity: 1; } }
+@media (hover: none) { .row-actions { opacity: 1; } .item-meta { opacity: 0; } }
+.row[data-confirm=true] .row-actions { background: var(--raised); border-radius: 8px; padding-left: 6px; }
 .pin-chip { flex: none; display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 50% 50% 50% 3px; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 700; }
-.row[data-highlight=true] .item { border-color: var(--accent); }
+.row[data-highlight=true] .item { box-shadow: inset 2px 0 0 var(--accent); }
 .pin { transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out); }
 .pin[data-highlight=true] { transform: scale(1.18); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent), 0 2px 8px #0004; }
 .pin[data-covered=true] { opacity: 0; pointer-events: none; }
@@ -1217,11 +1226,15 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       const chip = number
         ? node('span', String(number), 'pin-chip')
         : node('span', 'Page', 'tag');
-      item.append(
-        dot,
-        node('span', sessionTitle(a) ?? comment.split('\n')[0], 'item-title'),
-        chip,
+      const title = sessionTitle(a) ?? comment.split('\n')[0]!;
+      const body = node('span', undefined, 'item-body');
+      body.append(
+        node('span', title, 'item-title'),
+        node('span', excerptFor(a, title), 'item-excerpt'),
       );
+      const meta = node('span', undefined, 'item-meta');
+      meta.append(node('span', relativeTime(a.updatedAt)), chip);
+      item.append(dot, body, meta);
       const row = node('div', undefined, 'row');
       row.dataset.archived = String(!!a.archivedAt);
       row.dataset.annotationId = a.id;
@@ -1298,6 +1311,28 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     });
     actions.append(archive, remove);
     return actions;
+  }
+  /** Second line of a row: what the agent did or is doing, else the prompt. */
+  function excerptFor(a: Annotation, title: string) {
+    const latest = a.revisions.at(-1)!;
+    if (latest.implementation) return latest.implementation.summary;
+    const run = managed.state.runs
+      .filter((r) => r.annotationId === a.id)
+      .at(-1);
+    if (run && dotState(a) === 'working')
+      return run.events.at(-1)?.text ?? 'Working…';
+    const prompt = latest.comment.replace(/\s+/g, ' ').trim();
+    // Show the prompt when the title is the agent's; else the rest of it.
+    return prompt !== title && !prompt.startsWith(title)
+      ? prompt
+      : prompt.slice(title.length).trim() || statusLabels[a.status];
+  }
+  function relativeTime(iso: string) {
+    const seconds = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
+    if (seconds < 60) return 'now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+    return `${Math.floor(seconds / 86400)}d`;
   }
   /** The agent-generated title of this request's latest session, once known. */
   function sessionTitle(a: Annotation) {

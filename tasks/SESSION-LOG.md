@@ -1243,3 +1243,15 @@ public --tag preview` failed with missing authentication. The alternate local
   details" first.
 - Validation: tsc, oxlint, prettier, 112 unit/contract, all 13 browser tests;
   dialog checked from the onboarding test screenshot (light theme).
+
+## Flush side-panel list with title, excerpt and time
+
+- Side-panel rows are a flush list instead of cards: transparent rows, hover and
+  pin-linked highlight on a soft background with an accent edge. Each row shows
+  status (dot or grid spinner), a title (agent-generated or the prompt's first
+  line), a one-line excerpt (agent summary when finished, the latest activity
+  while working, else the prompt or status) and a relative time with the pin
+  number or Page tag. Archive/delete icons replace the time and marker on hover
+  (always shown on touch, where the meta hides).
+- Validation: tsc, oxlint, prettier, 112 unit/contract, 13 browser tests; dark
+  and light screenshots taken with Playwright against the preview app.
