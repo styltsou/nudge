@@ -213,8 +213,8 @@ textarea, select { box-shadow: inset 0 1px 2px var(--well); }
 .segmented button[aria-checked=true] { background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom)); box-shadow: inset 0 1px 0 var(--hl), 0 1px 2px var(--drop); }
 .pin { background: linear-gradient(180deg, #f3786c, #d9493d); box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 2px 6px rgb(0 0 0 / .35); }
 /* Press feedback: every button scales down slightly; release is just as quick. */
-button:active:not(:disabled) { transform: scale(.97); }
-.pin:active { transform: scale(.94); }
+button:active:not(:disabled) { transform: scale(.985); }
+.pin:active { transform: scale(.96); }
 @media (prefers-reduced-motion: reduce) { button:active { transform: none !important; } }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
