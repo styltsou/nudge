@@ -1097,3 +1097,62 @@ h2 {
 .sample-comparison figure {
   border-radius: var(--radius);
 }
+/* Sections end in rounded, inset panels rather than full-width hard edges. */
+.site-header {
+  height: 60px;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.site-header > .brand {
+  padding-inline: 20px;
+}
+.hero-demo .walkthrough {
+  border-inline: 1px solid var(--line);
+}
+.workflow-rail,
+.local-section {
+  margin-inline: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.site-footer {
+  margin-bottom: 14px;
+  border-radius: var(--radius-lg);
+}
+@media (max-width: 800px) {
+  .hero-demo {
+    padding-inline: 16px;
+  }
+  .workflow-rail,
+  .local-section {
+    margin-inline: 16px;
+  }
+}
+/* Header and footer sit on the code-block surface, reading as inset panels. */
+.site-header,
+.site-footer {
+  background: var(--surface);
+}
+/* The demo uses the same shapes as the real overlay. */
+.app-metrics > div,
+.app-chart {
+  border-radius: var(--radius);
+}
+.app-nav-active,
+.sample-primary,
+.sample-secondary,
+.sample-accept,
+.demo-playback,
+.button-secondary,
+.example-pane-title button,
+.sample-comment {
+  border-radius: var(--radius-sm);
+}
+.nudge-example-pane {
+  border-color: var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 48px #0000004d;
+}

@@ -212,14 +212,17 @@ starlight-theme-select select {
 .sidebar-content :is(a, summary) {
   border-radius: 8px;
 }
-.sidebar-content :is(a, summary):is(:hover, :focus-visible),
-.sidebar-content a[aria-current='page'] {
+/* Hover adds a background only; the current page also takes the accent text. */
+.sidebar-content :is(a, summary):is(:hover, :focus-visible) {
   /* Beats the frame-paint hover in frames.css, which has a heavier selector. */
   background-image: none !important;
   background-color: var(--sl-color-gray-6);
-  color: var(--sl-color-white);
+  color: var(--sl-color-gray-2) !important;
 }
 .sidebar-content a[aria-current='page'] {
+  background-image: none !important;
+  background-color: var(--sl-color-gray-6);
+  color: var(--nudge-accent) !important;
   font-weight: 500;
 }
 .sidebar-content .top-level :is(a, summary)::after {

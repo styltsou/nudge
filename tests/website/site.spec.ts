@@ -236,6 +236,7 @@ test('header links frame on hover/focus; sidebar rows fill on hover and selectio
       'rgba(0, 0, 0, 0)',
     );
     await expect(selected).toHaveCSS('background-image', 'none');
+    // The current page takes the accent text; hover only adds a background.
     const accent = await selected.evaluate((el) => {
       const probe = document.createElement('span');
       probe.style.color = 'var(--nudge-accent)';
@@ -244,10 +245,12 @@ test('header links frame on hover/focus; sidebar rows fill on hover and selectio
       probe.remove();
       return color;
     });
+    await expect(selected).toHaveCSS('color', accent);
     const nextLink = page
       .locator('.sidebar-content')
       .getByRole('link', { name: 'Snapshots', exact: true });
     await nextLink.hover();
+    await expect(nextLink).not.toHaveCSS('color', accent);
     await expect(nextLink).not.toHaveCSS(
       'background-color',
       'rgba(0, 0, 0, 0)',

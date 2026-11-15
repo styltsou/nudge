@@ -1276,3 +1276,18 @@ public --tag preview` failed with missing authentication. The alternate local
 - Validation: prettier, oxlint, tsc, 112 unit/contract, 13 overlay browser
   tests, 15 website tests; screenshots (Playwright, installed Chrome) of the
   overlay in several layouts/themes and of the site before/after.
+
+## Website: no hard edges; docs row states
+
+- Header and footer are rounded inset panels on the code-block surface;
+  the step rail and "Your project" band are rounded inset panels instead of
+  full-width strips; the demo has a full rounded border (inset only on small
+  screens, so its fixed desktop height still fits without internal scroll);
+  the theme toggle lost its separator.
+- Docs sidebar: hover adds a background only (normal text colour); the current
+  page has the accent text on a soft background.
+- Demo internals match the overlay: rounded metric/chart cards, rounded demo
+  popover with softer border and shadow, rounded buttons and comment box.
+- Validation: prettier, oxlint, 15 website tests (the demo-overflow test caught
+  the first inset attempt); screenshots of home, docs nav and the demo in both
+  themes from the built site.
