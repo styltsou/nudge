@@ -10,13 +10,13 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text = '') => {
 export class OnboardingPanel {
   readonly dialog = el('dialog');
   private select = el('select');
-  private status = el('div');
   private command = el('code');
   private copy = el('button', 'Copy setup command');
   private feedback = el('p');
   private begin = el('button', 'Annotate your first element');
   private login = el('code');
-  private agents = el('div');
+  private checks = el('details');
+  private summary = el('p');
   private use = el('button');
   private signIn = el('button');
   private task = el('p');
@@ -84,7 +84,8 @@ export class OnboardingPanel {
         check.disabled = false;
       }
     };
-    this.agents.className = 'setup-agents';
+    this.checks.className = 'setup-details';
+    this.summary.className = 'setup-summary';
     this.use.type = 'button';
     this.signIn.type = 'button';
     const act =
@@ -134,7 +135,7 @@ export class OnboardingPanel {
       this.login,
       el(
         'p',
-        'API keys may use separate API billing. Nudge never asks for your password or token.',
+        'API keys may use separate API billing. Nudge never asks for your password or token. Your agent’s permissions apply; cloud-backed models receive request and project context.',
       ),
     );
     const appearance = el('div');
@@ -143,24 +144,24 @@ export class OnboardingPanel {
       el('span', 'Appearance'),
       themeControl(shadow.host as HTMLElement),
     );
+    // Compact by default: choice, one-line state, actions. Details and
+    // setup steps open by themselves only while something needs attention.
+    const agentActions = el('div');
+    agentActions.className = 'setup-row';
+    agentActions.append(this.use, this.signIn);
+    appearance.classList.add('setup-footer');
     this.dialog.append(
       header,
-      appearance,
-      el('p', 'Point at your UI, describe the change, and review the result.'),
       label,
       this.select,
-      this.agents,
-      this.use,
-      this.signIn,
+      agentActions,
       this.task,
-      this.status,
+      this.summary,
+      this.checks,
       this.instructions,
-      el(
-        'small',
-        'Your agent’s permissions apply. Cloud-backed models receive request and project context.',
-      ),
       this.feedback,
       actions,
+      appearance,
     );
     this.dialog.addEventListener('close', () => this.trigger.focus());
     shadow.append(this.dialog);
@@ -185,27 +186,24 @@ export class OnboardingPanel {
   }
   private renderAgents(selected: Provider, current: boolean) {
     const reports = this.state.agents ?? [];
-    this.agents.replaceChildren();
-    for (const p of providers) {
+    for (const option of this.select.options) {
+      const p = option.value as Provider;
       const r = reports.find((a) => a.provider === p);
-      const text = !r
-        ? 'Checking…'
-        : [
-            r.installed ? 'CLI found' : 'CLI not found',
-            r.adapter === 'available'
-              ? 'adapter ready'
-              : 'adapter not installed',
-            r.auth === 'signed-in'
-              ? 'signed in'
-              : r.auth === 'login-required'
-                ? 'sign-in needed'
-                : 'sign-in unverified',
-          ].join(' · ');
-      const row = el(
-        'p',
-        `${names[p]}${this.state.enabled && p === this.state.provider ? ' (in use)' : ''}: ${text}`,
-      );
-      this.agents.append(row);
+      const status = !r
+        ? ''
+        : !r.installed && p === 'opencode'
+          ? 'not installed'
+          : r.auth === 'signed-in'
+            ? 'signed in'
+            : r.auth === 'login-required'
+              ? 'sign-in needed'
+              : r.installed
+                ? 'installed'
+                : 'CLI not found';
+      const inUse = this.state.enabled && p === this.state.provider;
+      option.textContent = [names[p], inUse ? 'in use' : '', status]
+        .filter(Boolean)
+        .join(' · ');
     }
     const task = this.state.setup;
     const busy = !!task && ['pending', 'running'].includes(task.state);
@@ -287,26 +285,21 @@ export class OnboardingPanel {
       ],
     ];
     this.renderAgents(selected, current);
-    this.status.replaceChildren();
     const list = el('dl');
     list.className = 'setup-checks';
     for (const [label, text] of rows)
       list.append(el('dt', label!), el('dd', text!));
-    this.status.append(list);
+    this.checks.replaceChildren(el('summary', 'Connection details'), list);
     const ready =
       this.connected &&
       online &&
       !!fresh &&
       readiness.adapter === 'available' &&
       readiness.auth !== 'login-required';
-    this.status.append(
-      el(
-        'p',
-        ready
-          ? 'Connection available. Start with a small request; this check does not verify model access.'
-          : 'Complete setup, sign in with your agent, and restart dev. You can still annotate and save requests.',
-      ),
-    );
+    this.summary.textContent = ready
+      ? 'Ready. Start with a small request; this does not verify model access.'
+      : 'Finish setup or sign in to run agents. You can still annotate and save requests.';
+    this.summary.dataset.ready = String(ready);
     this.command.textContent = `${this.state.setupCommand ?? 'bunx --bun usenudge'} agents --agent ${selected} --managed`;
     this.login.textContent =
       selected === 'codex'
@@ -321,6 +314,7 @@ export class OnboardingPanel {
     const instructionsKey = `${selected}:${current}:${online}:${readiness?.adapter}:${readiness?.auth}`;
     if (instructionsKey !== this.instructionsKey) {
       this.instructions.open = !ready;
+      this.checks.open = !ready;
       this.instructionsKey = instructionsKey;
     }
     this.trigger.dataset.needsSetup = String(

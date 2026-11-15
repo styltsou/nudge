@@ -127,6 +127,18 @@ button.danger { background: var(--danger); border-color: var(--danger); color: v
 .tray-filter { display: block; margin: 8px 0 0; font-size: 11px; color: var(--muted); background: none; border: 0; padding: 4px 0; min-height: 0; }
 .tray-filter:hover { color: var(--ink); }
 @media (hover: none) { .row-actions { opacity: 1; } }
+.pin-chip { flex: none; display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 50% 50% 50% 3px; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 700; }
+.row[data-highlight=true] .item { border-color: var(--accent); }
+.pin { transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+.pin[data-highlight=true] { transform: scale(1.18); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent), 0 2px 8px #0004; }
+.pin[data-covered=true] { opacity: 0; pointer-events: none; }
+.highlight-box { position: fixed; pointer-events: none; border: 2px dashed var(--accent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
+@media (prefers-reduced-motion: reduce) { .pin { transition: none; } }
+.setup-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 4px; }
+.setup-summary { margin: 10px 0 2px; font-size: 12px; color: var(--muted); }
+.setup-summary[data-ready=true] { color: var(--accept); }
+.setup-details summary, .onboarding details > summary { font-size: 12px; }
+.setup-footer { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 14px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
@@ -170,6 +182,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   const toolbar = node('div', undefined, 'toolbar');
   toolbar.style.pointerEvents = 'auto';
   const outline = node('div', undefined, 'outline');
+  const highlightBox = node('div', undefined, 'highlight-box');
+  highlightBox.hidden = true;
   const pins = node('div');
   pins.setAttribute('aria-label', 'Pinned comments');
   outline.hidden = true;
@@ -182,7 +196,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   live.setAttribute('aria-live', 'polite');
   live.style.cssText =
     'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)';
-  shadow.append(style, outline, pins, panel, toolbar, live);
+  shadow.append(style, outline, highlightBox, pins, panel, toolbar, live);
   document.body.append(host);
   // Styled tooltips for anything with data-tip (replaces native titles).
   const tip = node('div', '', 'tip');
@@ -455,6 +469,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     frame = 0;
     drawPins();
     positionComment();
+    drawHighlight();
+    uncoverPins();
     if (point && active && !selected) {
       const target = document.elementFromPoint(point.x, point.y);
       if (
@@ -478,6 +494,39 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       width: `${rect.width}px`,
       height: `${rect.height}px`,
     });
+  }
+  function drawHighlight() {
+    const a = annotations.find((x) => x.id === highlightId);
+    const target = a && !isPageWide(a) ? targetFor(a) : null;
+    for (const [id, pin] of pinButtons)
+      pin.dataset.highlight = String(id === highlightId);
+    highlightBox.hidden = !target;
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    Object.assign(highlightBox.style, {
+      left: `${rect.x}px`,
+      top: `${rect.y}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+    });
+  }
+  /** Pins of other requests under the open popup step aside, not over text. */
+  function uncoverPins() {
+    const box =
+      !panel.hidden && panel.classList.contains('pinned')
+        ? panel.getBoundingClientRect()
+        : null;
+    for (const [id, pin] of pinButtons) {
+      const r = pin.getBoundingClientRect();
+      const covered =
+        !!box &&
+        !(view === 'detail' && id === detailId) &&
+        r.left < box.right &&
+        r.right > box.left &&
+        r.top < box.bottom &&
+        r.bottom > box.top;
+      pin.dataset.covered = String(covered);
+    }
   }
   function schedule() {
     if (!frame && !destroyed) frame = requestAnimationFrame(draw);
@@ -549,6 +598,28 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     }
     return hit;
   }
+  /** Pin numbers in creation order among this page's pinned comments (the
+   *  bridge lists newest first). Shared by pins and side-panel rows. */
+  function pinNumbers() {
+    const here = `${location.origin}${location.pathname}`;
+    return new Map(
+      annotations
+        .filter(
+          (a) => a.anchor.pageUrl === here && !isPageWide(a) && !a.archivedAt,
+        )
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .map((a, i) => [a.id, i + 1]),
+    );
+  }
+  // Request whose pin, row and element are highlighted together on hover.
+  let highlightId: string | null = null;
+  function setHighlight(id: string | null) {
+    if (highlightId === id) return;
+    highlightId = id;
+    for (const row of panel.querySelectorAll<HTMLElement>('.row'))
+      row.dataset.highlight = String(row.dataset.annotationId === id);
+    schedule();
+  }
   function drawPins() {
     const ids = new Set(annotations.map((a) => a.id));
     for (const [id, pin] of pinButtons) {
@@ -558,17 +629,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         liveTargets.delete(id);
       }
     }
-    // Number pins in creation order among this page's comments (the bridge
-    // lists newest first).
-    const here = `${location.origin}${location.pathname}`;
-    const numbers = new Map(
-      annotations
-        .filter(
-          (a) => a.anchor.pageUrl === here && !isPageWide(a) && !a.archivedAt,
-        )
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-        .map((a, i) => [a.id, i + 1]),
-    );
+    const numbers = pinNumbers();
     for (const annotation of annotations) {
       const target = targetFor(annotation);
       let pin = pinButtons.get(annotation.id);
@@ -590,6 +651,9 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         });
         pin.className = 'pin';
         pin.dataset.annotationId = annotation.id;
+        const id = annotation.id;
+        pin.addEventListener('pointerenter', () => setHighlight(id));
+        pin.addEventListener('pointerleave', () => setHighlight(null));
         pinButtons.set(annotation.id, pin);
         pins.append(pin);
       }
@@ -1134,6 +1198,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
             : 'No requests on this page yet.',
         ),
       );
+    const numbers = pinNumbers();
     for (const a of current) {
       const comment = a.revisions.at(-1)!.comment;
       const item = button('', () => {
@@ -1147,13 +1212,24 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       const state = dotState(a);
       const dot = state === 'working' ? spinner() : node('span', '', 'dot');
       dot.dataset.state = state;
+      // The same number as the request's pin on the page.
+      const number = numbers.get(a.id);
+      const chip = number
+        ? node('span', String(number), 'pin-chip')
+        : node('span', 'Page', 'tag');
       item.append(
         dot,
         node('span', sessionTitle(a) ?? comment.split('\n')[0], 'item-title'),
+        chip,
       );
-      if (isPageWide(a)) item.append(node('span', 'Page', 'tag'));
       const row = node('div', undefined, 'row');
       row.dataset.archived = String(!!a.archivedAt);
+      row.dataset.annotationId = a.id;
+      row.dataset.highlight = String(highlightId === a.id);
+      row.addEventListener('pointerenter', () => setHighlight(a.id));
+      row.addEventListener('pointerleave', () => setHighlight(null));
+      row.addEventListener('focusin', () => setHighlight(a.id));
+      row.addEventListener('focusout', () => setHighlight(null));
       row.append(item);
       // No archive/delete while an agent works on it.
       if (state !== 'working') row.append(rowActions(a, row));

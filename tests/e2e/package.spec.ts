@@ -118,6 +118,9 @@ test('installed CLI and actual dev process run an ACP edit through human accepta
     await overlay
       .getByRole('button', { name: 'Agent setup', exact: true })
       .click();
+    // Ready folds the checklist away; wait for it, then open the details.
+    await expect(overlay.getByText(/^Ready./)).toBeVisible();
+    await overlay.getByText('Connection details', { exact: true }).click();
     await expect(overlay.getByText('Installed', { exact: true })).toBeVisible();
     await overlay
       .getByRole('button', { name: 'Close setup', exact: true })

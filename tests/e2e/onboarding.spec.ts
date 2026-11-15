@@ -145,6 +145,8 @@ test('agent setup explains missing readiness, copies setup, preserves drafts and
     });
     await setup.click();
     await dialog.getByRole('button', { name: 'Check again' }).click();
+    // When ready, the checklist is folded away; open it to inspect.
+    await dialog.getByText('Connection details', { exact: true }).click();
     await expect(
       dialog.getByText('API/provider billing detected', { exact: true }),
     ).toBeVisible();

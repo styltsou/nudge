@@ -1226,3 +1226,20 @@ public --tag preview` failed with missing authentication. The alternate local
   opacity + 6px slide, strong ease-out, 30ms stagger (@starting-style).
 - Validation: tsc, 112 unit/contract, 7 browser tests (loop, managed,
   installation); dot state and confirmation transitions checked via DOM.
+
+## Pins linked to the side panel; uncovered pins; compact Agent setup
+
+- Side-panel rows show the same number as their pin (shared `pinNumbers()`;
+  page-wide rows keep the "Page" tag). Hovering/focusing a row highlights its
+  pin (scaled with a ring) and outlines its element (dashed `.highlight-box`);
+  hovering a pin highlights its row.
+- Pins of other requests under an open pinned popup fade out and stop taking
+  clicks instead of sitting on its text; the popup's own pin stays.
+- Agent setup is compact: agent status lives in the dropdown labels, Use/Sign
+  in share a row, a one-line state summary (green when ready), the checklist and
+  setup steps fold away when ready and open when something needs attention,
+  the privacy note moved into the setup steps, Appearance sits at the bottom.
+  Tests that read the checklist in the ready state now open "Connection
+  details" first.
+- Validation: tsc, oxlint, prettier, 112 unit/contract, all 13 browser tests;
+  dialog checked from the onboarding test screenshot (light theme).
