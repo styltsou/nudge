@@ -1,5 +1,5 @@
 @layer base, starlight, theme, components, utilities;
-@import '@fontsource-variable/public-sans';
+@import '@fontsource-variable/geist';
 @import '@astrojs/starlight-tailwind';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
@@ -9,6 +9,7 @@
 @import './docs-controls.css';
 
 :root {
+  --sl-font: var(--font-sans);
   --sl-content-width: 45rem;
   --sl-sidebar-width: 16.5rem;
   --sl-nav-height: 4.75rem;

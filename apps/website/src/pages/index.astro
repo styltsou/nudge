@@ -2,8 +2,6 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Walkthrough from '../components/Walkthrough.astro';
 import InstallCommands from '../components/InstallCommands.astro';
-const commands =
-  'bun add -d /path/to/usenudge.tgz\nbunx --bun usenudge init --agent codex\nbunx --bun usenudge dev';
 ---
 
 <SiteLayout
@@ -84,48 +82,37 @@ const commands =
     <section class="review-section" aria-labelledby="review-heading">
       <div class="review-copy">
         <h2 id="review-heading">
-          The change is done.
+          Your request,
           <br />
-          The review is yours.
+          right next to the result.
         </h2>
         <p>
-          An agent's implementation report brings the request back to you. Check
-          the summary, compare before and after, and decide whether it needs
-          another pass.
+          When your agent finishes, return to the element you pointed at. Read
+          what changed, check it in your app, and decide what happens next.
         </p>
-        <dl class="review-details">
-          <div>
-            <dt>Context stays attached</dt>
-            <dd>
-              The original request and revision history stay with the element.
-            </dd>
-          </div>
-          <div>
-            <dt>Evidence, when available</dt>
-            <dd>
-              Optional snapshots. Clear recovery when an element moves or
-              capture fails.
-            </dd>
-          </div>
-          <div>
-            <dt>You close the loop</dt>
-            <dd>
-              Acceptance is a human decision. Another pass keeps the history.
-            </dd>
-          </div>
-        </dl>
+        <div class="review-decision">
+          <span class="review-decision-mark" aria-hidden="true">
+            ✓
+          </span>
+          <p>
+            <strong>Accept it, or ask for another pass.</strong>
+            Your request and revision history stay together. Optional snapshots
+            give you another way to compare.
+          </p>
+        </div>
         <a href="/docs/workflow/" class="button-text">
-          Read about annotation and review
+          How review works
         </a>
       </div>
       <figure class="real-review-image">
         <div class="evidence-header">
-          <span>From the working demo</span>
-          <a href="/images/review.png">View full image</a>
+          <span>Review in context</span>
+          <a href="/images/review.png">View full capture</a>
         </div>
         <a
           href="/images/review.png"
-          aria-label="Open full Nudge review screenshot"
+          class="review-crop"
+          aria-label="Open the full Nudge review screenshot"
         >
           <img
             src="/images/review.png"
@@ -136,7 +123,7 @@ const commands =
             alt="Actual Nudge demo with a chart, before/after evidence, and human Accept and Request changes controls."
           />
         </a>
-        <figcaption>Actual browser capture with isolated test data.</figcaption>
+        <figcaption>Detail from a browser capture with test data.</figcaption>
       </figure>
     </section>
 
@@ -147,74 +134,75 @@ const commands =
       </h2>
       <div>
         <p>
-          Annotations and snapshots live in your local <code>.nudge/</code>{' '}
-          folder. Your agent reads requests through a local MCP server. Queuing
-          saves the request; it doesn't send an agent message.
+          Requests, history and optional snapshots stay in your project's local{' '}
+          <code>.nudge/</code> folder. Start Codex, Claude or OpenCode from
+          Nudge, using your agent's own settings and approvals. Your agent may
+          send context to its model provider.
         </p>
         <div class="inline-links">
           <a href="/docs/privacy/">Privacy and security</a>
-          <a href="/docs/reference/mcp-tools/">MCP reference</a>
+          <a href="/docs/agents/">Connect your agent</a>
         </div>
       </div>
     </section>
 
-    <section class="setup-section" aria-labelledby="setup-heading">
-      <div class="setup-copy">
-        <h2 id="setup-heading">Use it in your project.</h2>
-        <p>
-          Install the preview in your Vite or Astro app. App source stays
-          untouched.
-        </p>
-        <a href="/docs/getting-started/" class="button-text">
-          Read the setup guide
-        </a>
-        <p class="setup-note">
-          Workspace preview · Bun 1.4.4+
+    <section class="faq-section" aria-labelledby="faq-heading">
+      <div class="faq-intro">
+        <h2 id="faq-heading">
+          A few things
           <br />
-          npm packages are not published yet.
+          you might ask.
+        </h2>
+        <p>
+          Everything else is in the <a href="/docs/">Docs</a>.
         </p>
       </div>
-      <div class="setup-terminal">
-        <div class="terminal-header">
-          <span>Terminal</span>
-          <button
-            type="button"
-            id="copy-commands"
-            aria-label="Copy setup commands"
-          >
-            Copy
-          </button>
-        </div>
-        <pre><code id="setup-commands">{commands}</code></pre>
-        <p
-          role="status"
-          aria-live="polite"
-          id="copy-status"
-          class="sr-only"
-        ></p>
+      <div class="faq-list">
+        <details>
+          <summary>
+            Which projects does Nudge work with?<span aria-hidden="true"></span>
+          </summary>
+          <p>
+            Nudge supports standalone local Vite and Astro apps. Bun is required
+            to run Nudge, even if your project uses another package manager.{' '}
+            <a href="/docs/getting-started/">See the requirements</a>.
+          </p>
+        </details>
+        <details>
+          <summary>
+            Which coding agents can I use?<span aria-hidden="true"></span>
+          </summary>
+          <p>
+            Choose Codex, Claude or OpenCode and start a session from Nudge.
+            Your agent keeps its own authentication, settings and approvals.
+            These integrations are in preview; live authenticated runs still
+            need validation. <a href="/docs/agents/">Learn about agent setup</a>
+            .
+          </p>
+        </details>
+        <details>
+          <summary>
+            Does my data leave my computer?<span aria-hidden="true"></span>
+          </summary>
+          <p>
+            Nudge stores requests, history and optional snapshots in your
+            project's <code>.nudge/</code> folder. Your agent may send request
+            and project context to its model provider.{' '}
+            <a href="/docs/privacy/">Read the privacy guide</a>.
+          </p>
+        </details>
+        <details>
+          <summary>
+            How do I get started?<span aria-hidden="true"></span>
+          </summary>
+          <p>
+            Install Nudge in your app, configure your agent, and start your dev
+            server through Nudge. The package is currently an unpublished
+            preview installed from a local archive.{' '}
+            <a href="/docs/getting-started/">Follow the setup guide</a>.
+          </p>
+        </details>
       </div>
     </section>
   </div>
 </SiteLayout>
-<script>
-  import { showCopied } from '../scripts/copy-feedback';
-  const copy = document.querySelector<HTMLButtonElement>('#copy-commands');
-  const status = document.querySelector<HTMLElement>('#copy-status');
-  copy?.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(
-        document.querySelector('#setup-commands')?.textContent ?? '',
-      );
-      if (status) status.textContent = 'Setup commands copied.';
-      copy.textContent = 'Copied';
-      showCopied(copy, () => {
-        copy.textContent = 'Copy';
-        if (status) status.textContent = '';
-      });
-    } catch {
-      if (status)
-        status.textContent =
-          'Copy is unavailable. Select the commands above to copy them manually.';
-    }
-  });
-</script>

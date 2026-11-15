@@ -1,4 +1,4 @@
-@import '@fontsource-variable/public-sans';
+@import '@fontsource-variable/geist';
 @import 'tailwindcss';
 @import './tokens.css';
 @import './frames.css';
@@ -117,6 +117,7 @@ p {
   display: flex;
   align-items: stretch;
   margin-left: auto;
+  --theme-toggle-width: 52px;
 }
 .header-nav > * {
   border-left: 1px solid var(--line);
@@ -125,7 +126,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-inline: 24px;
+  padding-inline: 16px;
 }
 .brand {
   display: inline-flex;
@@ -617,10 +618,10 @@ h2 {
 }
 .review-section {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   align-items: center;
   gap: 72px;
-  padding: 76px 48px;
+  padding: 92px 48px;
 }
 .review-copy h2,
 .local-section h2,
@@ -635,24 +636,39 @@ h2 {
   color: var(--muted);
   max-width: 390px;
 }
-.review-details {
-  margin: 28px 0;
+.review-copy h2 {
+  font-size: clamp(31px, 3vw, 39px);
 }
-.review-details > div {
-  margin-top: 19px;
-  padding-left: 14px;
-  border-left: 1px solid var(--line-strong);
+.review-decision {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 390px;
+  margin: 30px 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
 }
-.review-details dt {
-  font-size: 12px;
-  margin-bottom: 5px;
+.review-decision-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--accent);
+  background: var(--well-bg);
+  box-shadow: inset 0 1px 3px var(--well);
 }
-.review-details dd {
+.review-decision p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
-  line-height: 1.7;
-  max-width: 320px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.review-decision strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--ink);
+  font-weight: 550;
 }
 .real-review-image {
   margin: 0;
@@ -673,11 +689,19 @@ h2 {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.real-review-image > a {
+.real-review-image > .review-crop {
   display: block;
+  position: relative;
+  aspect-ratio: 0.9;
+  overflow: hidden;
+  background: #f4f5f8;
 }
 .real-review-image img {
-  width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 220%;
+  max-width: none;
   height: auto;
   display: block;
 }
@@ -719,6 +743,116 @@ h2 {
   text-decoration: underline;
   text-decoration-color: var(--line-strong);
   text-underline-offset: 4px;
+}
+.faq-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  padding: 76px 48px;
+}
+.faq-intro h2 {
+  margin: 0;
+  font-size: 31px;
+  font-weight: 430;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+.faq-intro p {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.faq-intro a,
+.faq-list p a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.faq-list {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.faq-list details {
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
+  box-shadow:
+    inset 0 1px 0 var(--hl),
+    0 1px 2px var(--drop);
+}
+.faq-list summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 19px 18px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 550;
+}
+.faq-list summary::-webkit-details-marker {
+  display: none;
+}
+.faq-list summary span {
+  position: relative;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  transition: transform 200ms var(--ease-out);
+}
+.faq-list summary span::before,
+.faq-list summary span::after {
+  content: '';
+  position: absolute;
+  inset: 7px 2px auto;
+  height: 1px;
+  background: currentColor;
+}
+.faq-list summary span::after {
+  transform: rotate(90deg);
+}
+.faq-list details[open] summary span {
+  transform: rotate(45deg);
+}
+.faq-list p {
+  margin: 0;
+  padding: 0 46px 20px 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+@supports selector(::details-content) {
+  .faq-list details {
+    interpolate-size: allow-keywords;
+  }
+  .faq-list details::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      block-size 200ms var(--ease-out),
+      opacity 200ms var(--ease-out),
+      content-visibility 200ms allow-discrete;
+  }
+  .faq-list details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+  .faq-list details:has(summary:focus-visible)::details-content {
+    transition: none;
+  }
+}
+.faq-list summary:focus-visible span {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-list summary span,
+  .faq-list details::details-content {
+    transition: none;
+  }
 }
 .setup-section {
   display: grid;
@@ -836,6 +970,7 @@ h2 {
   }
   .review-section,
   .setup-section,
+  .faq-section,
   .local-section {
     padding-inline: 32px;
     gap: 40px;
@@ -888,14 +1023,6 @@ h2 {
   .review-copy > p {
     max-width: 510px;
   }
-  .review-details {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  .review-details > div {
-    margin: 0;
-  }
   .real-review-image {
     max-width: 520px;
   }
@@ -906,6 +1033,11 @@ h2 {
     grid-template-columns: 1fr;
     padding-block: 48px;
     gap: 30px;
+  }
+  .faq-section {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-block: 48px;
   }
   .setup-terminal {
     max-width: 520px;
@@ -935,7 +1067,10 @@ h2 {
     font-size: 11px;
   }
   .header-nav .nav-link {
-    padding-inline: 14px;
+    padding-inline: 12px;
+  }
+  .header-nav {
+    --theme-toggle-width: 44px;
   }
   .hero {
     padding: 40px 20px 30px;
@@ -1009,18 +1144,14 @@ h2 {
   }
   .review-section,
   .local-section,
+  .faq-section,
   .setup-section {
     padding-inline: 20px;
   }
   .review-copy h2,
+  .faq-intro h2,
   .setup-section h2 {
     font-size: 27px;
-  }
-  .review-details {
-    display: block;
-  }
-  .review-details > div {
-    margin-top: 20px;
   }
   .local-section {
     grid-template-columns: 1fr;
@@ -1106,7 +1237,7 @@ h2 {
   overflow: hidden;
 }
 .site-header > .brand {
-  padding-inline: 20px;
+  padding-inline: 16px;
 }
 .hero-demo .walkthrough {
   border-inline: 1px solid var(--line);
@@ -1194,8 +1325,13 @@ h2 {
 .sample-primary,
 .sample-accept {
   color: #fff;
-  border-color: #b5352d;
-  background: linear-gradient(180deg, #f3786c 0%, #e05246 55%, #cd4337 100%);
+  border-color: var(--nudge-button-border);
+  background: linear-gradient(
+    180deg,
+    var(--nudge-button-top) 0%,
+    var(--nudge-button-middle) 55%,
+    var(--nudge-button-bottom) 100%
+  );
   text-shadow: 0 1px 0 rgb(0 0 0 / 0.22);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.3),
@@ -1206,7 +1342,12 @@ h2 {
 .sample-primary:hover,
 .sample-accept:hover {
   filter: none;
-  background: linear-gradient(180deg, #f6857a 0%, #e65e52 55%, #d24a3e 100%);
+  background: linear-gradient(
+    180deg,
+    var(--nudge-button-hover-top) 0%,
+    var(--nudge-button-hover-middle) 55%,
+    var(--nudge-button-hover-bottom) 100%
+  );
 }
 .button-secondary,
 .example-button,
@@ -1378,5 +1519,55 @@ h2 {
     .terminal-header button
   ):active {
     transform: none;
+  }
+}
+
+/* Keep page content aligned to the header and footer; the demo retains its own scale. */
+.workflow-rail,
+.local-section {
+  margin-inline: 0;
+}
+.review-section,
+.faq-section {
+  padding-inline: 0;
+}
+.hero-description {
+  max-width: 520px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+.header-nav .nav-link,
+.hero-actions .button-primary,
+.hero-actions .button-secondary {
+  font-size: 14px;
+}
+.hero-footnote,
+.inline-links,
+.faq-intro p,
+.site-footer nav,
+.real-review-image figcaption,
+.evidence-header {
+  font-size: 13px;
+}
+.review-copy > p,
+.local-section p,
+.faq-list p,
+.workflow-rail li > span:not(.rail-icon) {
+  font-size: 14px;
+  line-height: 1.65;
+}
+.local-section code {
+  font-size: inherit;
+}
+.faq-list summary,
+.workflow-rail strong {
+  font-size: 15px;
+}
+@media (max-width: 800px) {
+  .hero-demo {
+    padding-inline: 0;
+  }
+  .hero-description {
+    font-size: 16px;
   }
 }

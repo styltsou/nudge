@@ -87,6 +87,41 @@ test('hero install tabs support keyboard selection and copy only the selected co
   }
 });
 
+test('hero install indicator follows pointer selection and respects motion preferences', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const box = page.locator('[data-install-box]');
+  const indicator = box.locator('.install-indicator');
+  const activeTabs = box.locator('.install-active-tabs');
+  const npm = box.getByRole('tab', { name: 'npm', exact: true });
+  const pnpm = box.getByRole('tab', { name: 'pnpm', exact: true });
+  await npm.hover();
+  await expect(npm).toHaveCSS('background-clip', 'padding-box');
+  await npm.click();
+  await expect(indicator).toHaveAttribute('data-animate', 'true');
+  await expect(activeTabs).toHaveAttribute('data-animate', 'true');
+  await pnpm.click();
+  await expect
+    .poll(async () => {
+      const line = await indicator.boundingBox();
+      const tab = await pnpm.boundingBox();
+      return (
+        Math.abs(line!.x - tab!.x) < 1 && Math.abs(line!.width - tab!.width) < 1
+      );
+    })
+    .toBe(true);
+  await expect(activeTabs).toHaveCSS('clip-path', /inset\(0px 0px 0px/);
+  await pnpm.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(indicator).toHaveAttribute('data-animate', 'false');
+  await expect(activeTabs).toHaveAttribute('data-animate', 'false');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await pnpm.click();
+  await expect(indicator).toHaveCSS('transition-duration', '0s');
+  await expect(activeTabs).toHaveCSS('transition-duration', '0s');
+});
+
 test('walkthrough queues literal text, reports a sample change, revises, accepts, and resets', async ({
   page,
 }) => {
@@ -391,11 +426,7 @@ test('public navigation and authored content links resolve without exposing inte
     expect((await request.get(path)).status(), path).toBe(404);
 });
 
-test('keyboard tabs, setup copy, and narrow layouts work', async ({
-  page,
-  context,
-}) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+test('keyboard tabs, FAQ, and narrow layouts work', async ({ page }) => {
   await page.goto('/');
   const first = page.getByRole('tab', { name: 'Bun', exact: true });
   await first.focus();
@@ -407,19 +438,19 @@ test('keyboard tabs, setup copy, and narrow layouts work', async ({
   await expect(
     page.getByRole('tab', { name: 'pnpm', exact: true }),
   ).toBeFocused();
-  await page.getByRole('button', { name: 'Copy setup commands' }).click();
-  const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied.replaceAll('\r\n', '\n')).toBe(
-    await page.locator('#setup-commands').textContent(),
-  );
-  // Announced to assistive tech, shown visually as a short tooltip.
+  const question = page.getByText('Which projects does Nudge work with?');
+  await question.focus();
+  await page.keyboard.press('Enter');
   await expect(
-    page.getByRole('status').filter({ hasText: 'Setup commands copied.' }),
-  ).toHaveText('Setup commands copied.');
-  await expect(page.locator('.copy-tip')).toHaveText('Copied');
+    page.getByText(/Nudge supports standalone local Vite/),
+  ).toBeVisible();
+  await page.keyboard.press('Enter');
   await expect(
-    page.getByRole('button', { name: 'Copy setup commands' }),
-  ).toHaveText('Copied');
+    page.getByText(/Nudge supports standalone local Vite/),
+  ).toBeHidden();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await question.click();
+  await expect(question.locator('span')).toHaveCSS('transition-duration', '0s');
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     expect(

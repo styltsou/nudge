@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nudge-preview-app",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "packages/cli/src/index.ts",
+        "dev",
+        "--project",
+        ".nudge/preview-app",
+        "--port",
+        "5180"
+      ],
+      "port": 5180
+    },
+    {
+      "name": "nudge-website",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "website:dev"],
+      "port": 4321
+    }
+  ]
+}

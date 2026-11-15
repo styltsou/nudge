@@ -1,5 +1,5 @@
 @theme {
-  --font-sans: 'Public Sans Variable', 'Public Sans', system-ui, sans-serif;
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'Liberation Mono', monospace;
   --color-ink: #15171a;
   --color-muted: #626a73;
@@ -34,17 +34,25 @@
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --nudge-popover-bg: #f4f4f4;
-  --nudge-primary: var(--color-accent-500);
+  /* The button finish anchors both theme accents. */
+  --nudge-button-top: #f3786c;
+  --nudge-button-middle: #e05246;
+  --nudge-button-bottom: #cd4337;
+  --nudge-button-border: #b5352d;
+  --nudge-button-hover-top: #f6857a;
+  --nudge-button-hover-middle: #e65e52;
+  --nudge-button-hover-bottom: #d24a3e;
+  --nudge-primary: var(--nudge-button-border);
   --nudge-primary-ink: #000;
-  --nudge-accent: var(--color-accent-700);
+  --nudge-accent: var(--nudge-button-border);
   --nudge-accent-soft: var(--color-accent-50);
   --nudge-accent-ink: #fff;
 }
 
 :root[data-theme='dark'] {
   --nudge-popover-bg: #101010;
-  --nudge-primary: var(--color-accent-400);
-  --nudge-accent: var(--color-accent-400);
+  --nudge-primary: var(--nudge-button-top);
+  --nudge-accent: var(--nudge-button-top);
   --nudge-accent-soft: var(--color-accent-950);
   --nudge-accent-ink: #000;
 }
