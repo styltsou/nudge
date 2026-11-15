@@ -1058,3 +1058,22 @@ public --tag preview` failed with missing authentication. The alternate local
 - Validation: tsc, oxlint, prettier, 100 unit/contract tests and all 13 browser
   tests passed (Windows). Not verified: real `codex login` / `claude auth login`
   output, Windows `.cmd` CLI shims, or an end-to-end live agent run.
+
+## Overlay redesign, pin recovery and dev port selection
+
+- Overlay restyled with website brand tokens (dark/light via prefers-color-scheme),
+  rounded corners, icon-only toolbar buttons (accessible names unchanged).
+  Toolbar: small pill, bottom-centre, can be hidden leaving an edge that
+  reveals on hover/keyboard focus (per-viewer localStorage).
+- Tray and docked comments are a full-height side panel that pushes the page
+  via a temporary root margin-right (restored on close/destroy). Requests
+  opened from it stay in it. Rows show a status dot and title only; comments
+  show the prompt and one run-status line; details are collapsed or in tooltips.
+- Pins: new `locateAnchor` accepts a unique positional match with matching tag
+  and text (or position), so pins survive reloads/re-renders for elements
+  without id/test id. Snapshot comparison still uses strict `findAnchor`.
+- `usenudge dev` without `--port` picks the first port free on both 127.0.0.1
+  and ::1 from the app's configured port (respects strictPort). Previously Vite
+  could bind ::1 while another server held 127.0.0.1 on Windows.
+- Validation: tsc, oxlint, 102 unit/contract and all 13 browser tests passed;
+  checked visually in the browser pane. Agent setup dialog still dense.

@@ -1,6 +1,6 @@
 import { commentSchema, statusLabels } from '@usenudge/shared';
 import type { Annotation, SnapshotRef } from '@usenudge/shared';
-import { anchorFor, findAnchor } from './anchors';
+import { anchorFor, findAnchor, locateAnchor } from './anchors';
 import { captureElement } from './capture';
 import { BridgeClient } from './client';
 import { ManagedControls } from './managed';
@@ -14,25 +14,76 @@ export type NudgeOptions = {
 export type NudgeHandle = { destroy(): void };
 
 const css = `
-:host { all: initial; font: 13px/1.5 system-ui, sans-serif; color: #e5eaf0; }
+:host { all: initial; --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
+@media (prefers-color-scheme: light) { :host { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
 * { box-sizing: border-box; } [hidden] { display: none !important; }
-button,textarea { font: inherit; } button { background: #283343; border: 1px solid #536176; border-radius: 6px; padding: 8px 12px; color: inherit; cursor: pointer; }
-button:hover { background: #36455b; }button:disabled { opacity: .5; cursor: wait; }button:focus-visible,textarea:focus-visible { outline: 2px solid #b4d0ff; outline-offset: 3px; }
-.toolbar { position: fixed; right: 20px; bottom: 20px; display: flex; gap: 8px; padding: 8px; background: #17202d; border: 1px solid #536176; border-radius: 10px; box-shadow: 0 8px 32px #0003; }
-.panel { position: fixed; bottom: 90px; right: 20px; width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 120px); overflow: auto; background: #17202d; border: 1px solid #536176; border-radius: 10px; padding: 18px; box-shadow: 0 8px 32px #0003; }
-.panel.pinned { bottom: auto; right: auto; max-height: calc(100vh - 32px); }.panel.docked { top: 16px; right: 16px; bottom: 90px; max-height: none; }.pin { position: fixed; width: 28px; height: 28px; padding: 0; border-radius: 50% 50% 50% 2px; background: #6ba6ff; color: #101721; border: 2px solid #fff; pointer-events: auto; }.comment-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-textarea { display: block; width: 100%; min-height: 100px; background: #101721; border: 1px solid #536176; color: inherit; border-radius: 6px; padding: 10px; margin: 10px 0; resize: vertical; }
-details { margin-block: 12px; }summary { cursor: pointer; color: #bbd3ff; }summary:focus-visible { outline: 2px solid #b4d0ff; outline-offset: 3px; }
-h2 { font-size: 16px; margin: 0 0 12px; }p { margin: 8px 0; overflow-wrap: anywhere; }small { color: #b7c3d3; font-size: 11px; }.actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.outline { position: fixed; pointer-events: none; border: 2px solid #6ba6ff; border-radius: 3px; background: #6ba6ff13; }.item { display: block; width: 100%; text-align: left; margin: 8px 0; }.status { color: #bbd3ff; }.message { white-space: pre-wrap; } .error { color: #ffbdad; }hr { border: 0; border-top: 1px solid #465166; margin: 16px 0; }
-.evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }figure { margin: 8px 0; min-width: 0; }figure img { display: block; width: 100%; height: auto; background: #fff; border: 1px solid #536176; }figcaption { font-size: 11px; overflow-wrap: anywhere; }input[type=checkbox] { margin-right: 8px; }.toolbar small { align-self: center; }@media (max-width: 420px) { .toolbar { right: 12px; left: 12px; bottom: 12px; flex-wrap: wrap; }.panel { right: 12px; bottom: 112px; max-height: calc(100vh - 140px); } }
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
-select { display:block; width:100%; padding:8px; margin-block:8px; color:inherit; background:#101721; border:1px solid #536176; }
-.agent-working::before { content:''; display:inline-block; width:10px; height:10px; margin-right:8px; border:2px solid #536176; border-top-color:#bbd3ff; border-radius:50%; animation:nudge-spin .8s linear infinite; }
-@keyframes nudge-spin { to { transform:rotate(360deg); } } @media(prefers-reduced-motion:reduce) { .agent-working::before { animation:none; } }
-.onboarding { pointer-events:auto; position:fixed; margin:auto; width:min(460px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; color:#e5eaf0; background:#17202d; border:1px solid #536176; border-radius:12px; padding:22px; box-shadow:0 16px 64px #0005; font:13px/1.5 system-ui,sans-serif; }
-.onboarding::backdrop { background:#0006; }.onboarding h3 { font-size:13px; margin:18px 0 6px; }.setup-checks { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:18px 0; }.setup-checks dt { color:#b7c3d3; }.setup-checks dd { margin:0; text-align:right; overflow-wrap:anywhere; }.setup-command { display:block; user-select:text; white-space:pre-wrap; overflow-wrap:anywhere; padding:12px; margin:10px 0; background:#101721; border:1px solid #465166; border-radius:6px; font:12px/1.6 ui-monospace,monospace; }button[data-needs-setup=true] { border-color:#bbd3ff; }
-.setup-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; position:sticky; top:0; background:#17202d; padding-block:4px; z-index:1; }.setup-heading h2 { margin:0; }.setup-heading button { flex-shrink:0; font-size:12px; padding:6px 8px; }
+button, textarea, select, input { font: inherit; color: inherit; }
+button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 4px 10px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 12px; transition: background .12s, border-color .12s, color .12s; }
+button:hover { border-color: var(--line-strong); } button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); }
+button.icon { width: 30px; height: 30px; min-height: 0; padding: 0; background: transparent; border-color: transparent; color: var(--muted); border-radius: 8px; }
+button.icon:hover { color: var(--ink); background: var(--raised); }
+button.icon[aria-pressed=true] { color: var(--accent-ink); background: var(--accent); }
+button.icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.badge { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; font-size: 10px; line-height: 15px; font-weight: 700; background: var(--accent); color: var(--accent-ink); pointer-events: none; }
+.badge:empty { display: none; }
+.toolbar button.icon { position: relative; }
+.toolbar { position: fixed; left: calc((100% - var(--nudge-push, 0px)) / 2); bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 24px #0004; transition: transform .18s cubic-bezier(.23,1,.32,1); }
+.toolbar button.icon { border-radius: 999px; }
+.toolbar::before { content: ''; position: absolute; left: 0; right: 0; top: -16px; height: 16px; }
+.toolbar[data-collapsed=true] { transform: translate(-50%, calc(100% + 6px)); }
+.toolbar[data-collapsed=true]::before { top: -22px; height: 22px; }
+.toolbar[data-collapsed=true]:hover, .toolbar[data-collapsed=true]:has(:focus-visible) { transform: translateX(-50%); }
+.sep { width: 1px; height: 18px; margin-inline: 3px; background: var(--line); }
+.conn { display: inline-flex; width: 22px; justify-content: center; font-size: 0; }
+.conn::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.conn[data-on=true]::before { background: var(--accept); }
+.panel { position: fixed; bottom: 64px; right: 16px; width: min(320px, calc(100vw - 24px)); max-height: calc(100vh - 96px); overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 10px 40px #0005; }
+.panel.pinned { bottom: auto; right: auto; max-height: calc(100vh - 32px); }
+.panel.sidebar { top: 0; right: 0; bottom: 0; left: auto; width: min(var(--nudge-sidebar, 340px), 100vw); max-height: none; border-width: 0 0 0 1px; border-radius: 0; box-shadow: -8px 0 32px #0003; padding: 14px; }
+.panel-head { display: flex; align-items: center; gap: 4px; margin: -2px -4px 8px 0; }
+.panel-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pin { position: fixed; width: 22px; height: 22px; min-height: 0; padding: 0; font-size: 11px; font-weight: 700; border-radius: 50% 50% 50% 3px; background: var(--accent); color: var(--accent-ink); border: 2px solid #fff; pointer-events: auto; box-shadow: 0 2px 8px #0004; }
+textarea { display: block; width: 100%; min-height: 72px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 8px; resize: vertical; }
+textarea::placeholder { color: var(--muted); }
+details { margin-block: 8px; } summary { cursor: pointer; color: var(--muted); font-size: 12px; } summary:hover { color: var(--ink); }
+h2 { font-size: 13px; margin: 0 0 8px; font-weight: 600; } h3 { font-size: 12px; margin: 12px 0 4px; }
+p { margin: 6px 0; overflow-wrap: anywhere; } small { color: var(--muted); font-size: 11px; }
+.actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.outline { position: fixed; pointer-events: none; border: 2px solid var(--accent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.item { display: flex; width: 100%; justify-content: flex-start; gap: 8px; text-align: left; margin: 0 0 4px; padding: 8px 10px; background: var(--surface); }
+.item-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot[data-state=working] { background: var(--accent); animation: nudge-pulse 1.2s ease-in-out infinite; }
+.dot[data-state=review] { background: var(--accent); }
+.dot[data-state=accepted] { background: var(--accept); }
+@keyframes nudge-pulse { 50% { opacity: .35; } }
+.status { color: var(--muted); } .message { white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.message.full { display: block; -webkit-line-clamp: unset; }
+.prompt { padding: 8px 10px; background: var(--surface); border-radius: 8px; }
+.error { color: var(--danger); } .error:empty { display: none; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
+.evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } figure { margin: 6px 0; min-width: 0; }
+figure img { display: block; width: 100%; height: auto; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+figcaption { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+.check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 4px; } input[type=checkbox] { margin: 0; accent-color: var(--accent); }
+select { display: block; width: 100%; padding: 6px 8px; margin-block: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
+label { font-size: 12px; color: var(--muted); }
+.agent-working::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 7px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: nudge-spin .8s linear infinite; vertical-align: -1px; }
+.run-state { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .run-state p { margin: 0; flex: 1; }
+@keyframes nudge-spin { to { transform: rotate(360deg); } }
+@media (max-width: 520px) { .panel:not(.sidebar) { right: 8px; left: 8px !important; width: auto; bottom: 60px; max-height: calc(100vh - 80px); } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } .toolbar, button { transition: none; } .agent-working::before, .dot { animation: none !important; } }
+.onboarding { pointer-events: auto; position: fixed; margin: auto; width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: 0 16px 64px #0006; }
+.onboarding::backdrop { background: #0007; }
+.setup-checks { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 12px 0; font-size: 12px; } .setup-checks dt { color: var(--muted); } .setup-checks dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.setup-agents p { margin: 4px 0; font-size: 12px; }
+.setup-command { display: block; user-select: text; white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px; margin: 8px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font: 12px/1.6 ui-monospace, 'Cascadia Code', monospace; }
+button[data-needs-setup=true] { color: var(--accent); }
+.setup-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; background: var(--bg); padding-block: 2px; z-index: 1; } .setup-heading h2 { margin: 0; font-size: 15px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -48,6 +99,40 @@ function button(text: string, action: () => void) {
   const element = node('button', text);
   element.type = 'button';
   element.addEventListener('click', action);
+  return element;
+}
+
+const svg = (body: string) =>
+  `<svg viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
+// Static, trusted markup only; never built from annotation or agent data.
+const icons = {
+  annotate: svg('<path d="M5 3l14 7-6 2-2 6z"/>'),
+  exit: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  feedback: svg('<path d="M4 5h16v11H10l-5 4v-4H4z"/>'),
+  setup: svg(
+    '<circle cx="12" cy="12" r="3"/><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/>',
+  ),
+  hide: svg('<path d="M6 9l6 6 6-6"/>'),
+  show: svg('<path d="M6 15l6-6 6 6"/>'),
+  close: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  back: svg('<path d="M15 6l-6 6 6 6"/>'),
+  dock: svg(
+    '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
+  ),
+  pin: svg(
+    '<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
+  ),
+  refresh: svg('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+};
+function setIcon(element: HTMLButtonElement, icon: string, label: string) {
+  element.innerHTML = icon;
+  element.setAttribute('aria-label', label);
+  element.title = label;
+}
+function iconButton(icon: string, label: string, action: () => void) {
+  const element = button('', action);
+  element.className = 'icon';
+  setIcon(element, icon, label);
   return element;
 }
 export function mountNudge(options: NudgeOptions): NudgeHandle {
@@ -114,16 +199,91 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     revisionId: string;
     kind: CaptureKind;
   } | null = null;
-  const toggle = button('Annotate UI', () => setActive(!active));
+  const toggle = iconButton(icons.annotate, 'Annotate UI', () =>
+    setActive(!active),
+  );
   toggle.setAttribute('aria-pressed', 'false');
-  const tray = button('Feedback (0)', () => {
+  const tray = iconButton(icons.feedback, 'Feedback (0)', () => {
     setActive(false);
-    showTray();
+    if (view === 'tray') closePanel();
+    else showTray();
   });
-  const connection = node('small', 'Connecting…');
-  toolbar.append(toggle, tray, connection);
-  const setupButton = button('Agent setup', () => {});
+  const trayCount = node('span', '', 'badge');
+  tray.append(trayCount);
+  function setTrayCount(count: number) {
+    tray.setAttribute('aria-label', `Feedback (${count})`);
+    tray.title = 'Feedback';
+    trayCount.textContent = count ? String(count) : '';
+  }
+  const connection = node('span', 'Connecting…', 'conn');
+  function setConnection(text: string, on: boolean) {
+    connection.textContent = text;
+    connection.title = text;
+    connection.dataset.on = String(on);
+  }
+  // The tray and docked comments use a full-height side panel that pushes the page
+  // over via a temporary root margin; the original inline value is restored on close.
+  const SIDEBAR_WIDTH = 340;
+  host.style.setProperty('--nudge-sidebar', SIDEBAR_WIDTH + 'px');
+  const pageRoot = document.documentElement;
+  let savedMargin: [string, string] | undefined;
+  function syncSidebar() {
+    const sidebar = !panel.hidden && (view === 'tray' || docked);
+    panel.classList.toggle('sidebar', sidebar);
+    panel.classList.toggle(
+      'docked',
+      !panel.hidden && view !== 'tray' && docked,
+    );
+    panel.classList.toggle('pinned', !panel.hidden && !sidebar);
+    const push = sidebar && window.innerWidth >= 720 ? SIDEBAR_WIDTH : 0;
+    host.style.setProperty('--nudge-push', push + 'px');
+    if (push && !savedMargin)
+      savedMargin = [
+        pageRoot.style.getPropertyValue('margin-right'),
+        pageRoot.style.getPropertyPriority('margin-right'),
+      ];
+    if (push)
+      pageRoot.style.setProperty('margin-right', push + 'px', 'important');
+    else if (savedMargin) {
+      if (savedMargin[0])
+        pageRoot.style.setProperty(
+          'margin-right',
+          savedMargin[0],
+          savedMargin[1],
+        );
+      else pageRoot.style.removeProperty('margin-right');
+      savedMargin = undefined;
+    }
+    schedule();
+  }
+  let collapsed = false;
+  try {
+    collapsed = localStorage.getItem('nudge-toolbar-hidden') === '1';
+  } catch {
+    /* storage may be unavailable; the toolbar then starts visible */
+  }
+  const collapse = button('', () => {
+    collapsed = !collapsed;
+    try {
+      localStorage.setItem('nudge-toolbar-hidden', collapsed ? '1' : '0');
+    } catch {
+      /* per-viewer convenience only */
+    }
+    applyCollapsed();
+  });
+  collapse.className = 'icon';
+  function applyCollapsed() {
+    // Stay fully visible while annotating so Exit annotation is always reachable.
+    toolbar.dataset.collapsed = String(collapsed && !active);
+    const label = collapsed
+      ? 'Keep toolbar visible'
+      : 'Hide toolbar (hover the bottom edge to reveal)';
+    setIcon(collapse, collapsed ? icons.show : icons.hide, label);
+  }
+  toolbar.append(toggle, tray, connection, node('span', '', 'sep'), collapse);
+  const setupButton = iconButton(icons.setup, 'Agent setup', () => {});
   toolbar.insertBefore(setupButton, connection);
+  applyCollapsed();
   const onboarding = new OnboardingPanel(
     shadow,
     setupButton,
@@ -174,8 +334,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   function targetFor(annotation: Annotation): Element | null {
     if (annotation.anchor.pageUrl !== `${location.origin}${location.pathname}`)
       return null;
-    const result = findAnchor(annotation.anchor);
-    if (result.state === 'found') return result.element;
+    const located = locateAnchor(annotation.anchor);
+    if (located) return located;
     const original = liveTargets.get(annotation.id);
     return original?.isConnected ? original : null;
   }
@@ -298,7 +458,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     hovered = null;
     point = null;
     outline.hidden = true;
-    toggle.textContent = value ? 'Exit annotation' : 'Annotate UI';
+    applyCollapsed();
+    setIcon(
+      toggle,
+      value ? icons.exit : icons.annotate,
+      value ? 'Exit annotation' : 'Annotate UI',
+    );
     toggle.setAttribute('aria-pressed', String(value));
     document.removeEventListener('pointermove', move, true);
     document.removeEventListener('click', click, true);
@@ -321,40 +486,56 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     view = 'closed';
     panel.hidden = true;
     panel.replaceChildren();
+    syncSidebar();
   }
   function title(text: string) {
     panel.hidden = false;
-    panel.replaceChildren(node('h2', text));
-    panel.classList.toggle('pinned', view !== 'tray' && !docked);
-    panel.classList.toggle('docked', view !== 'tray' && docked);
+    const head = node('div', undefined, 'panel-head');
+    head.append(node('h2', text));
+    panel.replaceChildren(head);
+    syncSidebar();
     panel.style.left = '';
     panel.style.top = '';
-    if (view !== 'tray') {
-      const controls = node('div', undefined, 'comment-controls');
-      controls.append(
-        button(docked ? 'Pin to element' : 'Open in side panel', () => {
+    if (view === 'detail')
+      head.prepend(iconButton(icons.back, 'Back to feedback', showTray));
+    if (view === 'tray')
+      head.append(
+        iconButton(icons.refresh, 'Refresh', () => {
+          void refresh();
+        }),
+        iconButton(icons.close, 'Close', () => {
+          closePanel();
+          tray.focus();
+        }),
+      );
+    else {
+      const dock = iconButton(
+        docked ? icons.pin : icons.dock,
+        docked ? 'Pin to element' : 'Open in side panel',
+        () => {
           docked = !docked;
-          panel.classList.toggle('pinned', !docked);
-          panel.classList.toggle('docked', docked);
+          syncSidebar();
           panel.style.left = '';
           panel.style.top = '';
-          const control = controls.querySelector('button');
-          if (control)
-            control.textContent = docked
-              ? 'Pin to element'
-              : 'Open in side panel';
+          setIcon(
+            dock,
+            docked ? icons.pin : icons.dock,
+            docked ? 'Pin to element' : 'Open in side panel',
+          );
           schedule();
-        }),
-        button('Close comment', () => {
+        },
+      );
+      head.append(
+        dock,
+        iconButton(icons.close, 'Close comment', () => {
           setActive(false);
           closePanel();
           tray.focus();
         }),
       );
-      panel.append(controls);
       const notice = node(
-        'p',
-        'Element unavailable or ambiguous. The comment cannot currently be pinned to the page.',
+        'small',
+        'Element not found on this page right now.',
         'error',
       );
       notice.dataset.pinNotice = '';
@@ -367,11 +548,14 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     if (!selected) return;
     view = 'composer';
     title('Request a change');
-    const label = node('label', 'What should the coding agent change here?');
     const input = node('textarea');
     input.maxLength = 2000;
     input.id = 'nudge-comment';
-    label.htmlFor = input.id;
+    input.setAttribute(
+      'aria-label',
+      'What should the coding agent change here?',
+    );
+    input.placeholder = 'Describe the change…';
     const error = node('p', '', 'error');
     error.setAttribute('role', 'alert');
     const actions = node('div', undefined, 'actions');
@@ -385,7 +569,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         void save();
       },
     );
-    const runHint = node('p');
+    const runHint = node('small');
     runHint.setAttribute('role', 'status');
     updateComposerReadiness = () => {
       if (!queue.isConnected) return;
@@ -396,14 +580,15 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       if (saveOnly)
         saveOnly.disabled =
           busy || !commentSchema.safeParse(input.value).success;
-      runHint.textContent = managed.state.enabled
-        ? managed.runHint()
-        : 'Save a comment now, or use Agent setup to launch agents from Nudge.';
+      // Only explain when something blocks a run; the happy path stays quiet.
+      runHint.textContent =
+        managed.state.enabled && !managed.canRun() ? managed.runHint() : '';
     };
     queue.disabled = true;
     input.addEventListener('input', () => {
       updateComposerReadiness?.();
     });
+    queue.classList.add('primary');
     const cancel = button('Cancel', () => {
       setActive(false);
       closePanel();
@@ -413,35 +598,26 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     const capture = node('input');
     capture.type = 'checkbox';
     capture.id = 'nudge-capture';
-    const captureLabel = node('label');
+    capture.setAttribute(
+      'aria-label',
+      'Capture before and automatically capture after',
+    );
+    const captureLabel = node('label', undefined, 'check');
     captureLabel.htmlFor = capture.id;
+    captureLabel.title =
+      'Snapshots may contain visible sensitive information. Form values and private regions are excluded. Images stay local.';
     captureLabel.append(
       capture,
-      document.createTextNode('Capture before and automatically capture after'),
+      document.createTextNode('Capture before / after'),
     );
-    panel.append(
-      label,
-      input,
-      captureLabel,
-      node(
-        'p',
-        'Optional snapshots may contain visible sensitive information. Form values and marked private regions are excluded. Images stay local and require human review.',
-      ),
-      error,
-      actions,
-    );
+    panel.append(input, captureLabel, error, actions);
     if (managed.state.enabled) {
       saveOnly = button('Save without running', () => {
         void save(false);
       });
+      saveOnly.title = 'Save the comment and run the agent later';
       actions.prepend(saveOnly);
-      actions.before(session.node);
-      actions.before(
-        node(
-          'small',
-          'Your agent uses its configured permissions. Cloud-backed models receive request and project context.',
-        ),
-      );
+      captureLabel.before(session.node);
     }
     actions.before(runHint);
     updateComposerReadiness();
@@ -614,33 +790,42 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   }
   function showTray() {
     view = 'tray';
-    title('Local feedback');
-    panel.append(
-      node('p', 'Queued feedback waits for your agent to fetch it.'),
-      button('Refresh', () => {
-        void refresh();
-      }),
-      button('Close', () => {
-        closePanel();
-        tray.focus();
-      }),
-    );
+    title('Feedback');
     const current = annotations.filter(
       (a) => a.anchor.pageUrl === `${location.origin}${location.pathname}`,
     );
     if (!current.length)
-      panel.append(node('p', 'No annotations on this page yet.'));
+      panel.append(node('small', 'No requests on this page yet.'));
     for (const a of current) {
-      const item = button(
-        `${statusLabels[a.status]} · ${a.revisions.at(-1)!.comment}`,
-        () => {
-          detailId = a.id;
-          showDetail();
-        },
-      );
+      const comment = a.revisions.at(-1)!.comment;
+      const item = button('', () => {
+        detailId = a.id;
+        docked = true; // opened from the side panel: stay in it
+        showDetail();
+      });
       item.className = 'item';
+      item.setAttribute('aria-label', `${statusLabels[a.status]} · ${comment}`);
+      item.title = statusLabels[a.status];
+      const dot = node('span', '', 'dot');
+      dot.dataset.state = dotState(a);
+      item.append(dot, node('span', comment.split('\n')[0], 'item-title'));
       panel.append(item);
     }
+  }
+  function dotState(a: Annotation) {
+    const run = managed.state.runs
+      .filter((r) => r.annotationId === a.id)
+      .at(-1);
+    if (
+      run &&
+      ['queued', 'starting', 'working', 'waiting', 'stopping'].includes(
+        run.status,
+      )
+    )
+      return 'working';
+    if (a.status === 'ready_for_review') return 'review';
+    if (a.status === 'accepted') return 'accepted';
+    return 'idle';
   }
   function showDetail() {
     const a = annotations.find((item) => item.id === detailId);
@@ -651,24 +836,22 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     shownDetailVersion = a.version;
     view = 'detail';
     title(statusLabels[a.status]);
-    panel.append(button('Back to feedback', showTray));
     const latest = a.revisions.at(-1)!;
+    const prompt = node('p', latest.comment, 'message prompt');
+    prompt.title = `Revision ${latest.ordinal} · ${a.anchor.pathname}`;
+    prompt.addEventListener('click', () => prompt.classList.toggle('full'));
+    panel.append(prompt);
     if (managed.state.enabled) panel.append(managed.attach(a));
-    panel.append(
-      node('p', latest.comment, 'message'),
-      node('small', `Revision ${latest.ordinal} · ${a.anchor.pathname}`),
-    );
     const comparison = evidence(latest);
     if (latest.implementation) {
-      panel.append(
-        node(
-          'p',
-          'Agent reported a change. Review the result before accepting.',
-        ),
-        node('p', latest.implementation.summary, 'message'),
-      );
-      for (const file of latest.implementation.changedFiles ?? [])
-        panel.append(node('p', file));
+      panel.append(node('p', latest.implementation.summary, 'message'));
+      const files = latest.implementation.changedFiles ?? [];
+      if (files.length) {
+        const list = node('details');
+        list.append(node('summary', `Changed files (${files.length})`));
+        for (const file of files) list.append(node('small', file), node('br'));
+        panel.append(list);
+      }
       if (!latest.beforeSnapshot || !latest.afterSnapshot)
         comparison.append(
           node('p', 'Comparison unavailable'),
@@ -678,12 +861,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           ),
         );
       else
-        comparison.append(
-          node(
-            'p',
-            'Before / after evidence. Images are advisory; inspect the result before accepting.',
-          ),
-        );
+        comparison.title =
+          'Images are advisory; inspect the result before accepting.';
     }
     const kind: CaptureKind | null =
       a.status === 'queued' && !latest.beforeSnapshot
@@ -697,12 +876,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       if (capturing) comparison.append(node('p', `Capturing ${kind}…`));
       if (captureErrors.has(key))
         comparison.append(node('p', captureErrors.get(key), 'error'));
-      comparison.append(
-        node(
-          'small',
-          'Capturing shares visible pixels with local review. Private/form regions are excluded; external image resources may be unsupported.',
-        ),
-      );
+
       const retry = button(`Capture ${kind}`, () => {
         void captureFor(a, kind);
       });
@@ -727,12 +901,14 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       followup.setAttribute('aria-label', 'Follow-up request');
       followup.placeholder = 'What needs another pass?';
       const actions = node('div', undefined, 'actions');
+      followup.style.minHeight = '56px';
       const accept = button('Accept', () => {
         void review('accept');
       });
       const revise = button('Request changes', () => {
         void review('request-changes');
       });
+      accept.classList.add('primary');
       revise.disabled = true;
       followup.addEventListener('input', () => {
         revise.disabled =
@@ -774,7 +950,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       }
     }
     if (a.revisions.length > 1) {
-      panel.append(node('hr'), node('h2', 'Revision history'));
+      panel.append(node('hr'), node('h3', 'Revision history'));
       for (const revision of a.revisions.slice(0, -1)) {
         panel.append(
           node(
@@ -805,7 +981,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           if (destroyed) return;
           annotations = items;
           schedule();
-          tray.textContent = `Feedback (${items.filter((a) => a.anchor.pageUrl === `${location.origin}${location.pathname}`).length})`;
+          setTrayCount(
+            items.filter(
+              (a) =>
+                a.anchor.pageUrl === `${location.origin}${location.pathname}`,
+            ).length,
+          );
           for (const annotation of items) {
             const revision = annotation.revisions.at(-1)!;
             if (
@@ -829,7 +1010,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         } while (refreshAgain && !destroyed);
       } catch (cause) {
         if (!destroyed) {
-          connection.textContent = 'Disconnected';
+          setConnection('Disconnected', false);
           announce(
             cause instanceof Error ? cause.message : 'Bridge unavailable',
           );
@@ -866,6 +1047,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   document.addEventListener('keydown', key);
   window.addEventListener('scroll', schedule, { capture: true, passive: true });
   window.addEventListener('resize', schedule);
+  window.addEventListener('resize', syncSidebar);
   observer.observe(document.body);
   const mutations = new window.MutationObserver(schedule);
   mutations.observe(document.body, {
@@ -879,10 +1061,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       if (destroyed) return;
       destroyed = true;
       setActive(false);
+      closePanel();
       observer.disconnect();
       mutations.disconnect();
       window.removeEventListener('scroll', schedule, true);
       window.removeEventListener('resize', schedule);
+      window.removeEventListener('resize', syncSidebar);
       lifetime.abort();
       if (frame) cancelAnimationFrame(frame);
       for (const url of imageUrls.values()) URL.revokeObjectURL(url);
@@ -895,7 +1079,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   void client.events(refresh, (value) => {
     connected = value;
     if (!destroyed)
-      connection.textContent = connected ? 'Local bridge' : 'Disconnected';
+      setConnection(connected ? 'Local bridge' : 'Disconnected', connected);
     if (!destroyed) onboarding.connection(value);
   });
   return handle;

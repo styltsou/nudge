@@ -146,27 +146,31 @@ export class ManagedControls {
         cancelled: 'Agent stopped',
         interrupted: 'Agent interrupted',
       };
+      const row = element('div');
+      row.className = 'run-state';
       const status = element('p', labels[run.status]);
       status.setAttribute('role', 'status');
       if (['starting', 'working'].includes(run.status))
         status.className = 'agent-working';
-      box.append(
-        status,
-        element(
-          'small',
-          `${run.sessionMode === 'new' ? 'New' : 'Existing'} ${this.state.sessions.find((s) => s.id === run.sessionId)?.provider ?? this.state.provider ?? 'codex'} session · ${run.sessionId.slice(0, 8)}`,
-        ),
-      );
-      const details = element('details');
-      details.append(element('summary', 'Agent activity'));
-      for (const event of run.events) details.append(element('p', event.text));
-      box.append(details);
+      status.title = `${run.sessionMode === 'new' ? 'New' : 'Existing'} ${this.state.sessions.find((s) => s.id === run.sessionId)?.provider ?? this.state.provider ?? 'codex'} session · ${run.sessionId.slice(0, 8)}`;
+      row.append(status);
       if (activeRun(run))
-        box.append(
+        row.append(
           action('Stop agent', () =>
             this.client.request(`/runs/${run.id}/stop`, {}),
           ),
         );
+      box.append(row);
+      // New sessions are the default; only call out an explicit reuse.
+      if (run.sessionMode === 'existing')
+        box.append(element('small', status.title));
+      if (run.events.length > 1) {
+        const details = element('details');
+        details.append(element('summary', 'Agent activity'));
+        for (const event of run.events)
+          details.append(element('small', event.text), element('br'));
+        box.append(details);
+      }
       if (run.interaction) {
         box.append(element('p', run.interaction.text));
         const interactionId = run.interaction.id;
@@ -211,13 +215,13 @@ export class ManagedControls {
         this.dispatch(a, session.value(), requestId),
       );
       runButton.disabled = !this.canRun();
-      box.append(session.node, element('p', this.runHint()), runButton);
-      box.append(
-        element(
-          'small',
-          'Your configured agent permissions apply. Cloud-backed models receive this request and project context.',
-        ),
-      );
+      runButton.classList.add('primary');
+      const actions = element('div');
+      actions.className = 'actions';
+      actions.append(runButton);
+      box.append(session.node);
+      if (!this.canRun()) box.append(element('small', this.runHint()));
+      box.append(actions);
     }
     box.append(error);
   }

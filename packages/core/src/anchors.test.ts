@@ -7,7 +7,13 @@ import {
   it,
 } from 'bun:test';
 import { installDom } from '../../../tests/helpers/dom';
-import { anchorFor, findAnchor, selectorFor, textPreview } from './anchors';
+import {
+  anchorFor,
+  findAnchor,
+  locateAnchor,
+  selectorFor,
+  textPreview,
+} from './anchors';
 
 let restoreDom: () => void;
 beforeAll(() => {
@@ -78,5 +84,21 @@ describe('safe element context', () => {
     const anchor = anchorFor(element);
     expect(anchor.selector).not.toBeNull();
     expect(findAnchor(anchor).state).toBe('missing');
+  });
+  it('locates pins by unique position and matching text after a re-render, never for comparison', () => {
+    document.body.innerHTML =
+      '<main><button>Save</button><button>Cancel</button></main>';
+    const anchor = anchorFor(document.querySelectorAll('button')[1]!);
+    // Simulate a framework re-render: same structure, new nodes.
+    document.body.innerHTML =
+      '<main><button>Save</button><button>Cancel</button></main>';
+    const again = document.querySelectorAll('button')[1]!;
+    expect(locateAnchor(anchor)).toBe(again);
+    expect(findAnchor(anchor).state).toBe('missing');
+    again.textContent = 'Delete everything';
+    expect(locateAnchor(anchor)).toBeNull();
+    expect(
+      locateAnchor({ ...anchor, pageUrl: 'http://localhost/another' }),
+    ).toBeNull();
   });
 });

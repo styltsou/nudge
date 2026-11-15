@@ -128,3 +128,42 @@ export function findAnchor(anchor: ElementAnchor): AnchorResult {
     return { state: 'missing' };
   }
 }
+/**
+ * Best-effort element for showing a pin or comment. Unlike findAnchor, which gates
+ * before/after comparison, this also accepts a unique positional match when the
+ * tag and visible text (or position) still agree, so pins survive reloads and
+ * re-renders for elements without an id or test id. Never used for comparison.
+ */
+export function locateAnchor(anchor: ElementAnchor): Element | null {
+  const strict = findAnchor(anchor);
+  if (strict.state === 'found') return strict.element;
+  if (strict.state === 'ambiguous') return null;
+  if (
+    anchor.pageUrl !== `${window.location.origin}${window.location.pathname}` ||
+    !anchor.selector ||
+    anchor.selector.length > 512
+  )
+    return null;
+  try {
+    const matches = document.querySelectorAll(anchor.selector);
+    const element = matches.length === 1 ? matches[0] : undefined;
+    if (
+      !element ||
+      element.tagName !== anchor.tagName ||
+      element.closest('[data-nudge-host]')
+    )
+      return null;
+    if (anchor.textPreview)
+      return textPreview(element) === anchor.textPreview ? element : null;
+    const rect = element.getBoundingClientRect();
+    const near = (a: number, b: number) => Math.abs(a - b) <= 24;
+    return near(rect.x, anchor.rect.x) &&
+      near(rect.y, anchor.rect.y) &&
+      near(rect.width, anchor.rect.width) &&
+      near(rect.height, anchor.rect.height)
+      ? element
+      : null;
+  } catch {
+    return null;
+  }
+}

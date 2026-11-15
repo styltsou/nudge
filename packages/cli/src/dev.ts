@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { prepareLocalProject } from './local';
 import { nudge } from '../../vite/src/index';
+import { findFreePort } from './port';
 
 /** Vite and the app config come from the consumer, never from a global demo. */
 export async function startDev(root: string, port?: number) {
@@ -8,6 +9,13 @@ export async function startDev(root: string, port?: number) {
   const vite = (await import(
     Bun.resolveSync('vite', root)
   )) as typeof import('vite');
+  if (port === undefined) {
+    // Respect the app's configured port (and strictPort) but never share one with
+    // another server on the other loopback family.
+    const resolved = await vite.resolveConfig({ root }, 'serve');
+    if (!resolved.server.strictPort)
+      port = await findFreePort(resolved.server.port ?? 5173);
+  }
   const server = await vite.createServer({
     root,
     plugins: [nudge()],
