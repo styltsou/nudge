@@ -13,7 +13,6 @@ const commands =
   <div class="page-frame shell">
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="availability">Local-first visual feedback</p>
         <h1 id="hero-title">
           Show your agent
           <br />
@@ -25,11 +24,11 @@ const commands =
         </p>
         <InstallCommands />
         <div class="hero-actions">
-          <a href="/docs/getting-started/" class="button-primary">
-            Get started
-          </a>
           <a href="/docs/mcp-setup/" class="button-secondary">
             Connect your agent
+          </a>
+          <a href="/docs/getting-started/" class="button-primary">
+            Get started
           </a>
         </div>
         <p class="hero-footnote">
@@ -44,33 +43,41 @@ const commands =
       <Walkthrough />
     </section>
 
-    <ol class="workflow-rail" aria-label="The Nudge workflow">
+    <ol class="workflow-rail" aria-label="How Nudge works">
       <li>
-        <span class="rail-icon" aria-hidden="true">
-          ⌖
+        <span class="rail-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3l14 7-6 2-2 6z" />
+          </svg>
         </span>
-        <div>
-          <strong>Select in the browser</strong>
-          <span>Element, request, DOM context</span>
-        </div>
+        <strong>Point at it</strong>
+        <span>
+          Select an element in your running app and describe the change.
+        </span>
       </li>
       <li>
-        <span class="rail-icon" aria-hidden="true">
-          ↔
+        <span class="rail-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16v12H4z" />
+            <path d="m8 10 2 2-2 2M13 14h3" />
+          </svg>
         </span>
-        <div>
-          <strong>Hand off through MCP</strong>
-          <span>Your existing coding agent</span>
-        </div>
+        <strong>Your agent makes it</strong>
+        <span>
+          Codex, Claude or OpenCode runs in your project, started from the
+          browser.
+        </span>
       </li>
       <li>
-        <span class="rail-icon" aria-hidden="true">
-          ✓
+        <span class="rail-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
         </span>
-        <div>
-          <strong>Review the result</strong>
-          <span>Accept or request another pass</span>
-        </div>
+        <strong>Review it in place</strong>
+        <span>
+          Check the result on the page, then accept or ask for another pass.
+        </span>
       </li>
     </ol>
 

@@ -1156,3 +1156,166 @@ h2 {
   border-radius: var(--radius-lg);
   box-shadow: 0 16px 48px #0000004d;
 }
+/* Depth, matching the overlay: header and footer are recessed wells the page
+   sits above; buttons are lit from the top with a highlight, rim and drop. */
+:root {
+  --hl: rgb(255 255 255 / 0.9);
+  --drop: rgb(0 0 0 / 0.12);
+  --well: rgb(0 0 0 / 0.06);
+  --well-bg: #f3f3f3;
+  --btn-top: #ffffff;
+  --btn-bottom: #f2f2f2;
+  --btn-border: #d4d4d4;
+  --btn-hover-top: #fafafa;
+  --btn-hover-bottom: #ebebeb;
+}
+:root[data-theme='dark'] {
+  --hl: rgb(255 255 255 / 0.07);
+  --drop: rgb(0 0 0 / 0.6);
+  --well: rgb(0 0 0 / 0.55);
+  --well-bg: #101010;
+  --btn-top: #1d1d1d;
+  --btn-bottom: #121212;
+  --btn-border: #2c2c2c;
+  --btn-hover-top: #282828;
+  --btn-hover-bottom: #1a1a1a;
+}
+.site-header,
+.site-footer,
+.install-box,
+.setup-terminal {
+  border-color: color-mix(in srgb, var(--line) 45%, transparent);
+  background-color: var(--well-bg);
+  box-shadow:
+    inset 0 1px 3px var(--well),
+    0 1px 0 var(--hl);
+}
+.button-primary,
+.sample-primary,
+.sample-accept {
+  color: #fff;
+  border-color: #b5352d;
+  background: linear-gradient(180deg, #f3786c 0%, #e05246 55%, #cd4337 100%);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.22);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 1px 2px rgb(0 0 0 / 0.3),
+    0 2px 8px rgb(224 82 70 / 0.25);
+}
+.button-primary:hover,
+.sample-primary:hover,
+.sample-accept:hover {
+  filter: none;
+  background: linear-gradient(180deg, #f6857a 0%, #e65e52 55%, #d24a3e 100%);
+}
+.button-secondary,
+.example-button,
+.demo-playback,
+.terminal-header button,
+.sample-secondary {
+  border-color: var(--btn-border);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
+  box-shadow:
+    inset 0 1px 0 var(--hl),
+    0 1px 2px var(--drop);
+}
+:is(
+  .button-primary,
+  .sample-primary,
+  .sample-accept,
+  .button-secondary,
+  .example-button,
+  .demo-playback,
+  .terminal-header button,
+  .sample-secondary
+):active {
+  box-shadow: inset 0 1px 3px var(--well);
+  transform: translateY(0.5px);
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.button-primary, .button-secondary, .example-button):active {
+    transform: none;
+  }
+}
+/* Secondary hovers change the fill, like the primary; no border flash. */
+:is(
+    .button-secondary,
+    .example-button,
+    .demo-playback,
+    .terminal-header button,
+    .sample-secondary
+  ):not(:disabled):is(:hover, :focus-visible) {
+  border-color: var(--btn-border);
+  color: var(--ink);
+  background: linear-gradient(
+    180deg,
+    var(--btn-hover-top),
+    var(--btn-hover-bottom)
+  );
+}
+/* How it works: three tactile step cards, each with a recessed icon tile. */
+.workflow-rail {
+  gap: 12px;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+.workflow-rail li {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 6px;
+  padding: 22px 22px 24px;
+  text-align: left;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
+  box-shadow:
+    inset 0 1px 0 var(--hl),
+    0 1px 2px var(--drop);
+}
+.workflow-rail li + li {
+  border-left: 1px solid var(--btn-border);
+}
+.workflow-rail .rail-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  color: var(--accent);
+  background: var(--well-bg);
+  box-shadow: inset 0 1px 3px var(--well);
+}
+.workflow-rail .rail-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.workflow-rail strong {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--ink);
+}
+.workflow-rail li > span:not(.rail-icon) {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+@media (max-width: 800px) {
+  .workflow-rail {
+    grid-template-columns: 1fr;
+  }
+  .workflow-rail .rail-icon {
+    display: grid;
+  }
+  .workflow-rail li + li {
+    border-top: 1px solid var(--btn-border);
+  }
+}

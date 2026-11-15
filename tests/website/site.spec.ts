@@ -222,12 +222,15 @@ test('header links frame on hover/focus; sidebar rows fill on hover and selectio
     const docsLink = page
       .getByRole('navigation', { name: 'Main navigation' })
       .getByRole('link', { name: 'Docs', exact: true });
+    // The rounded corner frame is a masked ::after that appears on hover/focus.
+    const frameOpacity = () =>
+      docsLink.evaluate((el) => getComputedStyle(el, '::after').opacity);
     await docsLink.hover();
-    await expect(docsLink).not.toHaveCSS('background-image', 'none');
+    await expect.poll(frameOpacity).toBe('1');
     await docsLink.focus();
     await page.mouse.move(0, 100);
     await expect(docsLink).toBeFocused();
-    await expect(docsLink).not.toHaveCSS('background-image', 'none');
+    await expect.poll(frameOpacity).toBe('1');
     await docsLink.click();
     const selected = page.locator('.sidebar-content a[aria-current="page"]');
     // Soft filled row (product aesthetic), not the corner frame.

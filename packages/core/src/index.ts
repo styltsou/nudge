@@ -179,6 +179,40 @@ button.danger { background: var(--danger); border-color: var(--danger); color: v
 .popover .segmented { display: flex; width: 100%; }
 .popover .segmented button { flex: 1; padding-inline: 4px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* ---- Depth: tactile controls, raised surfaces and recessed fields ---- */
+:host { color-scheme: dark; --hl: rgb(255 255 255 / .07); --drop: rgb(0 0 0 / .55); --well: rgb(0 0 0 / .5); --btn-top: #1d1d1d; --btn-bottom: #121212; --btn-border: #2c2c2c; --btn-hover-top: #282828; --btn-hover-bottom: #1a1a1a; }
+@media (prefers-color-scheme: light) { :host(:not([data-theme=dark])) { color-scheme: light; --hl: rgb(255 255 255 / .95); --drop: rgb(0 0 0 / .12); --well: rgb(0 0 0 / .07); --btn-top: #ffffff; --btn-bottom: #f2f2f2; --btn-border: #d4d4d4; --btn-hover-top: #fafafa; --btn-hover-bottom: #ebebeb; } }
+:host([data-theme=light]) { color-scheme: light; --hl: rgb(255 255 255 / .95); --drop: rgb(0 0 0 / .12); --well: rgb(0 0 0 / .07); --btn-top: #ffffff; --btn-bottom: #f2f2f2; --btn-border: #d4d4d4; --btn-hover-top: #fafafa; --btn-hover-bottom: #ebebeb; }
+/* Secondary buttons: soft gradient, a 1px top highlight and a small drop. */
+button { background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom)); border-color: var(--btn-border); box-shadow: inset 0 1px 0 var(--hl), 0 1px 2px var(--drop); }
+button:hover { background: linear-gradient(180deg, var(--btn-hover-top), var(--btn-hover-bottom)); }
+button:active:not(:disabled) { background: var(--btn-bottom); box-shadow: inset 0 1px 2px var(--well); }
+/* Flat controls keep no bevel. */
+button.icon, .item, .tray-filter, .segmented button { box-shadow: none; }
+button.icon:active:not(:disabled) { box-shadow: inset 0 1px 2px var(--well); }
+/* Primary and pressed: brand coral, lit from above, darker rim, pressed sinks. */
+button.primary, button.icon.primary, button.icon[aria-pressed=true], button.danger {
+  color: #fff; border-color: #b5352d; text-shadow: 0 1px 0 rgb(0 0 0 / .22);
+  background: linear-gradient(180deg, #f3786c 0%, #e05246 55%, #cd4337 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .3), 0 1px 2px rgb(0 0 0 / .35), 0 2px 8px rgb(224 82 70 / .28);
+}
+button.primary:hover, button.icon.primary:hover, button.danger:hover { filter: none; background: linear-gradient(180deg, #f6857a 0%, #e65e52 55%, #d24a3e 100%); }
+button.primary:active:not(:disabled), button.icon.primary:active:not(:disabled), button.danger:active:not(:disabled) {
+  background: linear-gradient(180deg, #d24a3e, #e05246); box-shadow: inset 0 1px 3px rgb(0 0 0 / .35); transform: translateY(.5px);
+}
+button.icon.primary svg, button.icon[aria-pressed=true] svg { filter: drop-shadow(0 1px 0 rgb(0 0 0 / .2)); }
+/* Raised surfaces: a faint top highlight above their shadow. */
+.toolbar { background: linear-gradient(180deg, var(--surface), var(--bg)); box-shadow: inset 0 1px 0 var(--hl), 0 12px 32px rgb(0 0 0 / .45), 0 0 0 .5px rgb(0 0 0 / .5); }
+.panel, .popover, .onboarding { box-shadow: inset 0 1px 0 var(--hl), 0 16px 48px rgb(0 0 0 / .4); }
+.panel.sidebar { box-shadow: inset 1px 0 0 var(--hl), -12px 0 40px rgb(0 0 0 / .25); }
+.panel.sidebar[data-side=left] { box-shadow: inset -1px 0 0 var(--hl), 12px 0 40px rgb(0 0 0 / .25); }
+.new-row { background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom)); border-color: var(--btn-border); box-shadow: inset 0 1px 0 var(--hl), 0 1px 2px var(--drop); }
+/* Recessed fields and tracks. */
+textarea, select { box-shadow: inset 0 1px 2px var(--well); }
+.segmented { box-shadow: inset 0 1px 2px var(--well); }
+.segmented button[aria-checked=true] { background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom)); box-shadow: inset 0 1px 0 var(--hl), 0 1px 2px var(--drop); }
+.pin { background: linear-gradient(180deg, #f3786c, #d9493d); box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 2px 6px rgb(0 0 0 / .35); }
+@media (prefers-reduced-motion: reduce) { button:active { transform: none !important; } }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
   tag: K,

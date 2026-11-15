@@ -123,3 +123,59 @@
     outline-offset: -2px;
   }
 }
+
+/* Header controls: the bracket frame follows a rounded corner. A rounded ring
+   is drawn on ::after and masked down to its four corners, so each corner
+   reads as a rounded L. Replaces the square stroke paint for these controls. */
+:is(
+  .site-header > .brand,
+  .site-header .nav-link,
+  .theme-toggle,
+  header.header .site-title,
+  header.header .social-icons a,
+  header.header button[data-open-modal],
+  .sl-menu-button
+) {
+  position: relative;
+  background-image: none !important;
+}
+:is(
+  .site-header > .brand,
+  .site-header .nav-link,
+  .theme-toggle,
+  header.header .site-title,
+  header.header .social-icons a,
+  header.header button[data-open-modal],
+  .sl-menu-button
+)::after {
+  content: '';
+  position: absolute;
+  inset: var(--frame-inset, 6px);
+  border: 1px solid var(--nudge-primary);
+  border-radius: 9px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  --c: 10px;
+  mask:
+    linear-gradient(#000 0 0) top left / var(--c) var(--c) no-repeat,
+    linear-gradient(#000 0 0) top right / var(--c) var(--c) no-repeat,
+    linear-gradient(#000 0 0) bottom left / var(--c) var(--c) no-repeat,
+    linear-gradient(#000 0 0) bottom right / var(--c) var(--c) no-repeat;
+}
+:is(
+    .site-header > .brand,
+    .site-header .nav-link,
+    .theme-toggle,
+    header.header .site-title,
+    header.header .social-icons a,
+    header.header button[data-open-modal],
+    .sl-menu-button
+  ):is(:hover, :focus-visible)::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.site-header .nav-link, .theme-toggle)::after {
+    transition: none;
+  }
+}

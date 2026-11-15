@@ -1291,3 +1291,37 @@ public --tag preview` failed with missing authentication. The alternate local
 - Validation: prettier, oxlint, 15 website tests (the demo-overflow test caught
   the first inset attempt); screenshots of home, docs nav and the demo in both
   themes from the built site.
+
+## Tactile depth: wells, lit buttons, raised surfaces
+
+- Overlay and website share a depth recipe with light/dark tokens (--hl
+  highlight, --drop shadow, --well recess, --btn-top/bottom/border):
+  - Primary/pressed/danger buttons: coral gradient lit from the top, 1px inner
+    highlight, darker rim (#b5352d), small drop + soft coral glow, subtle text
+    shadow; pressed sinks 0.5px with an inner shadow (no transform with reduced
+    motion). Secondary buttons: quiet gradient with the same highlight/drop.
+  - Recessed: text fields, segmented tracks, and on the site the header,
+    footer, install box and terminal ("holes" with an inner top shadow and a
+    faint lower lip; borders nearly invisible).
+  - Raised: the overlay bar, panels, popover and setup dialog get a top
+    highlight above their shadows; pins are lit coral.
+- Overlay declares color-scheme so native controls (checkbox) match the theme.
+- Validation: prettier, oxlint, tsc, 112 unit/contract, 13 overlay browser and
+  15 website tests; 2x screenshots of composer, popover, header and hero in
+  both themes.
+
+## Subtler wells, fill hovers, rounded frames, step cards
+
+- Wells (site header/footer/install box/terminal, overlay fields and tracks):
+  lighter inner shadow and a slightly more contrasting inner background.
+- Secondary buttons hover by changing their fill (site and overlay); the coral
+  border flash on hover is gone. Hero order: Connect your agent, then Get
+  started.
+- Corner-bracket hover frames on header controls (site and docs) are rounded:
+  a 9px-radius ring on ::after, masked to its four corners. The website test
+  now checks the ::after frame instead of the old background paint.
+- Home: removed the "Local-first visual feedback" label; the three-step rail is
+  now three tactile cards with recessed coral icon tiles and current copy
+  (point at it / your agent makes it / review it in place).
+- Validation: prettier, oxlint, website typecheck, 112 unit/contract, 13
+  overlay browser and 15 website tests; screenshots in both themes.
