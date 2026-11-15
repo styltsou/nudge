@@ -1370,18 +1370,6 @@ h2 {
     box-shadow 120ms ease,
     color 120ms ease;
 }
-/* Text swaps (Copy → Copied) blur briefly so the two words read as one change. */
-.terminal-header button {
-  transition:
-    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
-    background 120ms ease,
-    filter 160ms ease,
-    opacity 160ms ease;
-}
-.terminal-header button[data-swapping] {
-  filter: blur(2px);
-  opacity: 0.6;
-}
 @media (prefers-reduced-motion: reduce) {
   :is(
     .button-primary,
@@ -1390,8 +1378,5 @@ h2 {
     .terminal-header button
   ):active {
     transform: none;
-  }
-  .terminal-header button[data-swapping] {
-    filter: none;
   }
 }

@@ -5,15 +5,6 @@
 const timers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
 const tips = new WeakMap<HTMLElement, HTMLElement>();
 
-/** Change a button's label behind a brief blur so it doesn't snap. */
-export function swapText(button: HTMLElement, text: string) {
-  button.dataset.swapping = 'true';
-  setTimeout(() => {
-    button.textContent = text;
-    delete button.dataset.swapping;
-  }, 120);
-}
-
 export function showCopied(
   button: HTMLElement,
   onReset?: () => void,

@@ -194,7 +194,7 @@ const commands =
   </div>
 </SiteLayout>
 <script>
-  import { showCopied, swapText } from '../scripts/copy-feedback';
+  import { showCopied } from '../scripts/copy-feedback';
   const copy = document.querySelector<HTMLButtonElement>('#copy-commands');
   const status = document.querySelector<HTMLElement>('#copy-status');
   copy?.addEventListener('click', async () => {
@@ -203,9 +203,9 @@ const commands =
         document.querySelector('#setup-commands')?.textContent ?? '',
       );
       if (status) status.textContent = 'Setup commands copied.';
-      swapText(copy, 'Copied');
+      copy.textContent = 'Copied';
       showCopied(copy, () => {
-        swapText(copy, 'Copy');
+        copy.textContent = 'Copy';
         if (status) status.textContent = '';
       });
     } catch {
