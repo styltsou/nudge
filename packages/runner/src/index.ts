@@ -1,11 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Annotation } from '../../shared/src/index';
-import type { AgentRun, AgentSession, RunAnswer } from '../../shared/src/runs';
+import type {
+  AgentRun,
+  AgentSession,
+  RunAnswer,
+  SetupTask,
+} from '../../shared/src/runs';
+import { runSetup } from './setup';
 import { AcpTurn } from './acp';
 import { resolveAdapter } from './adapters';
 import type { AgentTurn } from './provider';
-import { checkReadiness } from './readiness';
+import { checkReadiness, reportAgents } from './readiness';
 
 const root = process.env.NUDGE_PROJECT_ROOT;
 if (!root) throw new Error('Runner requires a configured project root');
@@ -17,9 +23,15 @@ const { bridgeUrl } = JSON.parse(
   readFileSync(resolve(state, 'connection.json'), 'utf8'),
 );
 const url = new URL(bridgeUrl);
-const agentConfig = JSON.parse(
-  readFileSync(resolve(state, 'agent.json'), 'utf8'),
-) as { provider: 'codex' | 'claude' | 'opencode' };
+/** Re-read each cycle: the browser can switch agents while this runner is up. */
+function agentConfig():
+  { provider: 'codex' | 'claude' | 'opencode'; mode?: string } | undefined {
+  try {
+    return JSON.parse(readFileSync(resolve(state, 'agent.json'), 'utf8'));
+  } catch {
+    return undefined;
+  }
+}
 if (
   url.protocol !== 'http:' ||
   url.hostname !== '127.0.0.1' ||
@@ -61,17 +73,38 @@ async function request(path: string, body: unknown) {
   return response.json();
 }
 let checkedAt = 0;
+let settingUp = false;
+const refreshStatus = async () => {
+  const config = agentConfig();
+  if (config?.mode === 'managed')
+    await request('/readiness', checkReadiness(root, config.provider));
+  await request('/agents', { agents: reportAgents(root) });
+  checkedAt = Date.now();
+};
 while (!stopping) {
   try {
-    const job = (await request('/claim', {})) as {
-      run: AgentRun;
-      annotation: Annotation;
-      session: AgentSession;
-    } | null;
-    if (!job && Date.now() - checkedAt > 30000) {
-      await request('/readiness', checkReadiness(root, agentConfig.provider));
-      checkedAt = Date.now();
+    const config = agentConfig();
+    if (!settingUp) {
+      const task = (await request('/setup/claim', {})) as SetupTask | null;
+      if (task) {
+        settingUp = true;
+        void runSetup(root, task, (event) =>
+          request('/setup/update', { id: task.id, ...event }),
+        ).finally(() => {
+          settingUp = false;
+          checkedAt = 0;
+        });
+      }
     }
+    const job =
+      config?.mode === 'managed'
+        ? ((await request('/claim', {})) as {
+            run: AgentRun;
+            annotation: Annotation;
+            session: AgentSession;
+          } | null)
+        : null;
+    if (!job && Date.now() - checkedAt > 30000) await refreshStatus();
     if (job) {
       const update = (event: Record<string, unknown>) =>
         request(`/${job.run.id}/update`, { ...event, lease: job.run.lease });

@@ -12,9 +12,16 @@ validation; do not treat fixture tests as proof that every installed version wor
 
 ## Choose an agent
 
-Open **Agent setup** in the browser toolbar for a guided checklist. Select your
-agent, copy the setup command and run it once in the project root, then restart
-dev. The panel distinguishes bridge connectivity, selected agent, installed ACP
+Open **Agent setup** in the browser toolbar. It lists Codex, Claude and OpenCode
+with their CLI, adapter and sign-in status. Select an agent and choose **Use**
+to switch to it; Nudge installs its pinned ACP adapter in ignored `.nudge/`
+state. Choose **Sign in with Codex/Claude** to run that CLI's own login: the CLI
+opens its sign-in page (a link appears if you need to open it yourself), and
+Nudge never sees your password or token. OpenCode has no in-browser sign-in; run
+`opencode auth login` in a terminal. Switching is blocked while a request runs.
+
+You can still use the command line instead: copy the setup command, run it once
+in the project root, then restart dev. The panel distinguishes bridge connectivity, selected agent, installed ACP
 adapter, background runner, native CLI sign-in and detected billing mode.
 
 Use **Check again** after setup or sign-in. Native sign-in checks update every

@@ -284,3 +284,19 @@ session, prints only sanitized readiness, and configures a host only after expli
 selection. Codex uses project TOML; Claude uses project MCP JSON. Neither global
 permissions nor credentials are changed. This is the setup foundation for future
 managed sessions, not automatic dispatch.
+
+### D-026 In-browser agent selection and sign-in (2026-11-15)
+
+The Agent setup panel lists Codex, Claude and OpenCode with CLI/adapter/sign-in
+status, switches the active agent (`Use <agent>`) and starts native sign-in.
+The browser only asks: it posts a provider name to the bridge, which records one
+setup task (install or login). The separate runner, now always launched by
+Nudge startup (idle unless `agent.json` is managed), claims the task and runs
+fixed commands: the pinned ACP adapter install, `codex login` or
+`claude auth login`. Nothing from the browser reaches a command line.
+The bridge and overlay still execute nothing. The native CLI opens its own
+sign-in page; the runner relays only a plain `https:` URL it printed so the
+user can open it manually. Credentials are never read, stored or shown, and
+success is re-checked with the CLI's own status command. Switching is refused
+while a run is active. OpenCode has no headless login, so the panel shows
+`opencode auth login`. Live provider sign-in is not covered by automated tests.

@@ -16,11 +16,15 @@ export type AgentStatus = {
   auth: 'signed-in' | 'login-required' | 'unknown';
   billing: 'subscription' | 'api' | 'unknown';
 };
+export function nativeExecutable(provider: Provider) {
+  return (
+    Bun.which(process.platform === 'win32' ? provider + '.exe' : provider) ??
+    Bun.which(provider)
+  );
+}
 export function nativeProbe(root = process.cwd()): Probe {
   return (provider, args) => {
-    const executable =
-      Bun.which(process.platform === 'win32' ? provider + '.exe' : provider) ??
-      Bun.which(provider);
+    const executable = nativeExecutable(provider);
     if (!executable) return { status: null, output: '' };
     try {
       const result = spawnSync(executable, args, {
@@ -114,4 +118,22 @@ export function checkReadiness(
     billing: status.billing,
     checkedAt: new Date().toISOString(),
   };
+}
+/** Status of every supported agent, for the in-browser picker. */
+export function reportAgents(root: string, probe = nativeProbe(root)) {
+  return detectAgents(probe).map((s) => {
+    let adapter: 'available' | 'missing' | 'invalid' = 'missing';
+    try {
+      adapter = resolveAdapter(root, s.provider) ? 'available' : 'missing';
+    } catch {
+      adapter = 'invalid';
+    }
+    return {
+      provider: s.provider,
+      installed: s.installed,
+      adapter,
+      auth: s.auth,
+      billing: s.billing,
+    };
+  });
 }

@@ -15,6 +15,10 @@ export class OnboardingPanel {
   private feedback = el('p');
   private begin = el('button', 'Annotate your first element');
   private login = el('code');
+  private agents = el('div');
+  private use = el('button');
+  private signIn = el('button');
+  private task = el('p');
   private instructions = el('details');
   private instructionsKey = '';
   private connected = false;
@@ -28,6 +32,7 @@ export class OnboardingPanel {
     shadow: ShadowRoot,
     private trigger: HTMLButtonElement,
     refresh: () => Promise<void>,
+    private request: (path: string, body: unknown) => Promise<unknown>,
     annotate: () => void,
   ) {
     this.dialog.className = 'onboarding';
@@ -78,6 +83,31 @@ export class OnboardingPanel {
         check.disabled = false;
       }
     };
+    this.agents.className = 'setup-agents';
+    this.use.type = 'button';
+    this.signIn.type = 'button';
+    const act =
+      (button: HTMLButtonElement, path: string, busy: string) => async () => {
+        button.disabled = true;
+        this.feedback.textContent = busy;
+        try {
+          await this.request(path, { provider: this.select.value });
+          await refresh();
+          this.feedback.textContent = '';
+        } catch (error) {
+          this.feedback.textContent =
+            error instanceof Error ? error.message : 'Request failed.';
+        } finally {
+          this.render();
+        }
+      };
+    this.use.onclick = act(this.use, '/agents/select', 'Switching agent…');
+    this.signIn.onclick = act(
+      this.signIn,
+      '/agents/login',
+      'Starting sign-in…',
+    );
+    this.task.setAttribute('aria-live', 'polite');
     this.begin.type = 'button';
     this.begin.onclick = () => {
       this.dialog.close();
@@ -111,6 +141,10 @@ export class OnboardingPanel {
       el('p', 'Point at your UI, describe the change, and review the result.'),
       label,
       this.select,
+      this.agents,
+      this.use,
+      this.signIn,
+      this.task,
       this.status,
       this.instructions,
       el(
@@ -140,6 +174,57 @@ export class OnboardingPanel {
   update(state: ManagedState) {
     this.state = state;
     this.render();
+  }
+  private renderAgents(selected: Provider, current: boolean) {
+    const reports = this.state.agents ?? [];
+    this.agents.replaceChildren();
+    for (const p of providers) {
+      const r = reports.find((a) => a.provider === p);
+      const text = !r
+        ? 'Checking…'
+        : [
+            r.installed ? 'CLI found' : 'CLI not found',
+            r.adapter === 'available'
+              ? 'adapter ready'
+              : 'adapter not installed',
+            r.auth === 'signed-in'
+              ? 'signed in'
+              : r.auth === 'login-required'
+                ? 'sign-in needed'
+                : 'sign-in unverified',
+          ].join(' · ');
+      const row = el(
+        'p',
+        `${names[p]}${this.state.enabled && p === this.state.provider ? ' (in use)' : ''}: ${text}`,
+      );
+      this.agents.append(row);
+    }
+    const task = this.state.setup;
+    const busy = !!task && ['pending', 'running'].includes(task.state);
+    this.use.textContent = current
+      ? `Using ${names[selected]}`
+      : `Use ${names[selected]}`;
+    this.use.disabled = current || busy || !this.connected;
+    const canLogin = selected !== 'opencode';
+    this.signIn.hidden = !canLogin;
+    this.signIn.textContent = `Sign in with ${names[selected]}`;
+    this.signIn.disabled = busy || !this.connected;
+    this.task.replaceChildren();
+    if (task) {
+      this.task.append(
+        el(
+          'span',
+          `${names[task.provider]} ${task.kind === 'login' ? 'sign-in' : 'setup'}: ${task.state === 'pending' ? 'starting…' : (task.message ?? task.state)}`,
+        ),
+      );
+      if (task.url && task.state === 'running') {
+        const link = el('a', ' Open sign-in page');
+        link.href = task.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        this.task.append(link);
+      }
+    }
   }
   private render() {
     const selected = (this.select.value || 'codex') as Provider;
@@ -193,6 +278,7 @@ export class OnboardingPanel {
             : 'API/provider billing detected',
       ],
     ];
+    this.renderAgents(selected, current);
     this.status.replaceChildren();
     const list = el('dl');
     list.className = 'setup-checks';

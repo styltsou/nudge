@@ -54,10 +54,7 @@ export function resolveAdapter(
     throw new Error('Invalid ACP adapter entry.');
   return { executable: process.execPath, args: [path] };
 }
-export function installAdapter(root: string, provider: Provider) {
-  if (resolveAdapter(root, provider)) return;
-  if (provider === 'opencode')
-    throw new Error('Install OpenCode with ACP support, then rerun setup.');
+function prepareInstall(root: string, provider: 'codex' | 'claude') {
   const spec = adapterPackages[provider];
   const directory = adapterDirectory(root, provider);
   mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -69,6 +66,39 @@ export function installAdapter(root: string, provider: Provider) {
       2,
     ) + '\n',
   );
+  return directory;
+}
+const installEnv = (root: string) => ({
+  ...process.env,
+  BUN_INSTALL_CACHE_DIR: resolve(root, '.nudge/agents/cache'),
+});
+/** Non-blocking install for the runner, so heartbeats continue meanwhile. */
+export async function installAdapterAsync(root: string, provider: Provider) {
+  if (resolveAdapter(root, provider)) return;
+  if (provider === 'opencode')
+    throw new Error('Install OpenCode with ACP support, then rerun setup.');
+  const directory = prepareInstall(root, provider);
+  const child = Bun.spawn(
+    [process.execPath, 'install', '--cwd', directory, '--ignore-scripts'],
+    {
+      cwd: root,
+      stdin: 'ignore',
+      stdout: 'ignore',
+      stderr: 'ignore',
+      windowsHide: true,
+      env: installEnv(root),
+      timeout: 180000,
+    },
+  );
+  if ((await child.exited) !== 0 || !resolveAdapter(root, provider))
+    throw new Error('ACP adapter installation failed.');
+}
+export function installAdapter(root: string, provider: Provider) {
+  if (resolveAdapter(root, provider)) return;
+  if (provider === 'opencode')
+    throw new Error('Install OpenCode with ACP support, then rerun setup.');
+  const spec = adapterPackages[provider];
+  const directory = prepareInstall(root, provider);
   console.log(`Installing ${spec.bin} in Nudge's private runtime directory...`);
   const result = spawnSync(
     process.execPath,
@@ -78,10 +108,7 @@ export function installAdapter(root: string, provider: Provider) {
       stdio: 'inherit',
       windowsHide: true,
       timeout: 180000,
-      env: {
-        ...process.env,
-        BUN_INSTALL_CACHE_DIR: resolve(root, '.nudge/agents/cache'),
-      },
+      env: installEnv(root),
     },
   );
   if (result.status !== 0 || !resolveAdapter(root, provider))

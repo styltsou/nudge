@@ -92,9 +92,52 @@ export const activeRun = (r: AgentRun) =>
 export type ManagedState = {
   setupCommand?: string;
   readiness?: Readiness;
+  agents?: AgentReport[];
+  setup?: SetupTask;
   provider?: Provider;
   enabled: boolean;
   online: boolean;
   runs: AgentRun[];
   sessions: AgentSession[];
 };
+
+export const providerRequestSchema = z.strictObject({
+  provider: z.enum(providers),
+});
+export const agentStatusSchema = z.strictObject({
+  provider: z.enum(providers),
+  installed: z.boolean(),
+  adapter: z.enum(['available', 'missing', 'invalid']),
+  auth: z.enum(['signed-in', 'login-required', 'unknown']),
+  billing: z.enum(['subscription', 'api', 'unknown']),
+});
+export const agentsReportSchema = z.strictObject({
+  agents: z.array(agentStatusSchema).max(providers.length),
+});
+export type AgentReport = z.infer<typeof agentStatusSchema>;
+/** One browser-requested setup action, executed only by the local runner. */
+export type SetupTask = {
+  id: string;
+  provider: Provider;
+  kind: 'install' | 'login';
+  state: 'pending' | 'running' | 'done' | 'failed';
+  message?: string;
+  url?: string;
+  updatedAt: string;
+};
+export const setupUpdateSchema = z.strictObject({
+  id: z.uuid(),
+  state: z.enum(['running', 'done', 'failed']),
+  message: z.string().max(300).optional(),
+  url: z.string().max(2000).optional(),
+});
+/** Only a plain https URL printed by a native sign-in CLI may reach the browser. */
+export function safeSignInUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) return;
+    return url.href.length <= 2000 ? url.href : undefined;
+  } catch {
+    return;
+  }
+}

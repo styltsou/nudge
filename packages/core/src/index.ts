@@ -124,9 +124,15 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   toolbar.append(toggle, tray, connection);
   const setupButton = button('Agent setup', () => {});
   toolbar.insertBefore(setupButton, connection);
-  const onboarding = new OnboardingPanel(shadow, setupButton, refresh, () => {
-    setActive(true);
-  });
+  const onboarding = new OnboardingPanel(
+    shadow,
+    setupButton,
+    refresh,
+    (path, body) => client.request(path, body),
+    () => {
+      setActive(true);
+    },
+  );
   managed.onState = (state) => {
     onboarding.update(state);
     updateComposerReadiness?.();

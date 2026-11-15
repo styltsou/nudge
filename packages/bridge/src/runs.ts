@@ -56,6 +56,9 @@ export class RunStore {
       fail('Run not found in this project.')
     );
   }
+  setProvider(provider: Provider) {
+    this.provider = provider;
+  }
   online() {
     return Date.now() - this.seen < 10000;
   }

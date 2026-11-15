@@ -63,6 +63,17 @@ test('agent setup explains missing readiness, copies setup, preserves drafts and
       dialog.getByText('Setup needed', { exact: true }),
     ).toBeVisible();
     await dialog.getByLabel('Choose an agent').selectOption('claude');
+    await expect(
+      dialog.getByRole('button', { name: 'Use Claude' }),
+    ).toBeEnabled();
+    await expect(
+      dialog.getByRole('button', { name: 'Sign in with Claude' }),
+    ).toBeVisible();
+    await dialog.getByLabel('Choose an agent').selectOption('opencode');
+    await expect(
+      dialog.getByRole('button', { name: 'Sign in with OpenCode' }),
+    ).toBeHidden();
+    await dialog.getByLabel('Choose an agent').selectOption('claude');
     await dialog.getByRole('button', { name: 'Copy setup command' }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
       'bun packages/cli/src/index.ts agents --agent claude --managed',

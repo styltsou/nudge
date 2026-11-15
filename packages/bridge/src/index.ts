@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
+import { renameSync, writeFileSync } from 'node:fs';
 import type { ServerResponse } from 'node:http';
 import {
   canAct,
@@ -24,6 +25,12 @@ import {
   answerSchema,
   runUpdateSchema,
   readinessSchema,
+  providerRequestSchema,
+  agentsReportSchema,
+  setupUpdateSchema,
+  safeSignInUrl,
+  type AgentReport,
+  type SetupTask,
   type Readiness,
 } from '../../shared/src/runs';
 
@@ -53,6 +60,8 @@ export function createBridge(config: BridgeConfig) {
   const authorities = new WeakMap<object, Authority>();
   const clients = new Set<ServerResponse>();
   let readiness: Readiness | undefined;
+  let agents: AgentReport[] | undefined;
+  let setup: SetupTask | undefined;
   let windowStart = Date.now();
   let requestCount = 0;
   app.setErrorHandler((error, _request, reply) => {
@@ -132,8 +141,12 @@ export function createBridge(config: BridgeConfig) {
     ) {
       if (
         origin ||
-        !config.managed ||
-        !request.url.startsWith('/api/v1/runner/')
+        !request.url.startsWith('/api/v1/runner/') ||
+        // Setup/status routes work before an agent is enabled; runs need managed mode.
+        (!config.managed &&
+          !/^\/api\/v1\/runner\/(?:agents|setup\/(?:claim|update))$/.test(
+            request.url,
+          ))
       )
         return reply.code(403).send({
           error: { code: 'SCOPE_DENIED', message: 'Runner channel required' },
@@ -187,7 +200,115 @@ export function createBridge(config: BridgeConfig) {
     ...runs.publicState(!!config.managed),
     setupCommand: config.setupCommand ?? 'bunx --bun usenudge',
     ...(readiness ? { readiness } : {}),
+    ...(agents ? { agents } : {}),
+    ...(setup ? { setup } : {}),
   }));
+  const setupBusy = () =>
+    setup !== undefined &&
+    ['pending', 'running'].includes(setup.state) &&
+    Date.now() - Date.parse(setup.updatedAt) < 10 * 60 * 1000;
+  const newSetup = (
+    provider: SetupTask['provider'],
+    kind: SetupTask['kind'],
+  ) => {
+    setup = {
+      id: randomUUID(),
+      provider,
+      kind,
+      state: 'pending',
+      updatedAt: new Date().toISOString(),
+    };
+    notifyRuns();
+  };
+  app.post('/api/v1/agents/select', async (request, reply) => {
+    if (authorities.get(request) !== 'browser')
+      return reply.code(403).send({ error: { message: 'Browser required' } });
+    const input = providerRequestSchema.safeParse(request.body);
+    if (!input.success)
+      return reply.code(400).send({ error: { message: 'Invalid agent' } });
+    if (runs.runs().some((r) => activeRun(r)))
+      return reply.code(409).send({
+        error: {
+          code: 'RUN_CONFLICT',
+          message:
+            'Stop or finish the running request before switching agents.',
+        },
+      });
+    if (setupBusy())
+      return reply.code(409).send({
+        error: {
+          code: 'RUN_CONFLICT',
+          message: 'Wait for the current agent setup step to finish.',
+        },
+      });
+    // Persist first; the runner reads this file, so a failed write changes nothing.
+    const file = resolve(config.stateDir, 'agent.json');
+    writeFileSync(
+      file + '.tmp',
+      JSON.stringify({
+        provider: input.data.provider,
+        mode: 'managed',
+        transport: 'acp',
+      }) + '\n',
+      { mode: 0o600 },
+    );
+    renameSync(file + '.tmp', file);
+    config.provider = input.data.provider;
+    config.managed = true;
+    runs.setProvider(input.data.provider);
+    readiness = undefined;
+    newSetup(input.data.provider, 'install');
+    return { ok: true };
+  });
+  app.post('/api/v1/agents/login', async (request, reply) => {
+    if (authorities.get(request) !== 'browser')
+      return reply.code(403).send({ error: { message: 'Browser required' } });
+    const input = providerRequestSchema.safeParse(request.body);
+    if (!input.success || input.data.provider === 'opencode')
+      return reply.code(400).send({
+        error: { message: 'Sign-in from Nudge supports Codex and Claude.' },
+      });
+    if (setupBusy())
+      return reply.code(409).send({
+        error: {
+          code: 'RUN_CONFLICT',
+          message: 'Wait for the current agent setup step to finish.',
+        },
+      });
+    newSetup(input.data.provider, 'login');
+    return { ok: true };
+  });
+  app.post('/api/v1/runner/agents', async (request, reply) => {
+    const input = agentsReportSchema.safeParse(request.body);
+    if (!input.success)
+      return reply.code(400).send({ error: { message: 'Invalid agents' } });
+    agents = input.data.agents;
+    notifyRuns();
+    return { ok: true };
+  });
+  app.post('/api/v1/runner/setup/claim', async () => {
+    if (setup?.state !== 'pending') return null;
+    setup = { ...setup, state: 'running', updatedAt: new Date().toISOString() };
+    notifyRuns();
+    return setup;
+  });
+  app.post('/api/v1/runner/setup/update', async (request, reply) => {
+    const input = setupUpdateSchema.safeParse(request.body);
+    if (!input.success || !setup || setup.id !== input.data.id)
+      return reply.code(400).send({ error: { message: 'Invalid update' } });
+    const { id: _id, message, url, state } = input.data;
+    setup = {
+      id: setup.id,
+      provider: setup.provider,
+      kind: setup.kind,
+      state,
+      updatedAt: new Date().toISOString(),
+      ...(message ? { message } : {}),
+      ...(url && safeSignInUrl(url) ? { url: safeSignInUrl(url)! } : {}),
+    };
+    notifyRuns();
+    return { ok: true };
+  });
   app.post('/api/v1/runner/readiness', async (request, reply) => {
     const input = readinessSchema.safeParse(request.body);
     if (!input.success || input.data.provider !== (config.provider ?? 'codex'))

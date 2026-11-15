@@ -1045,3 +1045,16 @@ public --tag preview` failed with missing authentication. The alternate local
   sandbox and reported that it succeeded. No remote deployment was performed.
 - Next: commit/push these changes, match the Worker name to the Cloudflare project,
   apply the documented build settings and attach the user's domain in Cloudflare.
+
+## In-browser agent selection and sign-in
+
+- `init` now auto-detects an installed agent when `--agent` is omitted.
+- Agent setup panel: per-agent status, `Use <agent>`, `Sign in with <agent>`
+  (Codex/Claude). New bridge routes: `POST /agents/select`, `POST /agents/login`
+  (browser) and `/runner/agents`, `/runner/setup/claim`, `/runner/setup/update`
+  (runner). Runner re-reads `agent.json` each cycle, reports all agents, runs
+  setup tasks with the non-blocking adapter installer and login subprocess.
+  The Vite plugin always launches the runner. See D-026.
+- Validation: tsc, oxlint, prettier, 100 unit/contract tests and all 13 browser
+  tests passed (Windows). Not verified: real `codex login` / `claude auth login`
+  output, Windows `.cmd` CLI shims, or an end-to-end live agent run.

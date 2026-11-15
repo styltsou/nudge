@@ -69,7 +69,8 @@ export function nudge(): Plugin {
         JSON.stringify({ bridgeUrl: browserConfig.bridgeUrl }),
         { mode: 0o600 },
       );
-      const stopRunner = config.managed ? launchRunner(vite.root) : undefined;
+      // Always start the idle runner: it reports agent status and runs in-browser setup.
+      const stopRunner = launchRunner(vite.root);
       server.httpServer?.once('listening', () => {
         const address = server.httpServer!.address();
         if (address && typeof address !== 'string') {
