@@ -14,20 +14,22 @@ routes directly. The runner uses its own capability for the dedicated job routes
 
 ## Routes
 
-| Method | Path                                      | Capability / behavior                                     |
-| ------ | ----------------------------------------- | --------------------------------------------------------- |
-| GET    | `/health`                                 | Liveness only; no private state.                          |
-| GET    | `/api/v1/annotations?status=queued`       | Read this project's annotations; optional state filter.   |
-| POST   | `/api/v1/annotations`                     | Browser creates `{ comment, anchor }`.                    |
-| GET    | `/api/v1/annotations/:id`                 | Read one annotation and its revisions.                    |
-| POST   | `/api/v1/annotations/:id/claim`           | MCP: queued → in progress.                                |
-| POST   | `/api/v1/annotations/:id/release`         | MCP: in progress → queued.                                |
-| POST   | `/api/v1/annotations/:id/implementation`  | MCP: queued/in progress → ready for review.               |
-| POST   | `/api/v1/annotations/:id/accept`          | Browser: ready for review → accepted.                     |
-| POST   | `/api/v1/annotations/:id/request-changes` | Browser: follow-up comment creates a new queued revision. |
-| POST   | `/api/v1/annotations/:id/snapshots`       | Browser uploads evidence for the current revision.        |
-| GET    | `/api/v1/snapshots/:id`                   | Read authenticated, project-scoped PNG bytes.             |
-| GET    | `/api/v1/events`                          | Authenticated fetch-based SSE hints.                      |
+| Method | Path                                      | Capability / behavior                                       |
+| ------ | ----------------------------------------- | ----------------------------------------------------------- |
+| GET    | `/health`                                 | Liveness only; no private state.                            |
+| GET    | `/api/v1/annotations?status=queued`       | Read this project's annotations; optional state filter.     |
+| POST   | `/api/v1/annotations`                     | Browser creates `{ comment, anchor }`.                      |
+| GET    | `/api/v1/annotations/:id`                 | Read one annotation and its revisions.                      |
+| POST   | `/api/v1/annotations/:id/claim`           | MCP: queued → in progress.                                  |
+| POST   | `/api/v1/annotations/:id/release`         | MCP: in progress → queued.                                  |
+| POST   | `/api/v1/annotations/:id/implementation`  | MCP: queued/in progress → ready for review.                 |
+| POST   | `/api/v1/annotations/:id/accept`          | Browser: ready for review → accepted.                       |
+| POST   | `/api/v1/annotations/:id/request-changes` | Browser: follow-up comment creates a new queued revision.   |
+| POST   | `/api/v1/annotations/:id/snapshots`       | Browser uploads evidence for the current revision.          |
+| POST   | `/api/v1/annotations/:id/archive`         | Browser: `{ expectedVersion, archived }` hides or restores. |
+| POST   | `/api/v1/annotations/:id/delete`          | Browser: `{ expectedVersion }` removes permanently.         |
+| GET    | `/api/v1/snapshots/:id`                   | Read authenticated, project-scoped PNG bytes.               |
+| GET    | `/api/v1/events`                          | Authenticated fetch-based SSE hints.                        |
 
 ## Managed runs
 
@@ -102,6 +104,13 @@ limits and 429 for request/subscription limits.
 
 `annotation.created`, `annotation.updated`, `annotation.review_ready`, and
 `annotation.accepted` contain `{ annotationId, projectId, version, status }`.
+`annotation.deleted` carries the last state of a removed annotation.
+
+Archived annotations carry `archivedAt`. MCP reads never list them and agents
+cannot claim or run them; the browser sees them flagged. Deleting removes the
+annotation, its snapshots, its runs and any session no other annotation uses.
+Neither action is allowed while an agent runs on the annotation, and neither
+undoes code changes.
 Events are hints; refetch current state on reconnection. Use authenticated fetch
 streaming, with the capability in a header.
 

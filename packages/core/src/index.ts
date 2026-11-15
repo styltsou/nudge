@@ -17,7 +17,7 @@ export type NudgeOptions = {
 export type NudgeHandle = { destroy(): void };
 
 const css = `
-:host { all: initial; --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
+:host { all: initial; --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
 @media (prefers-color-scheme: light) { :host(:not([data-theme=dark])) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
 :host([data-theme=light]) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; }
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
@@ -40,7 +40,7 @@ button.icon.primary svg { stroke-width: 2.2; }
 .badge { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; font-size: 10px; line-height: 15px; font-weight: 700; background: var(--accent); color: var(--accent-ink); pointer-events: none; }
 .badge:empty { display: none; }
 .toolbar button.icon { position: relative; }
-.toolbar { position: fixed; left: calc((100% - var(--nudge-push, 0px)) / 2); bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 24px #0004; transition: transform .18s cubic-bezier(.23,1,.32,1); }
+.toolbar { position: fixed; left: calc((100% - var(--nudge-push, 0px)) / 2); bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 24px #0004; transition: transform .18s cubic-bezier(.23,1,.32,1), left 260ms var(--ease-drawer); }
 .toolbar button.icon { border-radius: 999px; }
 .toolbar::before { content: ''; position: absolute; left: 0; right: 0; top: -16px; height: 16px; }
 .toolbar[data-collapsed=true] { transform: translate(-50%, calc(100% + 6px)); }
@@ -104,6 +104,21 @@ button[data-needs-setup=true] { color: var(--accent); }
 .segmented button[aria-checked=true] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px #0003; }
 .tag { flex: none; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--raised); color: var(--muted); }
 button[data-offline=true]::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--bg); }
+.panel.sidebar { transition: transform 260ms var(--ease-drawer); }
+@starting-style { .panel.sidebar { transform: translateX(100%); } }
+.panel.sidebar[data-closing=true] { transform: translateX(100%); }
+@media (prefers-reduced-motion: reduce) { .panel.sidebar { transition: none; } }
+.row { position: relative; display: flex; align-items: center; margin: 0 0 4px; }
+.row .item { margin: 0; padding-right: 10px; }
+.row-actions { position: absolute; right: 4px; display: flex; gap: 2px; opacity: 0; transition: opacity .12s; background: var(--surface); border-radius: 8px; }
+.row:hover .row-actions, .row:focus-within .row-actions, .row[data-confirm=true] .row-actions { opacity: 1; }
+.row-actions button.icon { width: 26px; height: 26px; }
+.row[data-archived=true] .item { opacity: .6; }
+.row-confirm { display: flex; align-items: center; gap: 6px; padding: 0 2px 0 8px; font-size: 12px; color: var(--muted); }
+button.danger { background: var(--danger); border-color: var(--danger); color: var(--bg); font-weight: 600; }
+.tray-filter { display: block; margin: 8px 0 0; font-size: 11px; color: var(--muted); background: none; border: 0; padding: 4px 0; min-height: 0; }
+.tray-filter:hover { color: var(--ink); }
+@media (hover: none) { .row-actions { opacity: 1; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
@@ -296,26 +311,54 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       !panel.hidden && view !== 'tray' && docked,
     );
     panel.classList.toggle('pinned', !panel.hidden && !sidebar);
-    const push = sidebar && window.innerWidth >= 720 ? SIDEBAR_WIDTH : 0;
+    setPush(sidebar && window.innerWidth >= 720 ? SIDEBAR_WIDTH : 0);
+    schedule();
+  }
+  // The page slides with the panel: a temporary margin-right transition on the
+  // root, using the same curve and duration. Both inline values are saved and
+  // restored exactly once the page is back.
+  const DRAWER_MS = 260;
+  const reducedMotion = () =>
+    typeof matchMedia === 'function' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let savedTransition: [string, string] | undefined;
+  let restoreTimer: ReturnType<typeof setTimeout> | undefined;
+  const restoreInline = (name: string, saved: [string, string]) => {
+    if (saved[0]) pageRoot.style.setProperty(name, saved[0], saved[1]);
+    else pageRoot.style.removeProperty(name);
+  };
+  function setPush(push: number, animate = !reducedMotion()) {
     host.style.setProperty('--nudge-push', push + 'px');
-    if (push && !savedMargin)
+    if (!push && !savedMargin) return;
+    clearTimeout(restoreTimer);
+    if (!savedMargin) {
       savedMargin = [
         pageRoot.style.getPropertyValue('margin-right'),
         pageRoot.style.getPropertyPriority('margin-right'),
       ];
-    if (push)
-      pageRoot.style.setProperty('margin-right', push + 'px', 'important');
-    else if (savedMargin) {
-      if (savedMargin[0])
-        pageRoot.style.setProperty(
-          'margin-right',
-          savedMargin[0],
-          savedMargin[1],
-        );
-      else pageRoot.style.removeProperty('margin-right');
-      savedMargin = undefined;
+      savedTransition = [
+        pageRoot.style.getPropertyValue('transition'),
+        pageRoot.style.getPropertyPriority('transition'),
+      ];
     }
-    schedule();
+    if (animate)
+      pageRoot.style.setProperty(
+        'transition',
+        `margin-right ${DRAWER_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+        'important',
+      );
+    else if (savedTransition) restoreInline('transition', savedTransition);
+    if (push) {
+      pageRoot.style.setProperty('margin-right', push + 'px', 'important');
+      return;
+    }
+    restoreInline('margin-right', savedMargin);
+    const finish = () => {
+      if (savedTransition) restoreInline('transition', savedTransition);
+      savedMargin = savedTransition = undefined;
+    };
+    if (animate) restoreTimer = setTimeout(finish, DRAWER_MS);
+    else finish();
   }
   let collapsed = false;
   try {
@@ -498,7 +541,9 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     const here = `${location.origin}${location.pathname}`;
     const numbers = new Map(
       annotations
-        .filter((a) => a.anchor.pageUrl === here && !isPageWide(a))
+        .filter(
+          (a) => a.anchor.pageUrl === here && !isPageWide(a) && !a.archivedAt,
+        )
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
         .map((a, i) => [a.id, i + 1]),
     );
@@ -545,6 +590,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       if (target) observer.observe(target);
       pin.hidden =
         isPageWide(annotation) ||
+        !!annotation.archivedAt ||
         !rect ||
         rect.width <= 0 ||
         rect.height <= 0 ||
@@ -560,7 +606,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     }
   }
   function positionComment() {
-    if (panel.hidden || docked || view === 'tray') return;
+    if (panel.hidden || docked || view === 'tray' || panel.dataset.closing)
+      return;
     const annotation = annotations.find((a) => a.id === detailId);
     if (
       view === 'composer' &&
@@ -721,14 +768,35 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       announce('Annotation mode enabled. Click an element. Escape cancels.');
     }
   }
-  function closePanel() {
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+  function closePanel(immediate = false) {
+    const slide =
+      !immediate &&
+      !panel.hidden &&
+      panel.classList.contains('sidebar') &&
+      !reducedMotion();
     docked = false;
     view = 'closed';
+    if (!slide) return finishClose();
+    // Exit the way it entered; inert so the leaving panel takes no clicks.
+    panel.dataset.closing = 'true';
+    panel.inert = true;
+    setPush(0);
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(finishClose, DRAWER_MS);
+  }
+  function finishClose() {
+    clearTimeout(closeTimer);
+    delete panel.dataset.closing;
+    panel.inert = false;
     panel.hidden = true;
     panel.replaceChildren();
     syncSidebar();
   }
   function title(text: string) {
+    clearTimeout(closeTimer);
+    delete panel.dataset.closing;
+    panel.inert = false;
     panel.hidden = false;
     const head = node('div', undefined, 'panel-head');
     head.append(node('h2', text));
@@ -1026,11 +1094,20 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   function showTray() {
     view = 'tray';
     title('Feedback');
-    const current = annotations.filter(
+    const onPage = annotations.filter(
       (a) => a.anchor.pageUrl === `${location.origin}${location.pathname}`,
     );
+    const archivedCount = onPage.filter((a) => a.archivedAt).length;
+    const current = onPage.filter((a) => !!a.archivedAt === showArchived);
     if (!current.length)
-      panel.append(node('small', 'No requests on this page yet.'));
+      panel.append(
+        node(
+          'small',
+          showArchived
+            ? 'Nothing archived on this page.'
+            : 'No requests on this page yet.',
+        ),
+      );
     for (const a of current) {
       const comment = a.revisions.at(-1)!.comment;
       const item = button('', () => {
@@ -1049,8 +1126,76 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         node('span', sessionTitle(a) ?? comment.split('\n')[0], 'item-title'),
       );
       if (isPageWide(a)) item.append(node('span', 'Page', 'tag'));
-      panel.append(item);
+      const row = node('div', undefined, 'row');
+      row.dataset.archived = String(!!a.archivedAt);
+      row.append(item);
+      // No archive/delete while an agent works on it.
+      if (state !== 'working') row.append(rowActions(a, row));
+      panel.append(row);
     }
+    if (archivedCount || showArchived) {
+      const filter = button(
+        showArchived ? 'Back to requests' : `Show archived (${archivedCount})`,
+        () => {
+          showArchived = !showArchived;
+          showTray();
+        },
+      );
+      filter.className = 'tray-filter';
+      panel.append(filter);
+    }
+  }
+  let showArchived = false;
+  function rowActions(a: Annotation, row: HTMLElement) {
+    const actions = node('div', undefined, 'row-actions');
+    const fail = (cause: unknown) =>
+      announce(cause instanceof Error ? cause.message : 'Action failed');
+    const archive = iconButton(
+      a.archivedAt ? icons.restore : icons.archive,
+      a.archivedAt ? 'Restore' : 'Archive',
+      () => {
+        void client
+          .mutate(`/annotations/${a.id}/archive`, {
+            expectedVersion: a.version,
+            archived: !a.archivedAt,
+          })
+          .then((updated) => {
+            upsert(updated);
+            announce(a.archivedAt ? 'Request restored.' : 'Request archived.');
+            showTray();
+          }, fail);
+      },
+    );
+    const remove = iconButton(icons.trash, 'Delete', () => {
+      // Deleting is permanent, so confirm inline (no native dialog).
+      row.dataset.confirm = 'true';
+      const confirmBox = node('div', undefined, 'row-confirm');
+      const yes = button('Delete', () => {
+        yes.disabled = true;
+        void client
+          .request(`/annotations/${a.id}/delete`, {
+            expectedVersion: a.version,
+          })
+          .then(() => {
+            annotations = annotations.filter((x) => x.id !== a.id);
+            if (detailId === a.id) detailId = null;
+            announce('Request deleted.');
+            void refresh();
+            showTray();
+          }, fail);
+      });
+      yes.className = 'danger';
+      const no = button('Cancel', () => {
+        delete row.dataset.confirm;
+        actions.replaceChildren(archive, remove);
+        remove.focus();
+      });
+      confirmBox.append(node('span', 'Delete permanently?'), no, yes);
+      actions.replaceChildren(confirmBox);
+      no.focus();
+    });
+    actions.append(archive, remove);
+    return actions;
   }
   /** The agent-generated title of this request's latest session, once known. */
   function sessionTitle(a: Annotation) {
@@ -1239,7 +1384,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           setTrayCount(
             items.filter(
               (a) =>
-                a.anchor.pageUrl === `${location.origin}${location.pathname}`,
+                a.anchor.pageUrl === `${location.origin}${location.pathname}` &&
+                !a.archivedAt,
             ).length,
           );
           for (const annotation of items) {
@@ -1316,7 +1462,9 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       if (destroyed) return;
       destroyed = true;
       setActive(false);
-      closePanel();
+      closePanel(true);
+      setPush(0, false);
+      clearTimeout(restoreTimer);
       observer.disconnect();
       mutations.disconnect();
       window.removeEventListener('scroll', schedule, true);

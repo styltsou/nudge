@@ -1183,3 +1183,19 @@ public --tag preview` failed with missing authentication. The alternate local
   Checked: holding [::1]:5173 makes Nudge choose 5174.
 - Validation: tsc, oxlint, 110 unit/contract tests, 6 browser tests
   (installation, managed, packaged CLI), package:release + package:check.
+
+## Side panel animation; archive and delete
+
+- Side panel slides in and out (transform via @starting-style and a CSS
+  transition, 260ms, drawer curve) and the page push animates on the same
+  timing via a temporary root margin-right transition; inline values are
+  restored afterwards. Closing slides out before hiding (panel inert), reopening
+  mid-close reverses. Reduced motion: instant. Checked in the pane via DOM state;
+  the motion itself could not be watched (hidden pane does not run frames).
+- Requests can be archived/restored or permanently deleted from the side panel
+  (hover/focus row actions, inline delete confirmation, "Show archived (n)").
+  Bridge: `/annotations/:id/archive` and `/delete` (browser-only, version
+  checked, refused during an active run); archived requests are hidden from MCP
+  listing, claim and managed dispatch. See D-027.
+- Validation: tsc, oxlint, 111 unit/contract (new archive contract test), all
+  13 browser tests; side panel flows exercised in the preview via DOM.

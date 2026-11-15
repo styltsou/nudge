@@ -113,6 +113,8 @@ export const annotationSchema = z.strictObject({
   revisions: z.array(revisionSchema).min(1),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  /** Hidden from the list, page and agent queue; reversible. */
+  archivedAt: z.iso.datetime().optional(),
 });
 export type Annotation = z.infer<typeof annotationSchema>;
 export type SnapshotRef = z.infer<typeof snapshotSchema>;
@@ -140,6 +142,7 @@ export const reportSchema = implementationSchema.extend({
   expectedVersion: versionSchema,
 });
 export const reviseSchema = expectedSchema.extend({ comment: commentSchema });
+export const archiveSchema = expectedSchema.extend({ archived: z.boolean() });
 export const statusLabels: Record<AnnotationStatus, string> = {
   queued: 'Queued for agent',
   in_progress: 'Agent working',

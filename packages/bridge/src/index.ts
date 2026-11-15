@@ -10,6 +10,7 @@ import {
   idSchema,
   reportSchema,
   reviseSchema,
+  archiveSchema,
   statusSchema,
   snapshotUploadSchema,
   MAX_SNAPSHOT_BYTES,
@@ -343,6 +344,12 @@ export function createBridge(config: BridgeConfig) {
       return reply
         .code(400)
         .send({ error: { message: 'Invalid run request' } });
+    if (repo.get(input.data.annotationId).archivedAt)
+      throw new RepositoryError(
+        409,
+        'ARCHIVED',
+        'Restore this request before running an agent on it.',
+      );
     const run = runs.dispatch(input.data);
     notifyRuns();
     return { id: run.id };
@@ -395,8 +402,74 @@ export function createBridge(config: BridgeConfig) {
       return reply
         .code(400)
         .send({ error: { code: 'INVALID_INPUT', message: 'Invalid status' } });
-    return repo.list(query.status);
+    // Archived requests are hidden from agents; the browser filters its own view.
+    return repo
+      .list(query.status)
+      .filter((a) => authorities.get(request) === 'browser' || !a.archivedAt);
   });
+  const busy = (id: string) =>
+    runs.runs().some((r) => r.annotationId === id && activeRun(r));
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/annotations/:id/archive',
+    async (request, reply) => {
+      const input = archiveSchema.safeParse(request.body);
+      if (
+        authorities.get(request) !== 'browser' ||
+        !input.success ||
+        !idSchema.safeParse(request.params.id).success
+      )
+        return reply.code(400).send({
+          error: { code: 'INVALID_INPUT', message: 'Invalid archive request' },
+        });
+      if (busy(request.params.id))
+        throw new RepositoryError(
+          409,
+          'MANAGED_RUN_ACTIVE',
+          'Stop the running agent before archiving this request.',
+        );
+      const annotation = repo.setArchived(
+        request.params.id,
+        input.data.expectedVersion,
+        input.data.archived,
+      );
+      publish(annotation, 'annotation.updated');
+      return annotation;
+    },
+  );
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/annotations/:id/delete',
+    async (request, reply) => {
+      const input = expectedSchema.safeParse(request.body);
+      if (
+        authorities.get(request) !== 'browser' ||
+        !input.success ||
+        !idSchema.safeParse(request.params.id).success
+      )
+        return reply.code(400).send({
+          error: { code: 'INVALID_INPUT', message: 'Invalid delete request' },
+        });
+      if (busy(request.params.id))
+        throw new RepositoryError(
+          409,
+          'MANAGED_RUN_ACTIVE',
+          'Stop the running agent before deleting this request.',
+        );
+      const { annotation, snapshotIds } = repo.remove(
+        request.params.id,
+        input.data.expectedVersion,
+      );
+      runs.forget(annotation.id);
+      for (const id of snapshotIds)
+        try {
+          snapshots.remove(id);
+        } catch {
+          /* already gone */
+        }
+      publish(annotation, 'annotation.deleted');
+      notifyRuns();
+      return { ok: true };
+    },
+  );
   app.post('/api/v1/annotations', async (request, reply) => {
     if (authorities.get(request) !== 'browser')
       return reply.code(403).send({
@@ -451,6 +524,16 @@ export function createBridge(config: BridgeConfig) {
             409,
             'MANAGED_RUN_ACTIVE',
             'Stop or finish the managed run before changing this annotation.',
+          );
+        if (
+          authority === 'mcp' &&
+          idSchema.safeParse(request.params.id).success &&
+          repo.get(request.params.id).archivedAt
+        )
+          throw new RepositoryError(
+            409,
+            'ARCHIVED',
+            'This request was archived in Nudge.',
           );
         if (!authority || !canAct(authority, action))
           return reply.code(403).send({

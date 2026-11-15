@@ -300,3 +300,12 @@ user can open it manually. Credentials are never read, stored or shown, and
 success is re-checked with the CLI's own status command. Switching is refused
 while a run is active. OpenCode has no headless login, so the panel shows
 `opencode auth login`. Live provider sign-in is not covered by automated tests.
+
+### D-027 Archive and delete requests (2026-11-15)
+
+Requests can be archived (reversible `archivedAt`, hidden from the list, page
+pins and every agent path: MCP listing, claim and managed dispatch) or deleted
+permanently after an inline confirmation (annotation, snapshots, runs and
+sessions no other request uses). Both are browser-only, version-checked and
+refused while an agent run is active. Neither reverts code the agent changed;
+the UI says "Delete permanently?" rather than implying an undo.

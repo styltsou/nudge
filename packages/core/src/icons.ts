@@ -29,6 +29,13 @@ export const icons = {
   page: svg(
     '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>',
   ),
+  archive: svg(
+    '<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/>',
+  ),
+  restore: svg('<path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5"/>'),
+  trash: svg(
+    '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"/>',
+  ),
   stop: svg('<rect x="7" y="7" width="10" height="10" rx="1.5"/>'),
 };
 export function setIcon(

@@ -56,6 +56,18 @@ export class RunStore {
       fail('Run not found in this project.')
     );
   }
+  /** Drop a deleted request's runs, and sessions no other request uses. */
+  forget(annotationId: string) {
+    const drop = (id: string) =>
+      this.repo.db
+        .query('DELETE FROM agent_records WHERE id = ? AND project = ?')
+        .run(id, this.project);
+    for (const run of this.runs())
+      if (run.annotationId === annotationId) drop(run.id);
+    const used = new Set(this.runs().map((r) => r.sessionId));
+    for (const session of this.sessions())
+      if (!used.has(session.id)) drop(session.id);
+  }
   /** Replace a session's placeholder title with the one its agent generated. */
   setTitle(sessionId: string, title: string) {
     const session =

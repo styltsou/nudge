@@ -59,6 +59,48 @@ export class Repository {
       .run(validated.id, this.projectId, JSON.stringify(validated));
     return validated;
   }
+  private expectVersion(a: Annotation, version: number) {
+    if (a.version !== version)
+      throw new RepositoryError(
+        409,
+        'STALE_VERSION',
+        'Annotation changed. Refresh and retry.',
+      );
+  }
+  setArchived(id: string, expectedVersion: number, archived: boolean) {
+    return this.db
+      .transaction(() => {
+        const a = this.get(id);
+        this.expectVersion(a, expectedVersion);
+        const now = new Date().toISOString();
+        if (archived) a.archivedAt = now;
+        else delete a.archivedAt;
+        a.version++;
+        a.updatedAt = now;
+        return this.save(a);
+      })
+      .immediate();
+  }
+  /** Permanently removes the record; returns its snapshot ids to delete. */
+  remove(id: string, expectedVersion: number) {
+    return this.db
+      .transaction(() => {
+        const a = this.get(id);
+        this.expectVersion(a, expectedVersion);
+        this.db
+          .query('DELETE FROM annotations WHERE id = ? AND project_id = ?')
+          .run(id, this.projectId);
+        return {
+          annotation: a,
+          snapshotIds: a.revisions.flatMap((r) =>
+            [r.beforeSnapshot?.id, r.afterSnapshot?.id].filter(
+              (v): v is string => !!v,
+            ),
+          ),
+        };
+      })
+      .immediate();
+  }
   create(input: z.infer<typeof createSchema>): Annotation {
     const id = randomUUID();
     const now = new Date().toISOString();
