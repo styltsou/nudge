@@ -1,3 +1,4 @@
+import { bunExecutable } from '../../shared/src/bun';
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -6,7 +7,7 @@ export function launchRunner(root: string) {
   const entry = existsSync(bundled)
     ? bundled
     : fileURLToPath(new URL('./index.ts', import.meta.url));
-  const processHandle = spawn(process.execPath, [entry], {
+  const processHandle = spawn(bunExecutable(), [entry], {
     cwd: root,
     windowsHide: true,
     stdio: ['pipe', 'ignore', 'ignore'],

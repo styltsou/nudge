@@ -1,3 +1,4 @@
+import { bunExecutable } from '../../shared/src/bun';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { packaged, runtimeFile, projectMcpFile } from './runtime';
@@ -73,8 +74,7 @@ export function initProject(root: string, packageSource?: string) {
       throw new Error(
         'Unsupported package manager. Install usenudge as a dev dependency, then rerun init.',
       );
-    const executable =
-      manager === 'bun' ? process.execPath : Bun.which(manager);
+    const executable = manager === 'bun' ? bunExecutable() : Bun.which(manager);
     if (!executable)
       throw new Error(
         `${manager} is not on PATH. Install usenudge as a dev dependency, then rerun init.`,
@@ -139,7 +139,7 @@ export function initProject(root: string, packageSource?: string) {
       {
         mcpServers: {
           usenudge: {
-            command: process.execPath,
+            command: bunExecutable(),
             args: [projectMcpFile(root)],
             env: { NUDGE_PROJECT_ROOT: root },
           },

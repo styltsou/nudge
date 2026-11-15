@@ -1,3 +1,4 @@
+import { bunExecutable } from '../../shared/src/bun';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { projectMcpFile } from './runtime';
@@ -14,7 +15,7 @@ export function configureAgent(root: string, provider: Provider) {
       'Use --managed for OpenCode. Automatic external MCP registration is not supported for OpenCode.',
     );
   const server = {
-    command: process.execPath,
+    command: bunExecutable(),
     args: [projectMcpFile(root)],
     env: { NUDGE_PROJECT_ROOT: root },
   };

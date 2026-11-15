@@ -1,3 +1,4 @@
+import { bunExecutable } from '../../shared/src/bun';
 import { loadConfig } from '@usenudge/bridge/config';
 import {
   lstatSync,
@@ -130,7 +131,7 @@ and API-key billing are different choices. Stop does not undo existing edits.`);
     const root = resolve(process.cwd());
     const config = loadConfig(root);
     const mcpPath = projectMcpFile(root);
-    const bunPath = process.execPath;
+    const bunPath = bunExecutable();
     const configPath = resolve(root, '.mcp.json');
     let existing: Record<string, unknown> = {};
     try {

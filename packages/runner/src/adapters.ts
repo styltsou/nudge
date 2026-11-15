@@ -1,3 +1,4 @@
+import { bunExecutable } from '../../shared/src/bun';
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -52,7 +53,7 @@ export function resolveAdapter(
   const rel = relative(directory, path);
   if (isAbsolute(rel) || rel.startsWith('..') || !existsSync(path))
     throw new Error('Invalid ACP adapter entry.');
-  return { executable: process.execPath, args: [path] };
+  return { executable: bunExecutable(), args: [path] };
 }
 function prepareInstall(root: string, provider: 'codex' | 'claude') {
   const spec = adapterPackages[provider];
@@ -79,7 +80,7 @@ export async function installAdapterAsync(root: string, provider: Provider) {
     throw new Error('Install OpenCode with ACP support, then rerun setup.');
   const directory = prepareInstall(root, provider);
   const child = Bun.spawn(
-    [process.execPath, 'install', '--cwd', directory, '--ignore-scripts'],
+    [bunExecutable(), 'install', '--cwd', directory, '--ignore-scripts'],
     {
       cwd: root,
       stdin: 'ignore',
@@ -101,7 +102,7 @@ export function installAdapter(root: string, provider: Provider) {
   const directory = prepareInstall(root, provider);
   console.log(`Installing ${spec.bin} in Nudge's private runtime directory...`);
   const result = spawnSync(
-    process.execPath,
+    bunExecutable(),
     ['install', '--cwd', directory, '--ignore-scripts'],
     {
       cwd: root,

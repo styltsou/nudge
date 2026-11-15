@@ -1,3 +1,4 @@
+import { bunExecutable } from '../../shared/src/bun';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { projectMcpFile, packaged } from './runtime';
@@ -27,7 +28,7 @@ export function prepareLocalProject(root: string) {
         {
           mcpServers: {
             usenudge: {
-              command: process.execPath,
+              command: bunExecutable(),
               args: [mcp],
               env: { NUDGE_PROJECT_ROOT: root },
             },
