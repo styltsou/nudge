@@ -24,7 +24,7 @@ const css = `
 @supports selector(::-webkit-scrollbar) { * { scrollbar-width: auto; scrollbar-color: auto; } ::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; } ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; } ::-webkit-scrollbar-thumb:hover { background-color: var(--muted); } ::-webkit-scrollbar-button { display: none; width: 0; height: 0; } }
 * { box-sizing: border-box; } [hidden] { display: none !important; }
 button, textarea, select, input { font: inherit; color: inherit; }
-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 4px 10px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 12px; transition: background .12s, border-color .12s, color .12s; }
+button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 4px 10px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 12px; transition: background .12s, border-color .12s, color .12s, transform 160ms var(--ease-out); }
 button:hover { border-color: var(--line-strong); } button:disabled { opacity: .45; cursor: default; }
 button:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
@@ -198,7 +198,7 @@ button.primary, button.icon.primary, button.icon[aria-pressed=true], button.dang
 }
 button.primary:hover, button.icon.primary:hover, button.danger:hover { filter: none; background: linear-gradient(180deg, #f6857a 0%, #e65e52 55%, #d24a3e 100%); }
 button.primary:active:not(:disabled), button.icon.primary:active:not(:disabled), button.danger:active:not(:disabled) {
-  background: linear-gradient(180deg, #d24a3e, #e05246); box-shadow: inset 0 1px 3px rgb(0 0 0 / .35); transform: translateY(.5px);
+  background: linear-gradient(180deg, #d24a3e, #e05246); box-shadow: inset 0 1px 3px rgb(0 0 0 / .35);
 }
 button.icon.primary svg, button.icon[aria-pressed=true] svg { filter: drop-shadow(0 1px 0 rgb(0 0 0 / .2)); }
 /* Raised surfaces: a faint top highlight above their shadow. */
@@ -212,6 +212,9 @@ textarea, select { box-shadow: inset 0 1px 2px var(--well); }
 .segmented { box-shadow: inset 0 1px 2px var(--well); }
 .segmented button[aria-checked=true] { background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom)); box-shadow: inset 0 1px 0 var(--hl), 0 1px 2px var(--drop); }
 .pin { background: linear-gradient(180deg, #f3786c, #d9493d); box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 2px 6px rgb(0 0 0 / .35); }
+/* Press feedback: every button scales down slightly; release is just as quick. */
+button:active:not(:disabled) { transform: scale(.97); }
+.pin:active { transform: scale(.94); }
 @media (prefers-reduced-motion: reduce) { button:active { transform: none !important; } }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(

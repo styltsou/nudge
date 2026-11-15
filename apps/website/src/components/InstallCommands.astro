@@ -209,19 +209,45 @@ const managers = [
       inset 0 1px 0 var(--hl),
       0 1px 2px var(--drop);
   }
+  /* Icons crossfade with a blur so copy → check reads as one change. */
+  .install-copy {
+    transition:
+      transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      background 120ms ease;
+  }
   .install-copy > svg {
     grid-area: 1 / 1;
+    transition:
+      opacity 200ms cubic-bezier(0.23, 1, 0.32, 1),
+      transform 200ms cubic-bezier(0.23, 1, 0.32, 1),
+      filter 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .install-copy .copied-icon {
+    color: var(--success);
   }
   .install-copy .copied-icon,
   .install-copy[data-copied] > svg:not(.copied-icon) {
-    display: none;
+    opacity: 0;
+    transform: scale(0.6);
+    filter: blur(4px);
   }
   .install-copy[data-copied] .copied-icon {
-    display: block;
-    color: var(--success);
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
   .install-copy:active {
+    transform: scale(0.97);
     box-shadow: inset 0 1px 3px var(--well);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .install-copy > svg {
+      transform: none !important;
+      filter: none !important;
+    }
+    .install-copy:active {
+      transform: none;
+    }
   }
   .sr-only {
     position: absolute;
