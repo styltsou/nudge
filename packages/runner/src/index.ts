@@ -120,6 +120,7 @@ while (!stopping) {
         root,
         update,
         provider,
+        adapter.env,
       ));
       void agent.done.catch(() => {});
       const sessionId = job.session.id;

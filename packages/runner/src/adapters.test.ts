@@ -35,6 +35,18 @@ for (const provider of ['codex', 'claude'] as const)
       expect(readFileSync(resolve(root, 'package.json'), 'utf8')).toBe(
         '{"name":"app"}',
       );
+      // Codex runs the user's installed Codex when present (one version, one
+      // Windows sandbox setup); other agents and missing CLIs set nothing.
+      const native = (name: string) =>
+        name.startsWith('codex') && !name.includes('acp')
+          ? '/usr/local/bin/codex'
+          : null;
+      expect(resolveAdapter(root, provider, native)?.env).toEqual(
+        provider === 'codex'
+          ? { CODEX_PATH: '/usr/local/bin/codex' }
+          : undefined,
+      );
+      expect(resolveAdapter(root, provider, () => null)?.env).toBeUndefined();
       pkg.bin[spec.bin] = '../outside.js';
       writeFileSync(resolve(directory, 'package.json'), JSON.stringify(pkg));
       expect(() => resolveAdapter(root, provider, () => null)).toThrow();

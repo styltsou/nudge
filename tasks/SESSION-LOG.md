@@ -1160,3 +1160,26 @@ public --tag preview` failed with missing authentication. The alternate local
   three providers, fixture agent sends a title with a control character) pass.
   The real runner's forwarding and Codex's post-turn timing are not exercised
   by tests with live agents.
+
+## Windows: repeated Codex admin prompts; dev port detection
+
+- Diagnosis from ~/.codex/.sandbox logs (read-only): every Nudge Codex run
+  logged "sandbox setup marker missing or incompatible" and started elevated
+  setup (the admin prompt), which then failed with
+  `helper_sandbox_lock_failed ... SetNamedSecurityInfoW ... 5` on
+  ~/.codex/.sandbox-bin, so setup never completed and the next Codex process
+  prompted again (twice per run: app-server and helper). Nudge's Codex adapter
+  ran its bundled Codex 0.166.0 while the user's CLI is 0.169.0; sandbox setup
+  is tied to the Codex version.
+- Fix: `resolveAdapter` passes `CODEX_PATH` (the user's installed `codex`)
+  to the Codex ACP adapter, so Nudge uses the same Codex as the CLI. Env is
+  threaded through AcpTurn/JsonRpcProcess. Unit-tested.
+- Not fixed by code: the stuck `.sandbox-bin` permissions; the user needs a
+  one-time Codex sandbox reset (documented in the reply). Not verified with a
+  live Codex run.
+- Dev port: a port is free only if both loopback families bind and nothing
+  answers a connect on 127.0.0.1/::1. Catches servers bound to all interfaces
+  (e.g. `vite --host`), which Windows otherwise lets Nudge shadow on 127.0.0.1.
+  Checked: holding [::1]:5173 makes Nudge choose 5174.
+- Validation: tsc, oxlint, 110 unit/contract tests, 6 browser tests
+  (installation, managed, packaged CLI), package:release + package:check.

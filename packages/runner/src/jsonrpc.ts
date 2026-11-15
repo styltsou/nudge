@@ -25,9 +25,11 @@ export class JsonRpcProcess {
     root: string,
     onMessage: (message: RpcMessage) => Promise<void>,
     private onFailure: () => void,
+    env?: Record<string, string>,
   ) {
     this.child = Bun.spawn([executable, ...args], {
       cwd: root,
+      ...(env ? { env: { ...process.env, ...env } } : {}),
       stdin: 'pipe',
       stdout: 'pipe',
       stderr: 'ignore',

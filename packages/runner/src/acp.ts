@@ -50,6 +50,7 @@ export class AcpTurn implements AgentTurn {
     private root: string,
     private update: Update,
     private provider = 'Agent',
+    env?: Record<string, string>,
   ) {
     this.done = new Promise((resolve, reject) => {
       this.resolve = resolve;
@@ -61,6 +62,7 @@ export class AcpTurn implements AgentTurn {
       root,
       (m) => this.message(m),
       () => this.fail(),
+      env,
     );
   }
   private fail() {

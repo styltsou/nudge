@@ -24,7 +24,16 @@ export function resolveAdapter(
   root: string,
   provider: Provider,
   which = Bun.which,
-): { executable: string; args: string[] } | null {
+): { executable: string; args: string[]; env?: Record<string, string> } | null {
+  // The Codex adapter bundles its own Codex. Prefer the user's installed one:
+  // Windows sandbox setup is tied to the Codex version, so mixing versions
+  // makes Codex redo its elevated (admin-prompting) setup on every run.
+  const native =
+    provider === 'codex'
+      ? (which(process.platform === 'win32' ? 'codex.exe' : 'codex') ??
+        which('codex'))
+      : null;
+  const env = native ? { env: { CODEX_PATH: native } } : {};
   const bin =
     provider === 'opencode' ? 'opencode' : adapterPackages[provider].bin;
   const installed =
@@ -33,6 +42,7 @@ export function resolveAdapter(
     return {
       executable: installed,
       args: provider === 'opencode' ? ['acp'] : [],
+      ...env,
     };
   if (provider === 'opencode') return null;
   const spec = adapterPackages[provider];
@@ -53,7 +63,7 @@ export function resolveAdapter(
   const rel = relative(directory, path);
   if (isAbsolute(rel) || rel.startsWith('..') || !existsSync(path))
     throw new Error('Invalid ACP adapter entry.');
-  return { executable: bunExecutable(), args: [path] };
+  return { executable: bunExecutable(), args: [path], ...env };
 }
 function prepareInstall(root: string, provider: 'codex' | 'claude') {
   const spec = adapterPackages[provider];
