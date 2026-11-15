@@ -56,6 +56,15 @@ export class RunStore {
       fail('Run not found in this project.')
     );
   }
+  /** Replace a session's placeholder title with the one its agent generated. */
+  setTitle(sessionId: string, title: string) {
+    const session =
+      this.sessions().find((s) => s.id === sessionId) ??
+      fail('Session not found in this project.');
+    session.title = title;
+    session.titled = true;
+    this.save('session', session);
+  }
   setProvider(provider: Provider) {
     this.provider = provider;
   }

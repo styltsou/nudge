@@ -28,6 +28,8 @@ import {
   providerRequestSchema,
   agentsReportSchema,
   setupUpdateSchema,
+  sessionTitleSchema,
+  cleanSessionTitle,
   safeSignInUrl,
   type AgentReport,
   type SetupTask,
@@ -278,6 +280,18 @@ export function createBridge(config: BridgeConfig) {
     newSetup(input.data.provider, 'login');
     return { ok: true };
   });
+  app.post<{ Params: { id: string } }>(
+    '/api/v1/runner/sessions/:id/title',
+    async (request, reply) => {
+      const input = sessionTitleSchema.safeParse(request.body);
+      const title = input.success ? cleanSessionTitle(input.data.title) : '';
+      if (!title || !idSchema.safeParse(request.params.id).success)
+        return reply.code(400).send({ error: { message: 'Invalid title' } });
+      runs.setTitle(request.params.id, title);
+      notifyRuns();
+      return { ok: true };
+    },
+  );
   app.post('/api/v1/runner/agents', async (request, reply) => {
     const input = agentsReportSchema.safeParse(request.body);
     if (!input.success)

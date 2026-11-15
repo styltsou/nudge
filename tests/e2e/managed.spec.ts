@@ -90,6 +90,12 @@ for (const provider of ['codex', 'claude', 'opencode'] as const)
               provider,
             ));
             void current.done.catch(() => {});
+            // Same forwarding as the real runner.
+            current.onTitle = (title) => {
+              void request(`/sessions/${job.session.id}/title`, {
+                title,
+              }).catch(() => {});
+            };
             let complete = false;
             const heartbeat = (async () => {
               while (!complete && !ended) {
@@ -165,6 +171,10 @@ for (const provider of ['codex', 'claude', 'opencode'] as const)
       await expect(
         overlay.getByText('Fixture implementation report', { exact: true }),
       ).toBeVisible();
+      // The agent's own (sanitised) title replaces the prompt excerpt.
+      await expect(
+        overlay.getByLabel('Agent session').locator('option').nth(1),
+      ).toHaveText(`Pad the primary button · ${provider}`);
       const session = await overlay
         .getByLabel('Agent session')
         .locator('option')

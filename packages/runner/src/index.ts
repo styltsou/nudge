@@ -122,6 +122,11 @@ while (!stopping) {
         provider,
       ));
       void agent.done.catch(() => {});
+      const sessionId = job.session.id;
+      agent.onTitle = (title) => {
+        void request(`/sessions/${sessionId}/title`, { title }).catch(() => {});
+      };
+      let succeeded = false;
       let cancelled = false;
       let finished = false;
       const deadline = setTimeout(
@@ -156,6 +161,7 @@ while (!stopping) {
           }),
         ]);
         await update({ type: 'completed', report });
+        succeeded = true;
       } catch {
         await agent.stop();
         await update({ type: cancelled ? 'cancelled' : 'failed' }).catch(
@@ -164,7 +170,20 @@ while (!stopping) {
       } finally {
         clearTimeout(deadline);
         finished = true;
-        agent.close();
+        // Codex titles a new session right after its first turn; keep the
+        // finished session open briefly so that title can arrive.
+        if (succeeded && !agent.title && !stopping) {
+          const linger = agent;
+          void new Promise<void>((resolve) => {
+            const timer = setTimeout(resolve, 8000);
+            const forward = linger.onTitle;
+            linger.onTitle = (title) => {
+              forward?.(title);
+              clearTimeout(timer);
+              resolve();
+            };
+          }).then(() => linger.close());
+        } else agent.close();
         await heartbeat.catch(() => {});
         current = undefined;
       }

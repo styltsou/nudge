@@ -1044,10 +1044,21 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       const state = dotState(a);
       const dot = state === 'working' ? spinner() : node('span', '', 'dot');
       dot.dataset.state = state;
-      item.append(dot, node('span', comment.split('\n')[0], 'item-title'));
+      item.append(
+        dot,
+        node('span', sessionTitle(a) ?? comment.split('\n')[0], 'item-title'),
+      );
       if (isPageWide(a)) item.append(node('span', 'Page', 'tag'));
       panel.append(item);
     }
+  }
+  /** The agent-generated title of this request's latest session, once known. */
+  function sessionTitle(a: Annotation) {
+    const run = managed.state.runs
+      .filter((r) => r.annotationId === a.id)
+      .at(-1);
+    const session = managed.state.sessions.find((s) => s.id === run?.sessionId);
+    return session?.titled ? session.title : undefined;
   }
   function dotState(a: Annotation) {
     const run = managed.state.runs

@@ -41,6 +41,9 @@ export class AcpTurn implements AgentTurn {
     }
   >();
   readonly done: Promise<Report>;
+  /** Latest title the agent generated for this session, if any. */
+  title?: string;
+  onTitle?: (title: string) => void;
   constructor(
     executable: string,
     args: string[],
@@ -195,6 +198,7 @@ export class AcpTurn implements AgentTurn {
       sessionUpdate?: string;
       content?: { type: string; text?: string };
       kind?: string;
+      title?: string | null;
       _meta?: Record<string, unknown>;
     };
     if (!update || update._meta?.['opencode/child-session']) return;
@@ -204,6 +208,14 @@ export class AcpTurn implements AgentTurn {
     ) {
       this.text += update.content.text ?? '';
       if (this.text.length > 64000) throw new Error('Agent output too large');
+    }
+    if (
+      update.sessionUpdate === 'session_info_update' &&
+      typeof update.title === 'string' &&
+      update.title.trim()
+    ) {
+      this.title = update.title;
+      this.onTitle?.(update.title);
     }
     if (update.sessionUpdate === 'tool_call') {
       this.text = '';

@@ -24,6 +24,17 @@ createInterface({ input: process.stdin }).on('line', (line) => {
         update: { sessionUpdate: 'tool_call', kind: 'execute' },
       },
     });
+    // Agent-generated session title, with a control character to strip.
+    send({
+      method: 'session/update',
+      params: {
+        sessionId: session,
+        update: {
+          sessionUpdate: 'session_info_update',
+          title: 'Pad the\u0007 primary\n button',
+        },
+      },
+    });
     send({
       id: 'approve',
       method: 'session/request_permission',

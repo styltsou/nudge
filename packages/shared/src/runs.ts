@@ -60,6 +60,8 @@ export type AgentSession = {
   id: string;
   provider: Provider;
   title: string;
+  /** True once the agent supplied the title (otherwise a prompt excerpt). */
+  titled?: boolean;
   updatedAt: string;
   providerSessionId?: string;
 };
@@ -101,6 +103,24 @@ export type ManagedState = {
   sessions: AgentSession[];
 };
 
+export const sessionTitleSchema = z.strictObject({
+  title: z.string().min(1).max(2000),
+});
+// Control, zero-width and bidi-override characters.
+const unsafeTitleChars = new RegExp(
+  String.raw`[\u0000-\u001f\u007f-\u009f​-‏ -‮]`,
+  'g',
+);
+/** Agent-generated titles are untrusted text: one line, no control characters. */
+export function cleanSessionTitle(raw: string): string | undefined {
+  const text = raw
+    .replace(unsafeTitleChars, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^["'`]+|["'`]+$/g, '');
+  if (!text) return;
+  return text.length > 80 ? text.slice(0, 79).trimEnd() + '…' : text;
+}
 export const providerRequestSchema = z.strictObject({
   provider: z.enum(providers),
 });

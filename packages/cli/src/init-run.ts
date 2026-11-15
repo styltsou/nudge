@@ -30,7 +30,10 @@ export const commandPrefix = packaged
 
 /** Output for one run: clack in a terminal, plain lines for scripts and CI. */
 type Reporter = {
-  task(message: string): {
+  task(
+    message: string,
+    transient?: boolean,
+  ): {
     done(message: string): void;
     fail(message: string): void;
   };
@@ -39,17 +42,25 @@ type Reporter = {
 };
 const plain: Reporter = {
   task: () => ({
-    done: (m) => console.log(m),
+    done: (m) => m && console.log(m),
     fail: (m) => console.error(m),
   }),
   info: (m) => console.log(m),
   warn: (m) => console.warn(m),
 };
 const fancy: Reporter = {
-  task(message) {
-    const s = p.spinner({ styleFrame: brand.accent });
+  task(message, transient) {
+    // Transient spinners skip the guide line so clearing leaves no trace.
+    const s = p.spinner({
+      styleFrame: brand.accent,
+      ...(transient ? { withGuide: false } : {}),
+    });
     s.start(message);
-    return { done: (m) => s.stop(m), fail: (m) => s.error(m) };
+    // An empty message removes the spinner line entirely.
+    return {
+      done: (m) => (m ? s.stop(m) : s.clear()),
+      fail: (m) => s.error(m),
+    };
   },
   info: (m) => p.log.info(m),
   warn: (m) => p.log.warn(m),
@@ -174,13 +185,10 @@ export async function runInit(args: InitArgs, interactive: boolean) {
     !(Array.isArray(args.agents) && args.mode === 'external');
   let statuses: AgentStatus[] = [];
   if (needStatus) {
-    const check = ui.task('Checking coding agents on this machine');
+    const check = ui.task('Checking coding agents on this machine', true);
     statuses = await detectAgentsAsync(args.root);
-    check.done(
-      statuses
-        .map((s) => `${names[s.provider]} ${brand.muted(statusHint(s))}`)
-        .join(brand.muted('  ·  ')),
-    );
+    // The agent question shows each status, so no summary line here.
+    check.done('');
   }
   const init = await decide(args, statuses, interactive);
   const command = initCommand(commandPrefix, init);

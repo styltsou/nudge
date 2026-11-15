@@ -1142,3 +1142,21 @@ public --tag preview` failed with missing authentication. The alternate local
   pane (hidden, checked via DOM): numbering, popup gap/no overlap, pin toggle,
   page-wide flow, theme switching. Interactive init checked in a real terminal
   up to the agent prompt. Not seen visually: light theme and scrollbars.
+
+## Agent-generated session titles; quieter init
+
+- Sessions take the title their agent generates over ACP
+  (`session_info_update.title`; Claude sends it during the turn, Codex right
+  after its first turn). The runner forwards it to a new runner-only route
+  `POST /api/v1/runner/sessions/:id/title`; the bridge reduces it to one safe
+  line (control/zero-width/bidi characters removed, max 80) and marks the
+  session `titled`. After a successful run without a title yet, the runner keeps
+  the agent open up to 8 s for it (review is not delayed). The Feedback list and
+  session picker show the generated title; the prompt excerpt remains the
+  fallback.
+- Interactive init no longer prints an agent summary line; the agent question
+  already shows each status (spinner without guide line, cleared).
+- Validation: tsc, oxlint, 109 unit/contract tests; managed browser tests (all
+  three providers, fixture agent sends a title with a control character) pass.
+  The real runner's forwarding and Codex's post-turn timing are not exercised
+  by tests with live agents.
