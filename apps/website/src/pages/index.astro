@@ -183,12 +183,18 @@ const commands =
           </button>
         </div>
         <pre><code id="setup-commands">{commands}</code></pre>
-        <p role="status" aria-live="polite" id="copy-status"></p>
+        <p
+          role="status"
+          aria-live="polite"
+          id="copy-status"
+          class="sr-only"
+        ></p>
       </div>
     </section>
   </div>
 </SiteLayout>
 <script>
+  import { showCopied } from '../scripts/copy-feedback';
   const copy = document.querySelector<HTMLButtonElement>('#copy-commands');
   const status = document.querySelector<HTMLElement>('#copy-status');
   copy?.addEventListener('click', async () => {
@@ -198,6 +204,10 @@ const commands =
       );
       if (status) status.textContent = 'Setup commands copied.';
       copy.textContent = 'Copied';
+      showCopied(copy, () => {
+        copy.textContent = 'Copy';
+        if (status) status.textContent = '';
+      });
     } catch {
       if (status)
         status.textContent =

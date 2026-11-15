@@ -49,8 +49,22 @@ const managers = [
           stroke-width="1.5"
           aria-hidden="true"
         >
-          <rect x="8" y="8" width="12" height="12" />
-          <path d="M16 8V4H4v12h4" />
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" />
+        </svg>
+        <svg
+          class="copied-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 12.5l4.5 4.5L19 7.5" />
         </svg>
       </button>
     </div>
@@ -64,6 +78,7 @@ const managers = [
 </div>
 
 <script>
+  import { showCopied } from '../scripts/copy-feedback';
   document
     .querySelectorAll<HTMLElement>('[data-install-box]')
     .forEach((box) => {
@@ -108,6 +123,9 @@ const managers = [
               panel.querySelector('code')!.textContent ?? '',
             );
             status.textContent = 'Command copied.';
+            showCopied(panel.querySelector('button')!, () => {
+              status.textContent = '';
+            });
           } catch {
             status.textContent =
               'Copy unavailable. Select the command to copy it manually.';
@@ -153,7 +171,11 @@ const managers = [
   }
   [role='tab']:hover,
   .install-copy:hover {
-    color: var(--accent);
+    background: linear-gradient(
+      180deg,
+      var(--btn-hover-top),
+      var(--btn-hover-bottom)
+    );
   }
   .install-command {
     display: flex;
@@ -170,15 +192,36 @@ const managers = [
     overflow-x: auto;
     white-space: nowrap;
   }
+  /* Tactile icon button, matching the terminal's Copy; a check while copied. */
   .install-copy {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+    width: 32px;
+    height: 32px;
     margin-left: auto;
-    border: 0;
-    padding: 6px;
-    color: var(--muted);
-    background: transparent;
+    padding: 0;
+    color: var(--ink);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
+    box-shadow:
+      inset 0 1px 0 var(--hl),
+      0 1px 2px var(--drop);
+  }
+  .install-copy > svg {
+    grid-area: 1 / 1;
+  }
+  .install-copy .copied-icon,
+  .install-copy[data-copied] > svg:not(.copied-icon) {
+    display: none;
+  }
+  .install-copy[data-copied] .copied-icon {
+    display: block;
+    color: var(--success);
+  }
+  .install-copy:active {
+    box-shadow: inset 0 1px 3px var(--well);
   }
   .sr-only {
     position: absolute;

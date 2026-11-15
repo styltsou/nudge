@@ -151,17 +151,22 @@
   content: '';
   position: absolute;
   inset: var(--frame-inset, 6px);
-  border: 1px solid var(--nudge-primary);
-  border-radius: 9px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
-  --c: 10px;
+  /* Each corner is its own crisp SVG stroke (a rounded L), used as a mask over
+     the accent fill, so the colour follows the theme without cut-off tails. */
+  background: var(--nudge-primary);
+  --corner: 10px;
   mask:
-    linear-gradient(#000 0 0) top left / var(--c) var(--c) no-repeat,
-    linear-gradient(#000 0 0) top right / var(--c) var(--c) no-repeat,
-    linear-gradient(#000 0 0) bottom left / var(--c) var(--c) no-repeat,
-    linear-gradient(#000 0 0) bottom right / var(--c) var(--c) no-repeat;
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M.5 10V5A4.5 4.5 0 0 1 5 .5H10' fill='none' stroke='black' stroke-width='1'/></svg>")
+      top left / var(--corner) var(--corner) no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M0 .5H5A4.5 4.5 0 0 1 9.5 5V10' fill='none' stroke='black' stroke-width='1'/></svg>")
+      top right / var(--corner) var(--corner) no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M.5 0V5A4.5 4.5 0 0 0 5 9.5H10' fill='none' stroke='black' stroke-width='1'/></svg>")
+      bottom left / var(--corner) var(--corner) no-repeat,
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M9.5 0V5A4.5 4.5 0 0 1 5 9.5H0' fill='none' stroke='black' stroke-width='1'/></svg>")
+      bottom right / var(--corner) var(--corner) no-repeat;
 }
 :is(
     .site-header > .brand,

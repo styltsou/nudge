@@ -412,9 +412,14 @@ test('keyboard tabs, setup copy, and narrow layouts work', async ({
   expect(copied.replaceAll('\r\n', '\n')).toBe(
     await page.locator('#setup-commands').textContent(),
   );
+  // Announced to assistive tech, shown visually as a short tooltip.
   await expect(
     page.getByRole('status').filter({ hasText: 'Setup commands copied.' }),
-  ).toBeVisible();
+  ).toHaveText('Setup commands copied.');
+  await expect(page.locator('.copy-tip')).toHaveText('Copied');
+  await expect(
+    page.getByRole('button', { name: 'Copy setup commands' }),
+  ).toHaveText('Copied');
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     expect(
