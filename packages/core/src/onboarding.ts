@@ -1,6 +1,5 @@
 import type { ManagedState, Provider } from '../../shared/src/runs';
 import { providers } from '../../shared/src/runs';
-import { themeControl } from './theme';
 const names = { codex: 'Codex', claude: 'Claude', opencode: 'OpenCode' };
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text = '') => {
   const node = document.createElement(tag);
@@ -138,18 +137,11 @@ export class OnboardingPanel {
         'API keys may use separate API billing. Nudge never asks for your password or token. Your agent’s permissions apply; cloud-backed models receive request and project context.',
       ),
     );
-    const appearance = el('div');
-    appearance.className = 'appearance';
-    appearance.append(
-      el('span', 'Appearance'),
-      themeControl(shadow.host as HTMLElement),
-    );
     // Compact by default: choice, one-line state, actions. Details and
     // setup steps open by themselves only while something needs attention.
     const agentActions = el('div');
     agentActions.className = 'setup-row';
     agentActions.append(this.use, this.signIn);
-    appearance.classList.add('setup-footer');
     this.dialog.append(
       header,
       label,
@@ -161,7 +153,6 @@ export class OnboardingPanel {
       this.instructions,
       this.feedback,
       actions,
-      appearance,
     );
     this.dialog.addEventListener('close', () => this.trigger.focus());
     shadow.append(this.dialog);

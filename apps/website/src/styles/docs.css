@@ -206,3 +206,37 @@ starlight-menu-button button,
 starlight-theme-select select {
   border-radius: 3px;
 }
+
+/* Product aesthetic: soft, rounded navigation rows on the black/white base that
+   match the Nudge overlay, in place of the corner-frame treatment. */
+.sidebar-content :is(a, summary) {
+  border-radius: 8px;
+}
+.sidebar-content :is(a, summary):is(:hover, :focus-visible),
+.sidebar-content a[aria-current='page'] {
+  /* Beats the frame-paint hover in frames.css, which has a heavier selector. */
+  background-image: none !important;
+  background-color: var(--sl-color-gray-6);
+  color: var(--sl-color-white);
+}
+.sidebar-content a[aria-current='page'] {
+  font-weight: 500;
+}
+.sidebar-content .top-level :is(a, summary)::after {
+  display: none;
+}
+.expressive-code,
+.starlight-aside {
+  border-radius: 10px;
+}
+.sl-markdown-content :not(pre) > code {
+  border-radius: 5px;
+}
+starlight-menu-button button,
+starlight-theme-select select,
+header.header button[data-open-modal] {
+  border-radius: 8px;
+}
+.pagination-links a {
+  border-radius: 12px;
+}

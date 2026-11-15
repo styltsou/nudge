@@ -1063,3 +1063,37 @@ h2 {
     gap: 18px;
   }
 }
+
+/* Product aesthetic: black and white, quiet chrome and rounded panels that
+   match the Nudge overlay. Kept as one layer so it reads as a deliberate pass. */
+:root {
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+.page-frame {
+  border-inline-color: transparent;
+}
+.site-header > .brand {
+  border-right-color: transparent;
+}
+.header-nav > * {
+  border-left-color: transparent;
+}
+.walkthrough,
+.real-review-image,
+.setup-terminal {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.button-primary,
+.button-secondary,
+.example-button,
+.terminal-header button,
+.walkthrough :is(textarea, input) {
+  border-radius: var(--radius-sm);
+}
+.queued-request,
+.sample-comparison figure {
+  border-radius: var(--radius);
+}

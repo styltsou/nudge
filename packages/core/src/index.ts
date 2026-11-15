@@ -6,7 +6,7 @@ import { BridgeClient } from './client';
 import { ManagedControls } from './managed';
 import { OnboardingPanel } from './onboarding';
 import { spinner } from './spinner';
-import { applyTheme } from './theme';
+import { applyTheme, themeControl } from './theme';
 import { icons, iconButton, setIcon, submitOnEnter } from './icons';
 export { anchorFor, findAnchor, selectorFor, textPreview } from './anchors';
 export type NudgeOptions = {
@@ -17,9 +17,9 @@ export type NudgeOptions = {
 export type NudgeHandle = { destroy(): void };
 
 const css = `
-:host { all: initial; --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
-@media (prefers-color-scheme: light) { :host(:not([data-theme=dark])) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
-:host([data-theme=light]) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; }
+:host { all: initial; --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --bg: #000000; --surface: #0a0a0a; --raised: #161616; --line: #222222; --line-strong: #333333; --ink: #ededed; --muted: #8b8b8b; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
+@media (prefers-color-scheme: light) { :host(:not([data-theme=dark])) { --bg: #ffffff; --surface: #f7f7f7; --raised: #efefef; --line: #ebebeb; --line-strong: #d4d4d4; --ink: #161616; --muted: #707070; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
+:host([data-theme=light]) { --bg: #ffffff; --surface: #f7f7f7; --raised: #efefef; --line: #ebebeb; --line-strong: #d4d4d4; --ink: #161616; --muted: #707070; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; }
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 @supports selector(::-webkit-scrollbar) { * { scrollbar-width: auto; scrollbar-color: auto; } ::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; } ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; } ::-webkit-scrollbar-thumb:hover { background-color: var(--muted); } ::-webkit-scrollbar-button { display: none; width: 0; height: 0; } }
 * { box-sizing: border-box; } [hidden] { display: none !important; }
@@ -42,18 +42,33 @@ button.icon.primary svg { stroke-width: 2.2; }
 .badge[data-state=review]::after { content: ''; position: absolute; inset: -3px; border-radius: inherit; border: 2px solid var(--accent); animation: nudge-badge 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
 @keyframes nudge-badge { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.7); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .badge[data-state=review]::after { animation: none; transform: scale(1.25); opacity: .6; } }
-.toolbar button.icon { position: relative; }
-.toolbar { position: fixed; left: calc((100% - var(--nudge-push, 0px)) / 2); bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 24px #0004; transition: transform .18s cubic-bezier(.23,1,.32,1), left 260ms var(--ease-drawer); }
-.toolbar button.icon { border-radius: 999px; }
-.toolbar::before { content: ''; position: absolute; left: 0; right: 0; top: -16px; height: 16px; }
-.toolbar[data-collapsed=true] { transform: translate(-50%, calc(100% + 6px)); }
-.toolbar[data-collapsed=true]::before { top: -22px; height: 22px; }
-.toolbar[data-collapsed=true][data-revealed=true], .toolbar[data-collapsed=true]:has(:focus-visible) { transform: translateX(-50%); }
+.toolbar button.icon { position: relative; border-radius: 9px; }
+.toolbar { position: fixed; display: flex; align-items: center; gap: 2px; padding: 5px; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px #0000004d; --tx: -50%; --ty: 0px; transform: translate(var(--tx), var(--ty)); transition: transform .2s var(--ease-out), left 260ms var(--ease-drawer), right 260ms var(--ease-drawer); }
+.toolbar[data-position=bottom], .toolbar[data-position=top] { left: calc(var(--nudge-push-left, 0px) + (100% - var(--nudge-push-left, 0px) - var(--nudge-push-right, 0px)) / 2); }
+.toolbar[data-position=bottom] { bottom: 12px; }
+.toolbar[data-position=top] { top: 12px; }
+.toolbar[data-position=left], .toolbar[data-position=right] { flex-direction: column; top: 50%; --tx: 0px; --ty: -50%; }
+.toolbar[data-position=left] { left: calc(12px + var(--nudge-push-left, 0px)); }
+.toolbar[data-position=right] { right: calc(12px + var(--nudge-push-right, 0px)); }
+/* Hidden: slide toward its own edge, leaving a sliver that reveals on hover. */
+.toolbar[data-collapsed=true][data-position=bottom] { transform: translate(var(--tx), calc(100% + 6px)); }
+.toolbar[data-collapsed=true][data-position=top] { transform: translate(var(--tx), calc(-100% - 6px)); }
+.toolbar[data-collapsed=true][data-position=left] { transform: translate(calc(-100% - 6px), var(--ty)); }
+.toolbar[data-collapsed=true][data-position=right] { transform: translate(calc(100% + 6px), var(--ty)); }
+.toolbar[data-collapsed=true][data-revealed=true], .toolbar[data-collapsed=true]:has(:focus-visible) { transform: translate(var(--tx), var(--ty)); }
+.toolbar::before { content: ''; position: absolute; }
+.toolbar[data-position=bottom]::before { left: 0; right: 0; top: -22px; height: 22px; }
+.toolbar[data-position=top]::before { left: 0; right: 0; bottom: -22px; height: 22px; }
+.toolbar[data-position=left]::before { top: 0; bottom: 0; right: -22px; width: 22px; }
+.toolbar[data-position=right]::before { top: 0; bottom: 0; left: -22px; width: 22px; }
 .sep { width: 1px; height: 18px; margin-inline: 3px; background: var(--line); }
-.panel { position: fixed; bottom: 64px; right: 16px; width: min(320px, calc(100vw - 24px)); max-height: calc(100vh - 96px); overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 10px 40px #0005; }
+.toolbar[data-position=left] .sep, .toolbar[data-position=right] .sep { width: 18px; height: 1px; margin: 3px 0; }
+.panel { position: fixed; bottom: 64px; right: 16px; width: min(320px, calc(100vw - 24px)); max-height: calc(100vh - 96px); overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: 0 16px 48px #00000059; }
 .panel.pinned { bottom: auto; right: auto; max-height: calc(100vh - 32px); }
-.panel.sidebar { top: 0; right: 0; bottom: 0; left: auto; width: min(var(--nudge-sidebar, 340px), 100vw); max-height: none; border-width: 0 0 0 1px; border-radius: 0; box-shadow: -8px 0 32px #0003; padding: 14px; }
+.panel.sidebar { top: 0; right: 0; bottom: 0; left: auto; width: min(var(--nudge-sidebar, 340px), 100vw); max-height: none; border-width: 0 0 0 1px; border-radius: 0; box-shadow: -12px 0 40px #00000033; padding: 10px; }
+.panel.sidebar[data-side=left] { left: 0; right: auto; border-width: 0 1px 0 0; box-shadow: 12px 0 40px #00000033; }
 .panel-head { display: flex; align-items: center; gap: 4px; margin: -2px -4px 8px 0; }
+.panel.sidebar > .panel-head { position: sticky; top: -10px; z-index: 1; margin: -10px -10px 8px; padding: 10px 10px 10px 16px; min-height: 52px; background: var(--bg); border-bottom: 1px solid var(--line); }
 .panel-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pin { position: fixed; width: 22px; height: 22px; min-height: 0; padding: 0; font-size: 11px; font-weight: 700; border-radius: 50% 50% 50% 3px; background: var(--accent); color: var(--accent-ink); border: 2px solid #fff; pointer-events: auto; box-shadow: 0 2px 8px #0004; }
 textarea { display: block; width: 100%; min-height: 72px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 8px; resize: vertical; }
@@ -114,6 +129,8 @@ button[data-needs-setup=true] { color: var(--accent); }
 button[data-offline=true]::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--bg); }
 .panel.sidebar { transition: transform 260ms var(--ease-drawer); }
 @starting-style { .panel.sidebar { transform: translateX(100%); } }
+@starting-style { .panel.sidebar[data-side=left] { transform: translateX(-100%); } }
+.panel.sidebar[data-side=left][data-closing=true] { transform: translateX(-100%); }
 .panel.sidebar[data-closing=true] { transform: translateX(100%); }
 @media (prefers-reduced-motion: reduce) { .panel.sidebar { transition: none; } }
 .row { position: relative; display: flex; align-items: center; }
@@ -148,6 +165,19 @@ button.danger { background: var(--danger); border-color: var(--danger); color: v
 .setup-summary[data-ready=true] { color: var(--accept); }
 .setup-details summary, .onboarding details > summary { font-size: 12px; }
 .setup-footer { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 14px; }
+.new-row { display: flex; width: 100%; justify-content: flex-start; gap: 10px; padding: 8px 10px; margin: 0 0 6px; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.new-row:hover { background: var(--raised); border-color: var(--line-strong); }
+.new-row svg { color: var(--muted); }
+.group-label { margin: 14px 10px 4px; font-size: 11px; color: var(--muted); }
+.empty { margin: 16px 10px; font-size: 12px; color: var(--muted); }
+.popover { position: fixed; z-index: 2; width: 252px; padding: 6px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px #00000066; pointer-events: auto; transform-origin: var(--origin, 50% 100%); transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out); }
+@starting-style { .popover { opacity: 0; transform: scale(.96); } }
+@media (prefers-reduced-motion: reduce) { @starting-style { .popover { transform: none; } } }
+.popover-row { display: grid; gap: 6px; padding: 8px 0; }
+.popover-row + .popover-row { border-top: 1px solid var(--line); }
+.popover-label { font-size: 11px; color: var(--muted); }
+.popover .segmented { display: flex; width: 100%; }
+.popover .segmented button { flex: 1; padding-inline: 4px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
@@ -167,6 +197,28 @@ function button(text: string, action: () => void) {
   return element;
 }
 
+/** Per-browser display preferences; storage may be unavailable. */
+function readPref<T extends string>(
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): T {
+  try {
+    const value = localStorage.getItem(key);
+    return allowed.includes(value as T) ? (value as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function writePref(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* convenience only */
+  }
+}
+const barPositions = ['bottom', 'top', 'left', 'right'] as const;
+type BarPosition = (typeof barPositions)[number];
 export function mountNudge(options: NudgeOptions): NudgeHandle {
   if (!options.enabled || typeof document === 'undefined')
     return { destroy() {} };
@@ -189,6 +241,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   applyTheme(host);
   const style = node('style', css);
   const toolbar = node('div', undefined, 'toolbar');
+  let barPosition: BarPosition = readPref(
+    'nudge-toolbar-position',
+    barPositions,
+    'bottom',
+  );
+  toolbar.dataset.position = barPosition;
   toolbar.style.pointerEvents = 'auto';
   const outline = node('div', undefined, 'outline');
   const highlightBox = node('div', undefined, 'highlight-box');
@@ -197,6 +255,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   pins.setAttribute('aria-label', 'Pinned comments');
   outline.hidden = true;
   const panel = node('section', undefined, 'panel');
+  let panelSide = readPref(
+    'nudge-panel-side',
+    ['left', 'right'] as const,
+    'right',
+  );
+  panel.dataset.side = panelSide;
   panel.style.pointerEvents = 'auto';
   panel.hidden = true;
   panel.setAttribute('aria-label', 'Nudge feedback');
@@ -220,13 +284,24 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     tip.textContent = text;
     const r = target.getBoundingClientRect();
     const t = tip.getBoundingClientRect();
-    const above = r.top - t.height - 8 >= 4;
+    const side = target.closest<HTMLElement>('.toolbar')?.dataset.position;
+    const midY = Math.max(
+      6,
+      Math.min(innerHeight - t.height - 6, r.top + r.height / 2 - t.height / 2),
+    );
     const left = Math.max(
       6,
       Math.min(innerWidth - t.width - 6, r.left + r.width / 2 - t.width / 2),
     );
-    tip.style.left = left + 'px';
-    tip.style.top = (above ? r.top - t.height - 8 : r.bottom + 8) + 'px';
+    if (side === 'left' || side === 'right') {
+      tip.style.left =
+        (side === 'left' ? r.right + 8 : r.left - t.width - 8) + 'px';
+      tip.style.top = midY + 'px';
+    } else {
+      const above = side !== 'top' && r.top - t.height - 8 >= 4;
+      tip.style.left = left + 'px';
+      tip.style.top = (above ? r.top - t.height - 8 : r.bottom + 8) + 'px';
+    }
     tip.dataset.show = 'true';
   }
   function hideTip() {
@@ -376,14 +451,32 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     if (saved[0]) pageRoot.style.setProperty(name, saved[0], saved[1]);
     else pageRoot.style.removeProperty(name);
   };
+  let pushedProp: string | undefined;
   function setPush(push: number, animate = !reducedMotion()) {
+    const prop = panelSide === 'left' ? 'margin-left' : 'margin-right';
     host.style.setProperty('--nudge-push', push + 'px');
+    host.style.setProperty(
+      '--nudge-push-left',
+      panelSide === 'left' ? push + 'px' : '0px',
+    );
+    host.style.setProperty(
+      '--nudge-push-right',
+      panelSide === 'right' ? push + 'px' : '0px',
+    );
     if (!push && !savedMargin) return;
     clearTimeout(restoreTimer);
+    // Side switched while pushed: put the old side back at once.
+    if (savedMargin && pushedProp && pushedProp !== prop) {
+      restoreInline(pushedProp, savedMargin);
+      if (savedTransition) restoreInline('transition', savedTransition);
+      savedMargin = savedTransition = pushedProp = undefined;
+      if (!push) return;
+    }
     if (!savedMargin) {
+      pushedProp = prop;
       savedMargin = [
-        pageRoot.style.getPropertyValue('margin-right'),
-        pageRoot.style.getPropertyPriority('margin-right'),
+        pageRoot.style.getPropertyValue(prop),
+        pageRoot.style.getPropertyPriority(prop),
       ];
       savedTransition = [
         pageRoot.style.getPropertyValue('transition'),
@@ -393,18 +486,18 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     if (animate)
       pageRoot.style.setProperty(
         'transition',
-        `margin-right ${DRAWER_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+        `${prop} ${DRAWER_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
         'important',
       );
     else if (savedTransition) restoreInline('transition', savedTransition);
     if (push) {
-      pageRoot.style.setProperty('margin-right', push + 'px', 'important');
+      pageRoot.style.setProperty(prop, push + 'px', 'important');
       return;
     }
-    restoreInline('margin-right', savedMargin);
+    restoreInline(prop, savedMargin);
     const finish = () => {
       if (savedTransition) restoreInline('transition', savedTransition);
-      savedMargin = savedTransition = undefined;
+      savedMargin = savedTransition = pushedProp = undefined;
     };
     if (animate) restoreTimer = setTimeout(finish, DRAWER_MS);
     else finish();
@@ -457,6 +550,138 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   toolbar.append(toggle, pageWide, tray, node('span', '', 'sep'), collapse);
   const setupButton = iconButton(icons.setup, 'Agent setup', () => {});
   tray.after(setupButton);
+  const layoutButton = iconButton(icons.layout, 'Layout and theme', () =>
+    togglePopover(),
+  );
+  layoutButton.setAttribute('aria-expanded', 'false');
+  setupButton.after(layoutButton);
+  const popover = node('div', undefined, 'popover');
+  popover.hidden = true;
+  popover.setAttribute('role', 'dialog');
+  popover.setAttribute('aria-label', 'Layout and theme');
+  function segmented<T extends string>(
+    label: string,
+    choices: readonly [T, string][],
+    current: T,
+    onChange: (value: T) => void,
+  ) {
+    const group = node('div', undefined, 'segmented');
+    group.setAttribute('role', 'radiogroup');
+    group.setAttribute('aria-label', label);
+    const buttons = choices.map(([value, text]) => {
+      const choice = button(text, () => {
+        for (const b of buttons) b.setAttribute('aria-checked', 'false');
+        choice.setAttribute('aria-checked', 'true');
+        onChange(value);
+      });
+      choice.setAttribute('role', 'radio');
+      choice.setAttribute('aria-checked', String(value === current));
+      return choice;
+    });
+    group.append(...buttons);
+    return group;
+  }
+  const popoverRow = (label: string, control: HTMLElement) => {
+    const row = node('div', undefined, 'popover-row');
+    row.append(node('span', label, 'popover-label'), control);
+    return row;
+  };
+  popover.append(
+    popoverRow(
+      'Toolbar',
+      segmented(
+        'Toolbar position',
+        [
+          ['bottom', 'Bottom'],
+          ['top', 'Top'],
+          ['left', 'Left'],
+          ['right', 'Right'],
+        ],
+        barPosition,
+        (value) => {
+          barPosition = value;
+          toolbar.dataset.position = value;
+          writePref('nudge-toolbar-position', value);
+          requestAnimationFrame(placePopover);
+          schedule();
+        },
+      ),
+    ),
+    popoverRow(
+      'Side panel',
+      segmented(
+        'Side panel position',
+        [
+          ['left', 'Left'],
+          ['right', 'Right'],
+        ],
+        panelSide,
+        (value) => {
+          panelSide = value;
+          panel.dataset.side = value;
+          writePref('nudge-panel-side', value);
+          syncSidebar();
+        },
+      ),
+    ),
+    popoverRow('Theme', themeControl(host)),
+  );
+  shadow.append(popover);
+  /** Opens beside the toolbar, toward the page, growing from its button. */
+  function placePopover() {
+    if (popover.hidden) return;
+    const r = layoutButton.getBoundingClientRect();
+    const p = popover.getBoundingClientRect();
+    const clampX = (x: number) =>
+      Math.max(8, Math.min(innerWidth - p.width - 8, x));
+    const clampY = (y: number) =>
+      Math.max(8, Math.min(innerHeight - p.height - 8, y));
+    const gap = 10;
+    const place = {
+      bottom: [
+        clampX(r.left + r.width / 2 - p.width / 2),
+        r.top - p.height - gap,
+        '50% 100%',
+      ],
+      top: [
+        clampX(r.left + r.width / 2 - p.width / 2),
+        r.bottom + gap,
+        '50% 0%',
+      ],
+      left: [
+        r.right + gap,
+        clampY(r.top + r.height / 2 - p.height / 2),
+        '0% 50%',
+      ],
+      right: [
+        r.left - p.width - gap,
+        clampY(r.top + r.height / 2 - p.height / 2),
+        '100% 50%',
+      ],
+    }[barPosition] as [number, number, string];
+    popover.style.left = place[0] + 'px';
+    popover.style.top = place[1] + 'px';
+    popover.style.setProperty('--origin', place[2]);
+  }
+  function togglePopover(open = popover.hidden) {
+    popover.hidden = !open;
+    layoutButton.setAttribute('aria-expanded', String(open));
+    if (open) placePopover();
+  }
+  const closePopover = (event: Event) => {
+    if (popover.hidden) return;
+    const path = event.composedPath();
+    if (event instanceof KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      togglePopover(false);
+      layoutButton.focus();
+      return;
+    }
+    if (!path.includes(popover) && !path.includes(layoutButton))
+      togglePopover(false);
+  };
+  document.addEventListener('pointerdown', closePopover, true);
+  document.addEventListener('keydown', closePopover, true);
   applyCollapsed();
   const onboarding = new OnboardingPanel(
     shadow,
@@ -719,12 +944,16 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           : null;
     if (target === document.body) {
       const box = panel.getBoundingClientRect();
-      const push = parseFloat(host.style.getPropertyValue('--nudge-push')) || 0;
-      const top = Math.max(16, window.innerHeight - box.height - 64);
+      const pushLeft =
+        parseFloat(host.style.getPropertyValue('--nudge-push-left')) || 0;
+      const pushRight =
+        parseFloat(host.style.getPropertyValue('--nudge-push-right')) || 0;
+      const clearance = barPosition === 'bottom' ? 64 : 16;
+      const top = Math.max(16, window.innerHeight - box.height - clearance);
       Object.assign(panel.style, {
-        left: `${Math.max(16, (window.innerWidth - push - box.width) / 2)}px`,
+        left: `${Math.max(16, pushLeft + (window.innerWidth - pushLeft - pushRight - box.width) / 2)}px`,
         top: `${top}px`,
-        maxHeight: `${window.innerHeight - top - 64}px`,
+        maxHeight: `${window.innerHeight - top - clearance}px`,
       });
       panel.dataset.anchorState = 'page';
       return;
@@ -1198,17 +1427,25 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     );
     const archivedCount = onPage.filter((a) => a.archivedAt).length;
     const current = onPage.filter((a) => !!a.archivedAt === showArchived);
+    if (!showArchived) {
+      const start = button('', () => setActive(true));
+      start.className = 'new-row';
+      start.innerHTML = icons.annotate; // static icon markup
+      start.append('New request');
+      panel.append(start);
+    }
     if (!current.length)
       panel.append(
         node(
-          'small',
+          'p',
           showArchived
             ? 'Nothing archived on this page.'
-            : 'No requests on this page yet.',
+            : 'Nothing here yet. Choose New request, then click the part of the page to change.',
+          'empty',
         ),
       );
     const numbers = pinNumbers();
-    for (const a of current) {
+    const renderRow = (a: Annotation) => {
       const comment = a.revisions.at(-1)!.comment;
       const item = button('', () => {
         detailId = a.id;
@@ -1217,7 +1454,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       });
       item.className = 'item';
       item.setAttribute('aria-label', `${statusLabels[a.status]} · ${comment}`);
-      item.dataset.tip = statusLabels[a.status];
       const state = dotState(a);
       const dot = state === 'working' ? spinner() : node('span', '', 'dot');
       dot.dataset.state = state;
@@ -1247,6 +1483,18 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       // No archive/delete while an agent works on it.
       if (state !== 'working') row.append(rowActions(a, row));
       panel.append(row);
+    };
+    // Grouped by what needs you: open requests first, then finished ones.
+    const groups: [string, Annotation[]][] = showArchived
+      ? [['Archived', current]]
+      : [
+          ['Open', current.filter((a) => a.status !== 'accepted')],
+          ['Accepted', current.filter((a) => a.status === 'accepted')],
+        ];
+    for (const [label, items] of groups) {
+      if (!items.length) continue;
+      panel.append(node('div', label, 'group-label'));
+      items.forEach(renderRow);
     }
     if (archivedCount || showArchived) {
       const filter = button(
@@ -1601,6 +1849,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       window.removeEventListener('scroll', schedule, true);
       window.removeEventListener('resize', schedule);
       window.removeEventListener('resize', syncSidebar);
+      document.removeEventListener('pointerdown', closePopover, true);
+      document.removeEventListener('keydown', closePopover, true);
       clearTimeout(hideTimer);
       clearTimeout(tipTimer);
       lifetime.abort();

@@ -1255,3 +1255,24 @@ public --tag preview` failed with missing authentication. The alternate local
   (always shown on touch, where the meta hides).
 - Validation: tsc, oxlint, prettier, 112 unit/contract, 13 browser tests; dark
   and light screenshots taken with Playwright against the preview app.
+
+## Product aesthetic pass; layout settings
+
+- Overlay restyled toward the user's references (Kodeo/CodaAI) on a black and
+  white base: true-black dark surfaces, hairline borders, 14px panels, 9-10px
+  controls, the coral accent kept. Bar is a rounded rect; side panel has a
+  sticky header, a "New request" row and requests grouped as Open / Accepted
+  (Archived in its own view).
+- New "Layout and theme" popover on the bar (scale-in from its button, 160ms,
+  reduced-motion safe): toolbar position bottom/top/left/right (vertical on the
+  sides, hide slides toward its edge), side panel left/right (page pushed from
+  that side; switching while open restores the old side first), and theme
+  (moved here from Agent setup). Preferences stored per browser. Tooltips point
+  away from vertical/top bars; the page-wide composer avoids the bar.
+- Website: rounded install box, demo, review image, terminal, buttons; frame
+  lines removed; docs sidebar uses soft filled rows instead of corner frames;
+  rounded code blocks, asides, search and pagination. Original black/white
+  canvases kept (user preference). Website tests updated for the new docs rows.
+- Validation: prettier, oxlint, tsc, 112 unit/contract, 13 overlay browser
+  tests, 15 website tests; screenshots (Playwright, installed Chrome) of the
+  overlay in several layouts/themes and of the site before/after.

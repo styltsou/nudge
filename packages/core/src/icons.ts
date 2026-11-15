@@ -26,6 +26,9 @@ export const icons = {
   send: svg('<path d="M12 19V5M6 11l6-6 6 6"/>'),
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   save: svg('<path d="M7 4h10v16l-5-3.5L7 20z"/>'),
+  layout: svg(
+    '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  ),
   page: svg(
     '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>',
   ),

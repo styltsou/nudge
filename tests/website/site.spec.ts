@@ -213,7 +213,7 @@ test('system theme follows the OS until the user saves a preference on either en
   }
 });
 
-test('header and sidebar frame hover/focus and keep sidebar selection unfilled', async ({
+test('header links frame on hover/focus; sidebar rows fill on hover and selection', async ({
   page,
 }) => {
   for (const colorScheme of ['light', 'dark'] as const) {
@@ -230,8 +230,12 @@ test('header and sidebar frame hover/focus and keep sidebar selection unfilled',
     await expect(docsLink).not.toHaveCSS('background-image', 'none');
     await docsLink.click();
     const selected = page.locator('.sidebar-content a[aria-current="page"]');
-    await expect(selected).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-    await expect(selected).not.toHaveCSS('background-image', 'none');
+    // Soft filled row (product aesthetic), not the corner frame.
+    await expect(selected).not.toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    );
+    await expect(selected).toHaveCSS('background-image', 'none');
     const accent = await selected.evaluate((el) => {
       const probe = document.createElement('span');
       probe.style.color = 'var(--nudge-accent)';
@@ -240,13 +244,15 @@ test('header and sidebar frame hover/focus and keep sidebar selection unfilled',
       probe.remove();
       return color;
     });
-    await expect(selected).toHaveCSS('color', accent);
     const nextLink = page
       .locator('.sidebar-content')
       .getByRole('link', { name: 'Snapshots', exact: true });
     await nextLink.hover();
-    await expect(nextLink).toHaveCSS('color', accent);
-    await expect(nextLink).not.toHaveCSS('background-image', 'none');
+    await expect(nextLink).not.toHaveCSS(
+      'background-color',
+      'rgba(0, 0, 0, 0)',
+    );
+    await expect(nextLink).toHaveCSS('background-image', 'none');
     await nextLink.click();
     await expect(page).toHaveURL(/\/docs\/snapshots\/$/);
     await expect(
@@ -254,7 +260,7 @@ test('header and sidebar frame hover/focus and keep sidebar selection unfilled',
     ).toHaveText('Snapshots');
     await expect(
       page.locator('.sidebar-content a[aria-current="page"]'),
-    ).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    ).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     const nextPage = page.locator('.pagination-links a[rel="next"]');
     await nextPage.hover();
     await expect(nextPage).toHaveCSS('color', accent);
