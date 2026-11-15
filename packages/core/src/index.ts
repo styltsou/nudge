@@ -17,7 +17,7 @@ export type NudgeOptions = {
 export type NudgeHandle = { destroy(): void };
 
 const css = `
-:host { all: initial; --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
+:host { all: initial; --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
 @media (prefers-color-scheme: light) { :host(:not([data-theme=dark])) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
 :host([data-theme=light]) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; }
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
@@ -37,8 +37,11 @@ button:not(.icon) svg { width: 14px; height: 14px; stroke-width: 2.2; }
 button.icon.primary { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 button.icon.primary:hover { color: var(--accent-ink); background: var(--accent); filter: brightness(1.08); }
 button.icon.primary svg { stroke-width: 2.2; }
-.badge { position: absolute; top: 1px; right: 0; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; font-size: 10px; line-height: 15px; font-weight: 700; background: var(--accent); color: var(--accent-ink); pointer-events: none; }
-.badge:empty { display: none; }
+.badge { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); pointer-events: none; }
+.badge[data-state=none] { display: none; }
+.badge[data-state=review]::after { content: ''; position: absolute; inset: -3px; border-radius: inherit; border: 2px solid var(--accent); animation: nudge-badge 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
+@keyframes nudge-badge { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.7); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .badge[data-state=review]::after { animation: none; transform: scale(1.25); opacity: .6; } }
 .toolbar button.icon { position: relative; }
 .toolbar { position: fixed; left: calc((100% - var(--nudge-push, 0px)) / 2); bottom: 12px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 24px #0004; transition: transform .18s cubic-bezier(.23,1,.32,1), left 260ms var(--ease-drawer); }
 .toolbar button.icon { border-radius: 999px; }
@@ -115,6 +118,11 @@ button[data-offline=true]::after { content: ''; position: absolute; top: 5px; ri
 .row-actions button.icon { width: 26px; height: 26px; }
 .row[data-archived=true] .item { opacity: .6; }
 .row-confirm { display: flex; align-items: center; gap: 6px; padding: 0 2px 0 8px; font-size: 12px; color: var(--muted); }
+.row-confirm > * { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out); }
+.row-confirm > :nth-child(2) { transition-delay: 30ms; }
+.row-confirm > :nth-child(3) { transition-delay: 60ms; }
+@starting-style { .row-confirm > * { opacity: 0; transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { @starting-style { .row-confirm > * { transform: none; } } }
 button.danger { background: var(--danger); border-color: var(--danger); color: var(--bg); font-weight: 600; }
 .tray-filter { display: block; margin: 8px 0 0; font-size: 11px; color: var(--muted); background: none; border: 0; padding: 4px 0; min-height: 0; }
 .tray-filter:hover { color: var(--ink); }
@@ -279,11 +287,29 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     else showTray();
   });
   const trayCount = node('span', '', 'badge');
+  trayCount.dataset.state = 'none';
   tray.append(trayCount);
-  function setTrayCount(count: number) {
-    tray.setAttribute('aria-label', `Feedback (${count})`);
-    tray.dataset.tip = 'Feedback';
-    trayCount.textContent = count ? String(count) : '';
+  /** Badge = open requests on this page; it pulses while some await review. */
+  function updateTrayCount() {
+    const open = annotations.filter(
+      (a) =>
+        a.anchor.pageUrl === `${location.origin}${location.pathname}` &&
+        !a.archivedAt &&
+        a.status !== 'accepted',
+    );
+    const review = open.filter((a) => a.status === 'ready_for_review').length;
+    tray.setAttribute(
+      'aria-label',
+      `Feedback (${open.length}${review ? `, ${review} ready for review` : ''})`,
+    );
+    tray.dataset.tip = review
+      ? `Feedback · ${review} ready for review`
+      : open.length
+        ? `Feedback · ${open.length} open`
+        : 'Feedback';
+    // A dot instead of a number: present while requests are open, pulsing
+    // while some wait for review. The count stays in the label and tooltip.
+    trayCount.dataset.state = review ? 'review' : open.length ? 'open' : 'none';
   }
   // Connection state rides on the setup button (a dot only when offline)
   // instead of taking its own slot on the bar.
@@ -360,11 +386,12 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     if (animate) restoreTimer = setTimeout(finish, DRAWER_MS);
     else finish();
   }
+  // The bar always starts open; hiding lasts until the page reloads.
   let collapsed = false;
   try {
-    collapsed = localStorage.getItem('nudge-toolbar-hidden') === '1';
+    localStorage.removeItem('nudge-toolbar-hidden'); // older builds saved it
   } catch {
-    /* storage may be unavailable; the toolbar then starts visible */
+    /* storage may be unavailable */
   }
   // Astro-style hiding: the bar slides away at once, even under the cursor, and
   // peeks back when the pointer returns to the bottom edge after leaving it.
@@ -373,11 +400,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   let hideTimer: ReturnType<typeof setTimeout> | undefined;
   const collapse = button('', () => {
     collapsed = !collapsed;
-    try {
-      localStorage.setItem('nudge-toolbar-hidden', collapsed ? '1' : '0');
-    } catch {
-      /* per-viewer convenience only */
-    }
     clearTimeout(hideTimer);
     revealed = false;
     ignoreHover = collapsed;
@@ -959,10 +981,13 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
               ? 'Saved for later. Start the agent from this comment when setup is ready.'
               : 'Saved locally. Ask your coding agent to read Nudge annotations.',
         );
+        // Swap to the saved comment in the same task: clearing the selection
+        // first and then awaiting would leave the box with no element to sit
+        // beside for a moment, so it jumped to the top and back.
         setActive(false);
-        await refresh();
         detailId = annotation.id;
         showDetail();
+        await refresh();
       } catch (cause) {
         error.textContent =
           cause instanceof Error ? cause.message : 'Unable to queue annotation';
@@ -977,6 +1002,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       annotation,
       ...annotations.filter((a) => a.id !== annotation.id),
     ];
+    updateTrayCount();
     schedule();
   }
   function keyFor(annotation: Annotation, kind: CaptureKind) {
@@ -1381,13 +1407,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           if (destroyed) return;
           annotations = items;
           schedule();
-          setTrayCount(
-            items.filter(
-              (a) =>
-                a.anchor.pageUrl === `${location.origin}${location.pathname}` &&
-                !a.archivedAt,
-            ).length,
-          );
+          updateTrayCount();
           for (const annotation of items) {
             const revision = annotation.revisions.at(-1)!;
             if (

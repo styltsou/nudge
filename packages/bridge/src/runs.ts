@@ -17,6 +17,8 @@ const fail = (message: string): never => {
 export class RunStore {
   private seen = 0;
   private recoveryUntil = 0;
+  /** Agents running at once in this project; each edits the same checkout. */
+  maxParallel = 3;
   constructor(
     private repo: Repository,
     private project: string,
@@ -125,9 +127,17 @@ export class RunStore {
           a.revisions.at(-1)!.id !== input.revisionId
         )
           fail('This revision is not available for a run.');
-        if (this.runs().some((r) => activeRun(r)))
+        // Runs may overlap, but never two on one request or one session.
+        if (this.runs().some((r) => activeRun(r) && r.annotationId === a.id))
+          fail('This request already has an agent run.');
+        if (
+          input.sessionId &&
+          this.runs().some(
+            (r) => activeRun(r) && r.sessionId === input.sessionId,
+          )
+        )
           fail(
-            'Another request is running in this project. Stop it or wait before starting this one.',
+            'That session is busy with another request. Choose a new session or wait.',
           );
         let session = input.sessionId
           ? this.sessions().find((s) => s.id === input.sessionId)
@@ -167,9 +177,15 @@ export class RunStore {
     this.seen = Date.now();
     return this.repo.db
       .transaction(() => {
-        if (this.runs().some((r) => activeRun(r) && r.status !== 'queued'))
-          return null;
-        const run = this.runs().find((r) => r.status === 'queued');
+        const running = this.runs().filter(
+          (r) => activeRun(r) && r.status !== 'queued',
+        );
+        if (running.length >= this.maxParallel) return null;
+        const busy = new Set(running.map((r) => r.sessionId));
+        // Oldest queued run whose session is free; others wait their turn.
+        const run = this.runs().find(
+          (r) => r.status === 'queued' && !busy.has(r.sessionId),
+        );
         if (!run) return null;
         const a = this.repo.get(run.annotationId);
         if (

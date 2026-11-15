@@ -1199,3 +1199,30 @@ public --tag preview` failed with missing authentication. The alternate local
   listing, claim and managed dispatch. See D-027.
 - Validation: tsc, oxlint, 111 unit/contract (new archive contract test), all
   13 browser tests; side panel flows exercised in the preview via DOM.
+
+## Parallel runs; bar always opens; no jump on submit
+
+- Simultaneous runs (D-028): RunStore allows overlapping runs across requests
+  up to maxParallel (default 3, NUDGE_MAX_PARALLEL_RUNS), still one per request
+  and per session; claim hands out the oldest queued run whose session is free.
+  Runner refactored to run claimed jobs concurrently (runJob per run, shared
+  active set for shutdown). Agent switching still waits for all runs to end.
+- Submitting a comment no longer jumps: the saved comment is shown in the same
+  task before refreshing (the selection was cleared first, leaving the box
+  without an anchor during the refresh).
+- The toolbar always starts open; hiding no longer persists across reloads.
+- Validation: tsc, oxlint, 112 unit/contract (new parallel-runs contract test),
+  all 13 browser tests. Two real agents running at once were not exercised.
+
+## Feedback dot; animated delete confirmation
+
+- The Feedback badge is a 7px dot instead of a number: shown while requests are
+  open (not accepted/archived), pulsing ring while any is ready for review
+  (static ring with reduced motion). Count stays in the label/tooltip, and it
+  updates on every change, not only on refresh (it previously counted accepted
+  requests too, so it never went down).
+- Archive stays one click (reversible via Show archived); delete keeps its
+  inline confirmation, whose label and buttons now enter with a 180ms
+  opacity + 6px slide, strong ease-out, 30ms stagger (@starting-style).
+- Validation: tsc, 112 unit/contract, 7 browser tests (loop, managed,
+  installation); dot state and confirmation transitions checked via DOM.

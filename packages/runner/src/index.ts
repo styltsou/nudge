@@ -42,22 +42,21 @@ if (
   url.hash
 )
   throw new Error('Runner requires loopback bridge');
+// Narrowed above; captured so functions below keep the string type.
+const projectRoot: string = root;
 let stopping = false;
-let current: AgentTurn | undefined;
+// Several runs can be in flight; the bridge decides how many it hands out.
+const active = new Set<AgentTurn>();
 const lifetime = new AbortController();
 const shutdown = () => {
   stopping = true;
   lifetime.abort();
-  void current?.stop();
+  for (const agent of active) void agent.stop();
 };
 process.stdin.resume();
 process.stdin.on('end', shutdown);
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
-  process.on(signal, () => {
-    stopping = true;
-    lifetime.abort();
-    void current?.stop();
-  });
+  process.on(signal, shutdown);
 async function request(path: string, body: unknown) {
   const response = await fetch(`${url.origin}/api/v1/runner${path}`, {
     method: 'POST',
@@ -72,6 +71,92 @@ async function request(path: string, body: unknown) {
   if (!response.ok) throw new Error('Runner request failed');
   return response.json();
 }
+type Job = { run: AgentRun; annotation: Annotation; session: AgentSession };
+
+/** One run from claim to report. Failures end this run only, not the runner. */
+async function runJob(job: Job) {
+  const update = (event: Record<string, unknown>) =>
+    request(`/${job.run.id}/update`, { ...event, lease: job.run.lease });
+  const provider = job.session.provider;
+  const adapter = resolveAdapter(projectRoot, provider);
+  if (!adapter) {
+    await update({ type: 'failed' }).catch(() => {});
+    return;
+  }
+  const agent = new AcpTurn(
+    adapter.executable,
+    adapter.args,
+    projectRoot,
+    update,
+    provider,
+    adapter.env,
+  );
+  active.add(agent);
+  void agent.done.catch(() => {});
+  const sessionId = job.session.id;
+  agent.onTitle = (title) => {
+    void request(`/sessions/${sessionId}/title`, { title }).catch(() => {});
+  };
+  let succeeded = false;
+  let cancelled = false;
+  let finished = false;
+  const deadline = setTimeout(
+    () => {
+      void agent.stop();
+    },
+    30 * 60 * 1000,
+  );
+  const heartbeat = (async () => {
+    while (!finished && !stopping) {
+      const result = (await update({ type: 'heartbeat' })) as {
+        stop: boolean;
+        answer?: RunAnswer;
+      };
+      if (result.stop) {
+        cancelled = true;
+        await agent.stop();
+        break;
+      }
+      if (result.answer) agent.answer(result.answer);
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  })();
+  // Observe all promises immediately, including early child-process failures.
+  const work = agent.start(job).then(() => agent.done);
+  try {
+    const report = await Promise.race([
+      work,
+      heartbeat.then(() => {
+        if (cancelled || stopping) throw new Error('Stopped');
+        return agent.done;
+      }),
+    ]);
+    await update({ type: 'completed', report });
+    succeeded = true;
+  } catch {
+    await agent.stop();
+    await update({ type: cancelled ? 'cancelled' : 'failed' }).catch(() => {});
+  } finally {
+    clearTimeout(deadline);
+    finished = true;
+    active.delete(agent);
+    // Codex titles a new session right after its first turn; keep the
+    // finished session open briefly so that title can arrive.
+    if (succeeded && !agent.title && !stopping) {
+      void new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 8000);
+        const forward = agent.onTitle;
+        agent.onTitle = (title) => {
+          forward?.(title);
+          clearTimeout(timer);
+          resolve();
+        };
+      }).then(() => agent.close());
+    } else agent.close();
+    await heartbeat.catch(() => {});
+  }
+}
+
 let checkedAt = 0;
 let settingUp = false;
 const refreshStatus = async () => {
@@ -96,104 +181,21 @@ while (!stopping) {
         });
       }
     }
-    const job =
-      config?.mode === 'managed'
-        ? ((await request('/claim', {})) as {
-            run: AgentRun;
-            annotation: Annotation;
-            session: AgentSession;
-          } | null)
-        : null;
-    if (!job && Date.now() - checkedAt > 30000) await refreshStatus();
-    if (job) {
-      const update = (event: Record<string, unknown>) =>
-        request(`/${job.run.id}/update`, { ...event, lease: job.run.lease });
-      const provider = job.session.provider;
-      const adapter = resolveAdapter(root, provider);
-      if (!adapter) {
-        await update({ type: 'failed' });
-        continue;
-      }
-      const agent = (current = new AcpTurn(
-        adapter.executable,
-        adapter.args,
-        root,
-        update,
-        provider,
-        adapter.env,
-      ));
-      void agent.done.catch(() => {});
-      const sessionId = job.session.id;
-      agent.onTitle = (title) => {
-        void request(`/sessions/${sessionId}/title`, { title }).catch(() => {});
-      };
-      let succeeded = false;
-      let cancelled = false;
-      let finished = false;
-      const deadline = setTimeout(
-        () => {
-          void agent.stop();
-        },
-        30 * 60 * 1000,
-      );
-      const heartbeat = (async () => {
-        while (!finished && !stopping) {
-          const result = (await update({ type: 'heartbeat' })) as {
-            stop: boolean;
-            answer?: RunAnswer;
-          };
-          if (result.stop) {
-            cancelled = true;
-            await agent.stop();
-            break;
-          }
-          if (result.answer) agent.answer(result.answer);
-          await new Promise((r) => setTimeout(r, 1000));
-        }
-      })();
-      // Observe all promises immediately, including early child-process failures.
-      const work = agent.start(job).then(() => agent.done);
-      try {
-        const report = await Promise.race([
-          work,
-          heartbeat.then(() => {
-            if (cancelled || stopping) throw new Error('Stopped');
-            return agent.done;
-          }),
-        ]);
-        await update({ type: 'completed', report });
-        succeeded = true;
-      } catch {
-        await agent.stop();
-        await update({ type: cancelled ? 'cancelled' : 'failed' }).catch(
-          () => {},
-        );
-      } finally {
-        clearTimeout(deadline);
-        finished = true;
-        // Codex titles a new session right after its first turn; keep the
-        // finished session open briefly so that title can arrive.
-        if (succeeded && !agent.title && !stopping) {
-          const linger = agent;
-          void new Promise<void>((resolve) => {
-            const timer = setTimeout(resolve, 8000);
-            const forward = linger.onTitle;
-            linger.onTitle = (title) => {
-              forward?.(title);
-              clearTimeout(timer);
-              resolve();
-            };
-          }).then(() => linger.close());
-        } else agent.close();
-        await heartbeat.catch(() => {});
-        current = undefined;
-      }
+    // Take every run the bridge will hand out right now (it enforces the cap).
+    let claimed = 0;
+    while (config?.mode === 'managed' && !stopping) {
+      const job = (await request('/claim', {})) as Job | null;
+      if (!job) break;
+      claimed++;
+      void runJob(job).catch(() => {});
     }
+    // The claim above doubles as the liveness signal; refresh agent status
+    // only when idle, so busy runs are never slowed by CLI probes.
+    if (!claimed && !active.size && Date.now() - checkedAt > 30000)
+      await refreshStatus();
   } catch {
-    if (!stopping) {
-      stopping = true;
-      await current?.stop();
-    }
+    // The bridge is gone (dev server stopped): end all runs and exit.
+    if (!stopping) shutdown();
   }
   if (!stopping) await new Promise((r) => setTimeout(r, 1000));
 }

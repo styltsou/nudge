@@ -309,3 +309,15 @@ permanently after an inline confirmation (annotation, snapshots, runs and
 sessions no other request uses). Both are browser-only, version-checked and
 refused while an agent run is active. Neither reverts code the agent changed;
 the UI says "Delete permanently?" rather than implying an undo.
+
+### D-028 Parallel managed runs (2026-11-15)
+
+The user asked for simultaneous runs, superseding the earlier one-editing-run-
+per-project serialization in doc 09. Runs on different requests may overlap up
+to `maxParallel` (default 3, `NUDGE_MAX_PARALLEL_RUNS` 1–10). Still enforced:
+one active run per request, and one active run per session (a reused session
+that is busy is refused at dispatch; a queued run waits while its session is
+busy). The runner executes claimed runs concurrently, each with its own
+heartbeat, deadline and process; a failure ends that run only. Overlapping runs
+share the working copy: agents editing the same file can conflict, which the
+docs state plainly rather than hiding.

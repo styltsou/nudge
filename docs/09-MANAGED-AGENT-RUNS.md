@@ -72,8 +72,9 @@ association in its detail view. Validate project/provider compatibility on the
 server; an arbitrary provider session ID is not authorization. If a chosen
 session is busy, missing or incompatible, explain the state and queue/disable or
 offer an explicit new-session choice. Never silently switch sessions or mix
-concurrent turns. Existing-source-edit serialization still applies: fresh
-conversation context does not imply an isolated source tree. Provider process
+concurrent turns in one session. Runs on different requests may overlap (see
+D-028), up to a per-project cap; fresh conversation context does not imply an
+isolated source tree, so overlapping runs share the working copy. Provider process
 lifecycle is an adapter detail; it must preserve conversation isolation.
 
 ## Architecture

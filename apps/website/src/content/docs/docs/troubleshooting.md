@@ -45,10 +45,13 @@ After fixing the cause, inspect existing edits and use **Retry agent**.
 Failures, Stop and restart do not undo file changes. Unsupported ACP permission
 or form requests fail rather than receiving automatic approval.
 
-## Another request is running, or a session cannot be reused
+## A request waits, or a session cannot be reused
 
-Nudge allows one editing run per project. Wait for it to finish or use
-**Stop agent** before submitting another.
+Up to three agent runs work at the same time in a project (set
+`NUDGE_MAX_PARALLEL_RUNS`, 1–10, before starting dev). Further requests wait as
+**Waiting for runner** and start when a run finishes. A request can only have
+one run at a time. Parallel runs share your working copy, so give them separate
+parts of the UI; two agents editing the same file can overwrite each other.
 
 Existing sessions must belong to this project and the selected provider and
 have a resumable provider session. A missing, busy or incompatible session is

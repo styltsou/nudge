@@ -30,8 +30,9 @@ run and starts the configured agent through ACP.
 Each submission defaults to **New session**, including follow-ups on the same
 item. Choose an existing session explicitly when you want its conversation
 history. An item can have several sessions; a session can handle several items.
-Only compatible sessions in this project are eligible, and editing runs are
-serialized so two agents do not edit the same project concurrently.
+Only compatible sessions in this project are eligible. Requests on different
+elements can run at the same time (three by default); a session handles one
+request at a time, and extra requests wait their turn.
 
 | Run state                      | What you should expect                                             |
 | ------------------------------ | ------------------------------------------------------------------ |

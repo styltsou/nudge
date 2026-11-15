@@ -56,6 +56,9 @@ export function createBridge(config: BridgeConfig) {
   );
   const snapshots = new SnapshotStore(config.stateDir);
   const runs = new RunStore(repo, config.projectId, config.provider);
+  const parallel = Number(process.env.NUDGE_MAX_PARALLEL_RUNS ?? 3);
+  if (Number.isInteger(parallel) && parallel >= 1 && parallel <= 10)
+    runs.maxParallel = parallel;
   const recovery = setInterval(() => {
     runs.recover();
     notifyRuns();
