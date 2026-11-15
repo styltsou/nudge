@@ -44,6 +44,8 @@ No postinstall rewrites the app.
 
 ## First publication — explicit maintainer action
 
+Step-by-step guide with Bun, npm tokens and 2FA: [PUBLISHING.md](PUBLISHING.md).
+
 After approval and successful checks, sign in to the intended npm account,
 verify ownership and publish the checked archive:
 
