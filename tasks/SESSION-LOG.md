@@ -1077,3 +1077,21 @@ public --tag preview` failed with missing authentication. The alternate local
   could bind ::1 while another server held 127.0.0.1 on Windows.
 - Validation: tsc, oxlint, 102 unit/contract and all 13 browser tests passed;
   checked visually in the browser pane. Agent setup dialog still dense.
+
+## Toolbar hiding, spinner, tooltips and pins that follow agent edits
+
+- Hide works like Astro's dev toolbar: eye-off icon hides the bar at once even
+  under the cursor; it peeks back when the pointer returns to the bottom edge
+  and re-hides 400 ms after leaving. Eye icon keeps it visible.
+- 3x3 square spinner with a diagonal opacity wave replaces the ring spinner
+  and pulsing dot (new `packages/core/src/spinner.ts`).
+- Agent setup uses a gear icon. Native `title` tooltips replaced by styled
+  `data-tip` tooltips (delayed on first hover, instant between controls, shown
+  on keyboard focus too).
+- Pins follow replaced elements: the live node while connected, then strict
+  anchor, then same position and tag (text may differ), then unique tag+text,
+  then whatever now occupies the last known spot. The "element not found"
+  notice is removed. Before/after comparison still uses strict `findAnchor`.
+- Validation: tsc, oxlint, 102 unit/contract and 13 browser tests passed.
+  In the browser pane: renamed and restyled the pinned button and reloaded;
+  the pin and comment stayed attached with no notice.

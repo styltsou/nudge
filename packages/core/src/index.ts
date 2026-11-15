@@ -1,10 +1,11 @@
 import { commentSchema, statusLabels } from '@usenudge/shared';
 import type { Annotation, SnapshotRef } from '@usenudge/shared';
-import { anchorFor, findAnchor, locateAnchor } from './anchors';
+import { anchorFor, findAnchor, locateAnchor, textPreview } from './anchors';
 import { captureElement } from './capture';
 import { BridgeClient } from './client';
 import { ManagedControls } from './managed';
 import { OnboardingPanel } from './onboarding';
+import { spinner } from './spinner';
 export { anchorFor, findAnchor, selectorFor, textPreview } from './anchors';
 export type NudgeOptions = {
   enabled?: boolean;
@@ -35,7 +36,7 @@ button.icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; s
 .toolbar::before { content: ''; position: absolute; left: 0; right: 0; top: -16px; height: 16px; }
 .toolbar[data-collapsed=true] { transform: translate(-50%, calc(100% + 6px)); }
 .toolbar[data-collapsed=true]::before { top: -22px; height: 22px; }
-.toolbar[data-collapsed=true]:hover, .toolbar[data-collapsed=true]:has(:focus-visible) { transform: translateX(-50%); }
+.toolbar[data-collapsed=true][data-revealed=true], .toolbar[data-collapsed=true]:has(:focus-visible) { transform: translateX(-50%); }
 .sep { width: 1px; height: 18px; margin-inline: 3px; background: var(--line); }
 .conn { display: inline-flex; width: 22px; justify-content: center; font-size: 0; }
 .conn::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
@@ -56,10 +57,8 @@ p { margin: 6px 0; overflow-wrap: anywhere; } small { color: var(--muted); font-
 .item { display: flex; width: 100%; justify-content: flex-start; gap: 8px; text-align: left; margin: 0 0 4px; padding: 8px 10px; background: var(--surface); }
 .item-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-.dot[data-state=working] { background: var(--accent); animation: nudge-pulse 1.2s ease-in-out infinite; }
 .dot[data-state=review] { background: var(--accent); }
 .dot[data-state=accepted] { background: var(--accept); }
-@keyframes nudge-pulse { 50% { opacity: .35; } }
 .status { color: var(--muted); } .message { white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .message.full { display: block; -webkit-line-clamp: unset; }
 .prompt { padding: 8px 10px; background: var(--surface); border-radius: 8px; }
@@ -71,11 +70,13 @@ figcaption { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
 .check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 4px; } input[type=checkbox] { margin: 0; accent-color: var(--accent); }
 select { display: block; width: 100%; padding: 6px 8px; margin-block: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
 label { font-size: 12px; color: var(--muted); }
-.agent-working::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 7px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: nudge-spin .8s linear infinite; vertical-align: -1px; }
+.spinner { flex: none; display: inline-grid; grid-template-columns: repeat(3, 3px); grid-auto-rows: 3px; gap: 1.5px; vertical-align: middle; }
+.spinner span { background: var(--accent); border-radius: .5px; opacity: .15; animation: nudge-grid 1s ease-in-out infinite; }
+@keyframes nudge-grid { 0%, 100% { opacity: .15; } 40% { opacity: 1; } }
+.agent-working { display: flex; align-items: center; gap: 8px; }
 .run-state { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; } .run-state p { margin: 0; flex: 1; }
-@keyframes nudge-spin { to { transform: rotate(360deg); } }
 @media (max-width: 520px) { .panel:not(.sidebar) { right: 8px; left: 8px !important; width: auto; bottom: 60px; max-height: calc(100vh - 80px); } }
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } .toolbar, button { transition: none; } .agent-working::before, .dot { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } .toolbar, button { transition: none; } .spinner span, .dot { animation: none !important; } .spinner span { opacity: .7; } }
 .onboarding { pointer-events: auto; position: fixed; margin: auto; width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 18px; box-shadow: 0 16px 64px #0006; }
 .onboarding::backdrop { background: #0007; }
 .setup-checks { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 12px 0; font-size: 12px; } .setup-checks dt { color: var(--muted); } .setup-checks dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
@@ -83,6 +84,9 @@ label { font-size: 12px; color: var(--muted); }
 .setup-command { display: block; user-select: text; white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px; margin: 8px 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font: 12px/1.6 ui-monospace, 'Cascadia Code', monospace; }
 button[data-needs-setup=true] { color: var(--accent); }
 .setup-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; background: var(--bg); padding-block: 2px; z-index: 1; } .setup-heading h2 { margin: 0; font-size: 15px; }
+.tip { position: fixed; z-index: 3; max-width: 260px; padding: 5px 8px; border-radius: 7px; background: var(--ink); color: var(--bg); font-size: 11px; line-height: 1.35; font-weight: 500; pointer-events: none; white-space: pre-line; box-shadow: 0 4px 16px #0004; opacity: 0; transform: translateY(2px); transition: opacity .12s, transform .12s; }
+.tip[data-show=true] { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .tip { transition: none; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
@@ -110,10 +114,14 @@ const icons = {
   exit: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
   feedback: svg('<path d="M4 5h16v11H10l-5 4v-4H4z"/>'),
   setup: svg(
-    '<circle cx="12" cy="12" r="3"/><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/>',
+    '<circle cx="12" cy="12" r="8.2" stroke-width="3.2" stroke-dasharray="3.2 3.24" stroke-linecap="butt"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="2"/>',
   ),
-  hide: svg('<path d="M6 9l6 6 6-6"/>'),
-  show: svg('<path d="M6 15l6-6 6 6"/>'),
+  hide: svg(
+    '<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2.5 12S6 19 12 19a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+  ),
+  show: svg(
+    '<path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/>',
+  ),
   close: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
   back: svg('<path d="M15 6l-6 6 6 6"/>'),
   dock: svg(
@@ -127,7 +135,7 @@ const icons = {
 function setIcon(element: HTMLButtonElement, icon: string, label: string) {
   element.innerHTML = icon;
   element.setAttribute('aria-label', label);
-  element.title = label;
+  element.dataset.tip = label;
 }
 function iconButton(icon: string, label: string, action: () => void) {
   const element = button('', action);
@@ -172,6 +180,64 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)';
   shadow.append(style, outline, pins, panel, toolbar, live);
   document.body.append(host);
+  // Styled tooltips for anything with data-tip (replaces native titles).
+  const tip = node('div', '', 'tip');
+  tip.setAttribute('aria-hidden', 'true');
+  shadow.append(tip);
+  let tipFor: HTMLElement | null = null;
+  let tipTimer: ReturnType<typeof setTimeout> | undefined;
+  let tipWarmUntil = 0;
+  function showTip(target: HTMLElement) {
+    const text = target.dataset.tip;
+    if (!text) return;
+    tip.textContent = text;
+    const r = target.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const above = r.top - t.height - 8 >= 4;
+    const left = Math.max(
+      6,
+      Math.min(innerWidth - t.width - 6, r.left + r.width / 2 - t.width / 2),
+    );
+    tip.style.left = left + 'px';
+    tip.style.top = (above ? r.top - t.height - 8 : r.bottom + 8) + 'px';
+    tip.dataset.show = 'true';
+  }
+  function hideTip() {
+    clearTimeout(tipTimer);
+    if (tip.dataset.show === 'true') tipWarmUntil = Date.now() + 400;
+    tip.dataset.show = 'false';
+    tipFor = null;
+  }
+  function tipTarget(event: Event) {
+    for (const el of event.composedPath()) {
+      if (el === shadow) break;
+      if (el instanceof HTMLElement && el.dataset.tip) return el;
+    }
+    return null;
+  }
+  function armTip(event: Event) {
+    const target = tipTarget(event);
+    if (target === tipFor) return;
+    hideTip();
+    if (!target) return;
+    tipFor = target;
+    // Short delay on first hover; instant while moving between controls.
+    tipTimer = setTimeout(
+      () => tipFor === target && showTip(target),
+      Date.now() < tipWarmUntil ? 0 : 450,
+    );
+  }
+  shadow.addEventListener('pointerover', armTip);
+  shadow.addEventListener('focusin', (event) => {
+    if ((event.target as HTMLElement).matches?.(':focus-visible'))
+      armTip(event);
+  });
+  shadow.addEventListener('pointerout', (event) => {
+    const next = (event as PointerEvent).relatedTarget as Node | null;
+    if (!tipFor || !next || !tipFor.contains(next)) hideTip();
+  });
+  shadow.addEventListener('focusout', hideTip);
+  shadow.addEventListener('pointerdown', hideTip);
   let active = false;
   let selected: Element | null = null;
   let hovered: Element | null = null;
@@ -212,13 +278,13 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   tray.append(trayCount);
   function setTrayCount(count: number) {
     tray.setAttribute('aria-label', `Feedback (${count})`);
-    tray.title = 'Feedback';
+    tray.dataset.tip = 'Feedback';
     trayCount.textContent = count ? String(count) : '';
   }
   const connection = node('span', 'Connecting…', 'conn');
   function setConnection(text: string, on: boolean) {
     connection.textContent = text;
-    connection.title = text;
+    connection.dataset.tip = text;
     connection.dataset.on = String(on);
   }
   // The tray and docked comments use a full-height side panel that pushes the page
@@ -262,6 +328,11 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   } catch {
     /* storage may be unavailable; the toolbar then starts visible */
   }
+  // Astro-style hiding: the bar slides away at once, even under the cursor, and
+  // peeks back when the pointer returns to the bottom edge after leaving it.
+  let revealed = false;
+  let ignoreHover = false;
+  let hideTimer: ReturnType<typeof setTimeout> | undefined;
   const collapse = button('', () => {
     collapsed = !collapsed;
     try {
@@ -269,16 +340,36 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     } catch {
       /* per-viewer convenience only */
     }
+    clearTimeout(hideTimer);
+    revealed = false;
+    ignoreHover = collapsed;
     applyCollapsed();
   });
   collapse.className = 'icon';
+  toolbar.addEventListener('pointerenter', () => {
+    clearTimeout(hideTimer);
+    if (ignoreHover || !collapsed) return;
+    revealed = true;
+    applyCollapsed();
+  });
+  toolbar.addEventListener('pointerleave', () => {
+    ignoreHover = false;
+    if (!collapsed) return;
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      revealed = false;
+      applyCollapsed();
+    }, 400);
+  });
   function applyCollapsed() {
     // Stay fully visible while annotating so Exit annotation is always reachable.
     toolbar.dataset.collapsed = String(collapsed && !active);
-    const label = collapsed
-      ? 'Keep toolbar visible'
-      : 'Hide toolbar (hover the bottom edge to reveal)';
-    setIcon(collapse, collapsed ? icons.show : icons.hide, label);
+    toolbar.dataset.revealed = String(revealed);
+    setIcon(
+      collapse,
+      collapsed ? icons.show : icons.hide,
+      collapsed ? 'Show toolbar' : 'Hide toolbar',
+    );
   }
   toolbar.append(toggle, tray, connection, node('span', '', 'sep'), collapse);
   const setupButton = iconButton(icons.setup, 'Agent setup', () => {});
@@ -334,10 +425,66 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   function targetFor(annotation: Annotation): Element | null {
     if (annotation.anchor.pageUrl !== `${location.origin}${location.pathname}`)
       return null;
-    const located = locateAnchor(annotation.anchor);
-    if (located) return located;
-    const original = liveTargets.get(annotation.id);
-    return original?.isConnected ? original : null;
+    // Agents rewrite components, so the pinned node is often replaced. Follow it:
+    // keep the live node while it exists, otherwise adopt its replacement.
+    const known = liveTargets.get(annotation.id);
+    const target =
+      (known?.isConnected ? known : null) ??
+      locateAnchor(annotation.anchor) ??
+      replacementFor(annotation);
+    if (!target) return null;
+    liveTargets.set(annotation.id, target);
+    const rect = target.getBoundingClientRect();
+    lastSpots.set(annotation.id, {
+      x: rect.x + rect.width / 2 + scrollX,
+      y: rect.y + rect.height / 2 + scrollY,
+    });
+    return target;
+  }
+  // Last on-page centre (document coordinates) of each pinned element.
+  const lastSpots = new Map<string, { x: number; y: number }>();
+  function usable(element: Element | null | undefined): element is Element {
+    return (
+      !!element &&
+      element !== document.body &&
+      element !== document.documentElement &&
+      !element.closest('[data-nudge-host]')
+    );
+  }
+  /** Pin-only fallback; before/after comparison still requires findAnchor. */
+  function replacementFor(annotation: Annotation): Element | null {
+    const { anchor } = annotation;
+    // 1. Same structural position and tag, even if the agent changed its text.
+    try {
+      const matches = anchor.selector
+        ? document.querySelectorAll(anchor.selector)
+        : [];
+      if (matches.length === 1 && matches[0]!.tagName === anchor.tagName)
+        return matches[0]!;
+    } catch {
+      /* stored selector no longer parses against this DOM */
+    }
+    // 2. Moved in the tree but kept its tag and visible text.
+    if (anchor.textPreview) {
+      const same = [...document.getElementsByTagName(anchor.tagName)]
+        .slice(0, 2000)
+        .filter((e) => usable(e) && textPreview(e) === anchor.textPreview);
+      if (same.length === 1) return same[0]!;
+    }
+    // 3. Whatever now occupies the spot where it was last seen.
+    const spot = lastSpots.get(annotation.id);
+    if (!spot) return null;
+    const x = spot.x - scrollX;
+    const y = spot.y - scrollY;
+    if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return null;
+    const hit = document.elementsFromPoint(x, y).find(usable);
+    if (!hit) return null;
+    // Prefer an element of the original kind around the hit point.
+    for (let e: Element | null = hit, depth = 0; e && depth < 4; depth++) {
+      if (e.tagName === anchor.tagName && usable(e)) return e;
+      e = e.parentElement;
+    }
+    return hit;
   }
   function drawPins() {
     const ids = new Set(annotations.map((a) => a.id));
@@ -396,10 +543,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           ? targetFor(annotation)
           : null;
     const rect = target?.getBoundingClientRect();
-    // A lost/ambiguous anchor is never replaced with another element or stale coordinates.
+    // With no element at all the comment simply floats; nothing is surfaced.
     panel.dataset.anchorState = rect ? 'attached' : 'unavailable';
-    const notice = panel.querySelector<HTMLElement>('[data-pin-notice]');
-    if (notice) notice.hidden = Boolean(rect);
     const width =
       panel.getBoundingClientRect().width ||
       Math.min(400, window.innerWidth - 32);
@@ -533,14 +678,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           tray.focus();
         }),
       );
-      const notice = node(
-        'small',
-        'Element not found on this page right now.',
-        'error',
-      );
-      notice.dataset.pinNotice = '';
-      notice.hidden = true;
-      panel.append(notice);
     }
     schedule();
   }
@@ -604,7 +741,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     );
     const captureLabel = node('label', undefined, 'check');
     captureLabel.htmlFor = capture.id;
-    captureLabel.title =
+    captureLabel.dataset.tip =
       'Snapshots may contain visible sensitive information. Form values and private regions are excluded. Images stay local.';
     captureLabel.append(
       capture,
@@ -615,7 +752,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       saveOnly = button('Save without running', () => {
         void save(false);
       });
-      saveOnly.title = 'Save the comment and run the agent later';
+      saveOnly.dataset.tip = 'Save the comment and run the agent later';
       actions.prepend(saveOnly);
       captureLabel.before(session.node);
     }
@@ -805,9 +942,10 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       });
       item.className = 'item';
       item.setAttribute('aria-label', `${statusLabels[a.status]} · ${comment}`);
-      item.title = statusLabels[a.status];
-      const dot = node('span', '', 'dot');
-      dot.dataset.state = dotState(a);
+      item.dataset.tip = statusLabels[a.status];
+      const state = dotState(a);
+      const dot = state === 'working' ? spinner() : node('span', '', 'dot');
+      dot.dataset.state = state;
       item.append(dot, node('span', comment.split('\n')[0], 'item-title'));
       panel.append(item);
     }
@@ -838,7 +976,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     title(statusLabels[a.status]);
     const latest = a.revisions.at(-1)!;
     const prompt = node('p', latest.comment, 'message prompt');
-    prompt.title = `Revision ${latest.ordinal} · ${a.anchor.pathname}`;
+    prompt.dataset.tip = `Revision ${latest.ordinal} · ${a.anchor.pathname}`;
     prompt.addEventListener('click', () => prompt.classList.toggle('full'));
     panel.append(prompt);
     if (managed.state.enabled) panel.append(managed.attach(a));
@@ -861,7 +999,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
           ),
         );
       else
-        comparison.title =
+        comparison.dataset.tip =
           'Images are advisory; inspect the result before accepting.';
     }
     const kind: CaptureKind | null =
@@ -1067,6 +1205,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       window.removeEventListener('scroll', schedule, true);
       window.removeEventListener('resize', schedule);
       window.removeEventListener('resize', syncSidebar);
+      clearTimeout(hideTimer);
+      clearTimeout(tipTimer);
       lifetime.abort();
       if (frame) cancelAnimationFrame(frame);
       for (const url of imageUrls.values()) URL.revokeObjectURL(url);

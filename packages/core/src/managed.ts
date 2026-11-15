@@ -5,6 +5,7 @@ import {
   type ManagedState,
 } from '../../shared/src/runs';
 import { BridgeClient } from './client';
+import { spinner } from './spinner';
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text = '') {
   const el = document.createElement(tag);
@@ -150,9 +151,11 @@ export class ManagedControls {
       row.className = 'run-state';
       const status = element('p', labels[run.status]);
       status.setAttribute('role', 'status');
-      if (['starting', 'working'].includes(run.status))
+      if (['starting', 'working'].includes(run.status)) {
         status.className = 'agent-working';
-      status.title = `${run.sessionMode === 'new' ? 'New' : 'Existing'} ${this.state.sessions.find((s) => s.id === run.sessionId)?.provider ?? this.state.provider ?? 'codex'} session · ${run.sessionId.slice(0, 8)}`;
+        status.prepend(spinner());
+      }
+      status.dataset.tip = `${run.sessionMode === 'new' ? 'New' : 'Existing'} ${this.state.sessions.find((s) => s.id === run.sessionId)?.provider ?? this.state.provider ?? 'codex'} session · ${run.sessionId.slice(0, 8)}`;
       row.append(status);
       if (activeRun(run))
         row.append(
@@ -163,7 +166,7 @@ export class ManagedControls {
       box.append(row);
       // New sessions are the default; only call out an explicit reuse.
       if (run.sessionMode === 'existing')
-        box.append(element('small', status.title));
+        box.append(element('small', status.dataset.tip ?? ''));
       if (run.events.length > 1) {
         const details = element('details');
         details.append(element('summary', 'Agent activity'));
