@@ -7,6 +7,9 @@
     "dev": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro dev --host localhost",
     "build": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro build --force",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro preview --host localhost",
+    "deploy": "wrangler deploy",
+    "deploy:preview": "wrangler preview",
+    "deploy:dry-run": "wrangler deploy --dry-run --outdir ../../.nudge/wrangler-dry-run",
     "typecheck": "ASTRO_TELEMETRY_DISABLED=1 bun --bun astro check"
   },
   "dependencies": {
@@ -19,6 +22,7 @@
     "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.12"
+    "@astrojs/check": "^0.9.12",
+    "wrangler": "^4.162.0"
   }
 }

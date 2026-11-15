@@ -1027,3 +1027,21 @@ public --tag preview` failed with missing authentication. The alternate local
   `bun run website:test` suite passed locally (15 tests, Windows). The Linux CI
   run remains to be verified after the change is pushed. The initial enhanced
   assertion failed on Windows CRLF; normalization fixed it.
+
+## Cloudflare Workers deployment setup
+
+- Added `apps/website/wrangler.jsonc` for a static-assets Worker named
+  `nudge-website`, with the generated `dist` directory, custom 404 handling and
+  branch preview configuration. Added Wrangler 4.162 as a website dev dependency,
+  root/website production, preview and dry-run scripts, and `.wrangler/` ignore.
+- Documented Workers Builds root/build/deploy/preview commands and variables in
+  the website README. The Worker name must match the dashboard project; domain
+  and account-specific routes remain dashboard configuration. This prepares a
+  Workers project, which has a different flow from Cloudflare Pages.
+- Validation: frozen offline Bun install, website build, website typecheck,
+  targeted Prettier check and all 15 website browser tests passed locally.
+  The sandbox's Wrangler dry run failed due to profile-write and ancestor-directory
+  access restrictions. The user ran `bun run website:deploy:dry-run` outside the
+  sandbox and reported that it succeeded. No remote deployment was performed.
+- Next: commit/push these changes, match the Worker name to the Cloudflare project,
+  apply the documented build settings and attach the user's domain in Cloudflare.

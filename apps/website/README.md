@@ -84,8 +84,42 @@ The accent choice remains easy to revise after visual review.
 
 ## Hosting configuration
 
-The output is a static `dist/` folder. No hosting account or deployment is created
-by these commands. When a canonical website URL is owned/configured, set
+The output is a static `dist/` folder. `wrangler.jsonc` deploys these assets on
+Cloudflare Workers, including the custom 404 page; no Worker script or Astro
+server adapter is needed. The Worker name is `nudge-website` and must match your
+Cloudflare Workers project name. Change it in the configuration if your existing
+Worker uses a different name.
+
+For a Git-connected **Workers** project, configure these Workers Builds settings:
+
+| Setting         | Value                                                    |
+| --------------- | -------------------------------------------------------- |
+| Root directory  | Repository root (`/`)                                    |
+| Build command   | `bun install --frozen-lockfile && bun run website:build` |
+| Deploy command  | `bun run website:deploy`                                 |
+| Preview command | `bun run website:deploy:preview`                         |
+| Build variable  | `BUN_VERSION=1.4.4`                                      |
+| Build variable  | `SKIP_DEPENDENCY_INSTALL=1`                              |
+
+The assets directory is defined relative to `apps/website/wrangler.jsonc`, so
+Wrangler picks up `apps/website/dist` regardless of the repository-root build
+directory. Cloudflare's build environment needs access to the package registry
+to install the lockfile dependencies. Preview deployments require Wrangler 4.135
+or later. Production and preview commands publish to Cloudflare when run; do not
+run them just to test configuration. To validate locally without deploying:
+
+```sh
+bun run website:build
+bun run website:deploy:dry-run
+```
+
+This is the Workers Builds flow, not a Pages project: Pages has a different
+deploy command and output-directory setting. Connect your repository to the
+Worker and choose its production branch in Cloudflare. Add your custom domain
+in the Worker's **Domains & Routes** after the Worker exists; no account ID,
+route or domain is hard-coded in this repository.
+
+When a canonical website URL is owned/configured, set
 `NUDGE_WEBSITE_URL` to its absolute HTTP(S) origin before building; Astro/Starlight
 then emit canonical metadata and a sitemap. Without it, sitemap generation is
 skipped with a build warning rather than assuming ownership of a domain.

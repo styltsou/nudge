@@ -99,6 +99,8 @@ over the remaining showcase tasks. See [target contract](../docs/09-MANAGED-AGEN
 
 ## Public website — explicitly requested addition
 
+- [x] Configure Cloudflare Workers static-asset deployment with Wrangler and document Git build settings. User reported a successful local dry run. Remote deployment and domain configuration remain separate account-side steps.
+
 - [x] Rewrite the README/public docs around select → request → run → human review, with clear Vite setup, ACP/subscription guidance, separate external MCP mode and honest preview validation status. Update downloadable setup skill and contributor contracts consistently.
 
 - [x] Create `apps/website` / `@usenudge/website` with Astro, Tailwind 4 and Starlight.
