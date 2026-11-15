@@ -1,5 +1,6 @@
 import type { ManagedState, Provider } from '../../shared/src/runs';
 import { providers } from '../../shared/src/runs';
+import { themeControl } from './theme';
 const names = { codex: 'Codex', claude: 'Claude', opencode: 'OpenCode' };
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, text = '') => {
   const node = document.createElement(tag);
@@ -136,8 +137,15 @@ export class OnboardingPanel {
         'API keys may use separate API billing. Nudge never asks for your password or token.',
       ),
     );
+    const appearance = el('div');
+    appearance.className = 'appearance';
+    appearance.append(
+      el('span', 'Appearance'),
+      themeControl(shadow.host as HTMLElement),
+    );
     this.dialog.append(
       header,
+      appearance,
       el('p', 'Point at your UI, describe the change, and review the result.'),
       label,
       this.select,

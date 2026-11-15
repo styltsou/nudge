@@ -137,3 +137,54 @@ export function reportAgents(root: string, probe = nativeProbe(root)) {
     };
   });
 }
+/** Same result as detectAgents, but probes run concurrently and never block. */
+export async function detectAgentsAsync(
+  root = process.cwd(),
+): Promise<AgentStatus[]> {
+  const commands: [Provider, string[]][] = providers.flatMap((p) => [
+    [p, ['--version']] as [Provider, string[]],
+    ...(p === 'opencode'
+      ? []
+      : [
+          [p, p === 'codex' ? ['login', 'status'] : ['auth', 'status']] as [
+            Provider,
+            string[],
+          ],
+        ]),
+  ]);
+  const results = new Map<string, { status: number | null; output: string }>();
+  await Promise.all(
+    commands.map(async ([provider, args]) => {
+      const executable = nativeExecutable(provider);
+      if (!executable) return;
+      try {
+        const child = Bun.spawn([executable, ...args], {
+          cwd: root,
+          stdin: 'ignore',
+          stdout: 'pipe',
+          stderr: 'pipe',
+          windowsHide: true,
+          timeout: 3000,
+        });
+        const [out, err, status] = await Promise.all([
+          new Response(child.stdout).text(),
+          new Response(child.stderr).text(),
+          child.exited,
+        ]);
+        results.set(`${provider} ${args.join(' ')}`, {
+          status,
+          output: `${out}\n${err}`.slice(0, 65536),
+        });
+      } catch {
+        /* unreadable CLI: reported as not installed / unknown */
+      }
+    }),
+  );
+  return detectAgents(
+    (provider, args) =>
+      results.get(`${provider} ${args.join(' ')}`) ?? {
+        status: null,
+        output: '',
+      },
+  );
+}

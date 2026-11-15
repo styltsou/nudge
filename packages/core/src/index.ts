@@ -6,6 +6,7 @@ import { BridgeClient } from './client';
 import { ManagedControls } from './managed';
 import { OnboardingPanel } from './onboarding';
 import { spinner } from './spinner';
+import { applyTheme } from './theme';
 import { icons, iconButton, setIcon, submitOnEnter } from './icons';
 export { anchorFor, findAnchor, selectorFor, textPreview } from './anchors';
 export type NudgeOptions = {
@@ -17,7 +18,10 @@ export type NudgeHandle = { destroy(): void };
 
 const css = `
 :host { all: initial; --bg: #101010; --surface: #181818; --raised: #242424; --line: #2a2a2a; --line-strong: #444; --ink: #ededed; --muted: #939393; --accent: #ef6b5e; --accent-ink: #000; --accent-soft: #3b1210; --accept: #3fa37a; --danger: #ffa297; font: 13px/1.45 'Public Sans Variable', 'Public Sans', system-ui, sans-serif; color: var(--ink); }
-@media (prefers-color-scheme: light) { :host { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
+@media (prefers-color-scheme: light) { :host(:not([data-theme=dark])) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; } }
+:host([data-theme=light]) { --bg: #fff; --surface: #f7f8fa; --raised: #f4f4f4; --line: #e6e8eb; --line-strong: #c5c5c5; --ink: #15171a; --muted: #626a73; --accent: #e05246; --accent-ink: #fff; --accent-soft: #fff5f3; --accept: #217454; --danger: #a8322b; }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+@supports selector(::-webkit-scrollbar) { * { scrollbar-width: auto; scrollbar-color: auto; } ::-webkit-scrollbar { width: 8px; height: 8px; background: transparent; } ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; } ::-webkit-scrollbar-thumb:hover { background-color: var(--muted); } ::-webkit-scrollbar-button { display: none; width: 0; height: 0; } }
 * { box-sizing: border-box; } [hidden] { display: none !important; }
 button, textarea, select, input { font: inherit; color: inherit; }
 button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; padding: 4px 10px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 12px; transition: background .12s, border-color .12s, color .12s; }
@@ -43,9 +47,6 @@ button.icon.primary svg { stroke-width: 2.2; }
 .toolbar[data-collapsed=true]::before { top: -22px; height: 22px; }
 .toolbar[data-collapsed=true][data-revealed=true], .toolbar[data-collapsed=true]:has(:focus-visible) { transform: translateX(-50%); }
 .sep { width: 1px; height: 18px; margin-inline: 3px; background: var(--line); }
-.conn { display: inline-flex; width: 22px; justify-content: center; font-size: 0; }
-.conn::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-.conn[data-on=true]::before { background: var(--accept); }
 .panel { position: fixed; bottom: 64px; right: 16px; width: min(320px, calc(100vw - 24px)); max-height: calc(100vh - 96px); overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: 0 10px 40px #0005; }
 .panel.pinned { bottom: auto; right: auto; max-height: calc(100vh - 32px); }
 .panel.sidebar { top: 0; right: 0; bottom: 0; left: auto; width: min(var(--nudge-sidebar, 340px), 100vw); max-height: none; border-width: 0 0 0 1px; border-radius: 0; box-shadow: -8px 0 32px #0003; padding: 14px; }
@@ -97,6 +98,12 @@ button[data-needs-setup=true] { color: var(--accent); }
 .pin .spinner span { background: var(--accent-ink); }
 .composer-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; } .composer-row .check { margin: 0 auto 0 0; }
 .review-row { display: flex; align-items: flex-end; gap: 6px; } .review-row textarea { margin: 0; flex: 1; min-height: 34px; }
+.appearance { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 4px; font-size: 12px; color: var(--muted); }
+.segmented { display: inline-flex; padding: 2px; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
+.segmented button { min-height: 24px; padding: 2px 10px; border: 0; background: transparent; color: var(--muted); border-radius: 7px; }
+.segmented button[aria-checked=true] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 2px #0003; }
+.tag { flex: none; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--raised); color: var(--muted); }
+button[data-offline=true]::after { content: ''; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--bg); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
@@ -135,6 +142,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   host.style.cssText =
     'position:fixed;inset:0;pointer-events:none;z-index:2147483647';
   const shadow = host.attachShadow({ mode: 'open' });
+  applyTheme(host);
   const style = node('style', css);
   const toolbar = node('div', undefined, 'toolbar');
   toolbar.style.pointerEvents = 'auto';
@@ -243,6 +251,13 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     setActive(!active),
   );
   toggle.setAttribute('aria-pressed', 'false');
+  // A request about the whole page rather than one element.
+  const pageWide = iconButton(icons.page, 'Request a page-wide change', () => {
+    setActive(false);
+    docked = false;
+    selected = document.body;
+    showComposer();
+  });
   const tray = iconButton(icons.feedback, 'Feedback (0)', () => {
     setActive(false);
     if (view === 'tray') closePanel();
@@ -255,11 +270,15 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     tray.dataset.tip = 'Feedback';
     trayCount.textContent = count ? String(count) : '';
   }
-  const connection = node('span', 'Connecting…', 'conn');
+  // Connection state rides on the setup button (a dot only when offline)
+  // instead of taking its own slot on the bar.
   function setConnection(text: string, on: boolean) {
-    connection.textContent = text;
-    connection.dataset.tip = text;
-    connection.dataset.on = String(on);
+    setupButton.dataset.offline = String(!on);
+    setupButton.dataset.tip = on ? 'Agent setup' : `Agent setup · ${text}`;
+    setupButton.setAttribute(
+      'aria-label',
+      on ? 'Agent setup' : `Agent setup (${text})`,
+    );
   }
   // The tray and docked comments use a full-height side panel that pushes the page
   // over via a temporary root margin; the original inline value is restored on close.
@@ -270,7 +289,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   function syncSidebar() {
     const sidebar = !panel.hidden && (view === 'tray' || docked);
     panel.classList.toggle('sidebar', sidebar);
-    if (sidebar || panel.hidden) panel.style.maxHeight = '';
+    if (sidebar || panel.hidden)
+      Object.assign(panel.style, { left: '', top: '', maxHeight: '' });
     panel.classList.toggle(
       'docked',
       !panel.hidden && view !== 'tray' && docked,
@@ -346,9 +366,9 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       collapsed ? 'Show toolbar' : 'Hide toolbar',
     );
   }
-  toolbar.append(toggle, tray, connection, node('span', '', 'sep'), collapse);
+  toolbar.append(toggle, pageWide, tray, node('span', '', 'sep'), collapse);
   const setupButton = iconButton(icons.setup, 'Agent setup', () => {});
-  toolbar.insertBefore(setupButton, connection);
+  tray.after(setupButton);
   applyCollapsed();
   const onboarding = new OnboardingPanel(
     shadow,
@@ -418,6 +438,9 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   }
   // Last on-page centre (document coordinates) of each pinned element.
   const lastSpots = new Map<string, { x: number; y: number }>();
+  function isPageWide(a: Annotation) {
+    return a.anchor.tagName === 'BODY';
+  }
   function usable(element: Element | null | undefined): element is Element {
     return (
       !!element &&
@@ -429,7 +452,14 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   /** Pin-only fallback; before/after comparison still requires findAnchor. */
   function replacementFor(annotation: Annotation): Element | null {
     const { anchor } = annotation;
-    // 1. Same structural position and tag, even if the agent changed its text.
+    // 1. Same tag and visible text anywhere (survives inserted siblings).
+    if (anchor.textPreview) {
+      const same = [...document.getElementsByTagName(anchor.tagName)]
+        .slice(0, 2000)
+        .filter((e) => usable(e) && textPreview(e) === anchor.textPreview);
+      if (same.length === 1) return same[0]!;
+    }
+    // 2. Same structural position and tag, even if the agent changed its text.
     try {
       const matches = anchor.selector
         ? document.querySelectorAll(anchor.selector)
@@ -438,13 +468,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         return matches[0]!;
     } catch {
       /* stored selector no longer parses against this DOM */
-    }
-    // 2. Moved in the tree but kept its tag and visible text.
-    if (anchor.textPreview) {
-      const same = [...document.getElementsByTagName(anchor.tagName)]
-        .slice(0, 2000)
-        .filter((e) => usable(e) && textPreview(e) === anchor.textPreview);
-      if (same.length === 1) return same[0]!;
     }
     // 3. Whatever now occupies the spot where it was last seen.
     const spot = lastSpots.get(annotation.id);
@@ -470,13 +493,30 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         liveTargets.delete(id);
       }
     }
-    let number = 0;
+    // Number pins in creation order among this page's comments (the bridge
+    // lists newest first).
+    const here = `${location.origin}${location.pathname}`;
+    const numbers = new Map(
+      annotations
+        .filter((a) => a.anchor.pageUrl === here && !isPageWide(a))
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .map((a, i) => [a.id, i + 1]),
+    );
     for (const annotation of annotations) {
       const target = targetFor(annotation);
       let pin = pinButtons.get(annotation.id);
       if (!pin) {
         pin = button('', () => {
           setActive(false);
+          // Clicking the pin of the open comment toggles it closed.
+          if (
+            !panel.hidden &&
+            view === 'detail' &&
+            detailId === annotation.id
+          ) {
+            closePanel();
+            return;
+          }
           docked = false;
           detailId = annotation.id;
           showDetail();
@@ -487,7 +527,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         pins.append(pin);
       }
       const working = dotState(annotation) === 'working';
-      const label = String(++number);
+      const label = String(numbers.get(annotation.id) ?? '');
       if (
         pin.dataset.label !== label ||
         pin.dataset.working !== String(working)
@@ -504,6 +544,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       const rect = target?.getBoundingClientRect();
       if (target) observer.observe(target);
       pin.hidden =
+        isPageWide(annotation) ||
         !rect ||
         rect.width <= 0 ||
         rect.height <= 0 ||
@@ -534,6 +575,18 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         : annotation
           ? targetFor(annotation)
           : null;
+    if (target === document.body) {
+      const box = panel.getBoundingClientRect();
+      const push = parseFloat(host.style.getPropertyValue('--nudge-push')) || 0;
+      const top = Math.max(16, window.innerHeight - box.height - 64);
+      Object.assign(panel.style, {
+        left: `${Math.max(16, (window.innerWidth - push - box.width) / 2)}px`,
+        top: `${top}px`,
+        maxHeight: `${window.innerHeight - top - 64}px`,
+      });
+      panel.dataset.anchorState = 'page';
+      return;
+    }
     const rect = target?.getBoundingClientRect();
     // With no element at all the comment simply floats; nothing is surfaced.
     panel.dataset.anchorState = rect ? 'attached' : 'unavailable';
@@ -541,20 +594,47 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       panel.getBoundingClientRect().width ||
       Math.min(400, window.innerWidth - 32);
     const height = panel.getBoundingClientRect().height;
-    const left = rect
-      ? rect.right + width + 16 <= window.innerWidth
-        ? rect.right + 12
-        : rect.left - width - 12
+    // The marker area to keep clear: the real pin when shown (it widens while
+    // the agent works), else where the pin sits on the element's top-right.
+    const pin =
+      view === 'detail' && annotation
+        ? pinButtons.get(annotation.id)
+        : undefined;
+    const marker =
+      pin && !pin.hidden
+        ? pin.getBoundingClientRect()
+        : rect
+          ? {
+              left: rect.right - 12,
+              right: rect.right + 10,
+              top: rect.top - 12,
+              bottom: rect.top + 10,
+            }
+          : null;
+    const gap = 8;
+    let left = marker
+      ? marker.right + gap + width <= window.innerWidth - 16
+        ? marker.right + gap
+        : Math.min(rect!.left, marker.left) - gap - width
       : (window.innerWidth - width) / 2;
-    // Align with the marker (pin sits at the element's top edge). Only move up
-    // when fewer than 220px remain below; otherwise shrink and scroll inside.
-    const anchorTop = rect ? rect.top - 12 : 40;
-    const top = Math.max(
+    left = Math.max(16, Math.min(window.innerWidth - width - 16, left));
+    // Align with the marker; move up only when fewer than 220px remain below.
+    let top = marker ? marker.top : 40;
+    top = Math.max(
       16,
-      Math.min(anchorTop, window.innerHeight - 16 - Math.min(height, 220)),
+      Math.min(top, window.innerHeight - 16 - Math.min(height, 220)),
     );
+    // If clamping still lands on the pin (narrow screens), drop below it.
+    if (
+      marker &&
+      left < marker.right + gap &&
+      left + width > marker.left - gap &&
+      top < marker.bottom + gap &&
+      top + height > marker.top - gap
+    )
+      top = Math.min(marker.bottom + gap, window.innerHeight - 16 - 120);
     Object.assign(panel.style, {
-      left: `${Math.max(16, Math.min(window.innerWidth - width - 16, left))}px`,
+      left: `${left}px`,
       top: `${top}px`,
       maxHeight: `${window.innerHeight - top - 16}px`,
     });
@@ -599,7 +679,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
   // Temporary page-wide cursor while annotating; removed when annotation ends.
   const cursorStyle = node(
     'style',
-    `html[data-nudge-annotating], html[data-nudge-annotating] * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><path d='M3 2.5l15.5 6.6-6.4 2-2.2 6.3z' fill='%23e05246' stroke='%23fff' stroke-width='1.6' stroke-linejoin='round'/><rect x='14.5' y='15.5' width='11' height='8.5' rx='2.6' fill='%2315171a' stroke='%23fff' stroke-width='1.2'/><path d='M17.5 24l-1.4 2.6 3.6-2.6' fill='%2315171a' stroke='%23fff' stroke-width='1' stroke-linejoin='round'/><path d='M17.5 19.75h6' stroke='%23fff' stroke-width='1.3' stroke-linecap='round'/></svg>") 3 2, crosshair !important; }`,
+    `html[data-nudge-annotating], html[data-nudge-annotating] * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M3 2.5l17 7.2-7 2.2-2.4 6.9z' fill='%23e05246' stroke='%23fff' stroke-width='1.7' stroke-linejoin='round'/></svg>") 3 2, crosshair !important; }`,
   );
   function setCursor(on: boolean) {
     if (on) {
@@ -654,8 +734,6 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     head.append(node('h2', text));
     panel.replaceChildren(head);
     syncSidebar();
-    panel.style.left = '';
-    panel.style.top = '';
     if (view === 'detail')
       head.prepend(iconButton(icons.back, 'Back to feedback', showTray));
     if (view === 'tray')
@@ -675,8 +753,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         () => {
           docked = !docked;
           syncSidebar();
-          panel.style.left = '';
-          panel.style.top = '';
+          positionComment();
           setIcon(
             dock,
             docked ? icons.pin : icons.dock,
@@ -694,13 +771,17 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
         }),
       );
     }
+    // Place it before the first paint, once the caller has added its content.
+    queueMicrotask(positionComment);
     schedule();
   }
   function showComposer() {
     if (!selected) return;
     selectedAnchor = anchorFor(selected);
     view = 'composer';
-    title('Request a change');
+    title(
+      selected === document.body ? 'Change the whole page' : 'Request a change',
+    );
     const input = node('textarea');
     input.maxLength = 2000;
     input.id = 'nudge-comment';
@@ -764,7 +845,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       document.createTextNode('Capture before / after'),
     );
     actions.className = 'composer-row';
-    actions.append(captureLabel);
+    // Whole-page snapshots are large and rarely useful; offer capture per element.
+    if (selected !== document.body) actions.append(captureLabel);
     if (managed.state.enabled) {
       saveOnly = iconButton(icons.save, 'Save without running', () => {
         void save(false);
@@ -963,6 +1045,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       const dot = state === 'working' ? spinner() : node('span', '', 'dot');
       dot.dataset.state = state;
       item.append(dot, node('span', comment.split('\n')[0], 'item-title'));
+      if (isPageWide(a)) item.append(node('span', 'Page', 'tag'));
       panel.append(item);
     }
   }

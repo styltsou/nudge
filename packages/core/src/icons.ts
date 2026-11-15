@@ -26,6 +26,9 @@ export const icons = {
   send: svg('<path d="M12 19V5M6 11l6-6 6 6"/>'),
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   save: svg('<path d="M7 4h10v16l-5-3.5L7 20z"/>'),
+  page: svg(
+    '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  ),
   stop: svg('<rect x="7" y="7" width="10" height="10" rx="1.5"/>'),
 };
 export function setIcon(

@@ -2,18 +2,17 @@ import { bunExecutable } from '../../shared/src/bun';
 import { loadConfig } from '@usenudge/bridge/config';
 import {
   lstatSync,
-  existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { resolve } from 'node:path';
-import { initProject } from './init';
+import { parseInitArgs } from './init-options';
+import { runInit } from './init-run';
 import { guideAgent, detectAgents } from './agents';
 import { projectMcpFile } from './runtime';
 import { version } from '../../shared/src/release';
-import { prepareLocalProject } from './local';
 
 try {
   const command = process.argv[2] ?? 'help';
@@ -24,12 +23,13 @@ try {
   )
     console.log(`Nudge ${version} — request UI changes and review them in your browser.
 
-  usenudge init [project]                  Configure local Nudge state for a Vite app
-    --agent auto|codex|claude|opencode     Choose an agent (default: auto-detect)
-    --external                            Connect an external MCP host instead
-    --skip-agent                          Configure the overlay; preserve agent settings
+  usenudge init [project]                  Set up Nudge for a Vite app (interactive in a terminal)
+    --agent claude,codex                   Agents to set up; the first runs by default
+    --agent auto | skip                    Pick the ready agent / leave agents unchanged
+    --external                            Connect an agent you run yourself (MCP)
+    --integrate | --no-integrate          Add Nudge to the Vite config and dev script
     --package-source /path/usenudge.tgz    Use an unpublished local archive
-    --integrate                           Opt in to changing the app's dev script/config
+    --yes                                 Never prompt; use flags and defaults
   usenudge dev [--project path] [--port N] Start the app with Nudge; no source/config edits
   usenudge agents --agent codex --managed  Configure browser-launched agent runs
   usenudge agents --status                 Inspect native CLI sign-in hints
@@ -41,37 +41,14 @@ After local setup, run usenudge dev and open Agent setup in Nudge.
 Agents keep their own authentication and billing. Native subscription login
 and API-key billing are different choices. Stop does not undo existing edits.`);
   else if (command === 'init') {
-    const root = resolve(
-      process.argv[3]?.startsWith('--')
-        ? process.cwd()
-        : (process.argv[3] ?? process.cwd()),
-    );
-    const sourceIndex = process.argv.indexOf('--package-source');
-    if (process.argv.includes('--integrate'))
-      initProject(
-        root,
-        sourceIndex >= 0 ? process.argv[sourceIndex + 1] : undefined,
-      );
-    else {
-      prepareLocalProject(root);
-      if (
-        process.argv.includes('--external') &&
-        !existsSync(projectMcpFile(root))
-      )
-        throw new Error(
-          'Install usenudge as an app dev dependency before configuring external MCP, so its executable path stays available.',
-        );
-      console.log(
-        'Local Nudge setup ready. Start bunx --bun usenudge dev. App source, config and scripts were not changed.',
-      );
-    }
-    const agentIndex = process.argv.indexOf('--agent');
-    if (!process.argv.includes('--skip-agent'))
-      await guideAgent(
-        root,
-        agentIndex >= 0 ? process.argv[agentIndex + 1] : undefined,
-        !process.argv.includes('--external'),
-      );
+    const args = parseInitArgs(process.argv.slice(3));
+    // Ask only in a real terminal; scripts and CI get flags plus defaults.
+    const interactive =
+      !args.yes &&
+      !!process.stdin.isTTY &&
+      !!process.stdout.isTTY &&
+      !process.env.CI;
+    await runInit(args, interactive);
   } else if (command === 'dev') {
     const rootIndex = process.argv.indexOf('--project');
     const portIndex = process.argv.indexOf('--port');

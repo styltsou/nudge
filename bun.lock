@@ -51,6 +51,7 @@
       "name": "@usenudge/cli",
       "version": "0.0.0",
       "dependencies": {
+        "@clack/prompts": "1.9.0",
         "@usenudge/bridge": "workspace:*",
       },
     },

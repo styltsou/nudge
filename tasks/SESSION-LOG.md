@@ -1116,3 +1116,29 @@ public --tag preview` failed with missing authentication. The alternate local
 - Validation: tsc, oxlint, 104 unit/contract and 13 browser tests passed.
   Browser pane: composer layout, Enter submit, cursor and popup placement
   checked. The pin spinner was not seen live (no running agent in the pane).
+
+## Interactive init, popup fixes, page-wide requests, theme and scrollbars
+
+- `usenudge init` is interactive in a TTY (@clack/prompts 1.9.0, MIT, bundled):
+  agent multiselect with live status, default agent, browser vs MCP, opt-in
+  integration; prints the equivalent command. Every choice has a flag
+  (`--agent a,b`, `--external`, `--integrate/--no-integrate`, `--yes`);
+  non-TTY/CI never prompts. New `init-options.ts` (parse + canonical command,
+  unit-tested), `init-run.ts`, `brand.ts` (website colours, honours NO_COLOR),
+  non-blocking `detectAgentsAsync`. Multiple agents install adapters up front so
+  switching in the browser is instant.
+- Pins numbered by creation order on the page (bridge lists newest first).
+  Replacement search prefers same tag+text before bare position.
+- Clicking an open comment's pin closes it; popups keep clear of their pin
+  (measured: 8px gap, top-aligned) and are positioned before first paint, so
+  submitting no longer flashes the box at the top-left.
+- Page-wide requests from a new toolbar button: composer above the bar, no pin,
+  "Page" tag in the list, capture option hidden.
+- Light/dark follows the system with a System/Light/Dark switch in Agent setup
+  (per browser). Thin scrollbars without arrow buttons, transparent track.
+- Cursor is the plain coral arrow. The bridge status dot left the toolbar; the
+  gear shows a red dot and says so when the bridge is offline.
+- Validation: tsc, oxlint, 107 unit/contract and 13 browser tests passed. Browser
+  pane (hidden, checked via DOM): numbering, popup gap/no overlap, pin toggle,
+  page-wide flow, theme switching. Interactive init checked in a real terminal
+  up to the agent prompt. Not seen visually: light theme and scrollbars.

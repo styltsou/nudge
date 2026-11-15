@@ -23,7 +23,7 @@ Default setup writes only self-ignored `.nudge/` state; app source, Vite config
 and normal dev/build scripts stay untouched. `usenudge dev` injects Nudge at runtime.
 Use `init --integrate` only to opt into a portable dev-config/script integration.
 
-`init` auto-detects an installed, signed-in agent. Pass `--agent codex|claude|opencode` to choose. Setup installs maintained
+In a terminal, `init` asks which installed agents to set up (the first runs by default), how they connect and whether to edit your Vite config, then prints the equivalent one-line command. Every choice has a flag (`--agent claude,codex`, `--external`, `--integrate`, `--yes`); scripts and CI never get prompts and auto-detect a ready agent. Setup installs maintained
 Codex/Claude ACP adapters in ignored `.nudge/agents/`. OpenCode needs an installed
 CLI with ACP support. Complete native agent sign-in separately; subscription
 login and API-key billing are different choices. Nudge does not collect tokens.
