@@ -1,12 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { createInterface } from 'node:readline/promises';
 import { projectMcpFile } from './runtime';
 import { installAdapter } from '../../runner/src/adapters';
 
 import { type Provider } from '../../shared/src/runs';
 export type { Provider } from '../../shared/src/runs';
-import { detectAgents } from '../../runner/src/readiness';
+import { detectAgents, type AgentStatus } from '../../runner/src/readiness';
 export { detectAgents } from '../../runner/src/readiness';
 export type { AgentStatus, Probe } from '../../runner/src/readiness';
 export function configureAgent(root: string, provider: Provider) {
@@ -74,6 +73,13 @@ export function configureAgent(root: string, provider: Provider) {
     { mode: 0o600 },
   );
 }
+/** Prefer an installed, signed-in agent, then any installed one, in provider order. */
+export function pickAgent(statuses: AgentStatus[]): Provider | undefined {
+  return (
+    statuses.find((s) => s.installed && s.auth === 'signed-in') ??
+    statuses.find((s) => s.installed)
+  )?.provider;
+}
 export async function guideAgent(
   root: string,
   selected?: string,
@@ -84,26 +90,18 @@ export async function guideAgent(
     console.log(
       `${s.provider}: ${s.installed ? `${s.version ?? 'version unavailable'} · ${s.auth === 'signed-in' ? 'Signed in' : s.auth === 'login-required' ? 'Sign in needed' : 'Sign-in not verified'}${s.billing === 'subscription' ? ' · Subscription login' : s.billing === 'api' ? ' · API billing' : ''}` : 'Native CLI not found (ACP setup can install its runtime)'}`,
     );
-  if (!selected && process.stdin.isTTY) {
-    const prompt = createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-    try {
-      selected = (
-        await prompt.question(
-          'Connect an agent [codex / claude / opencode / skip]: ',
-        )
-      )
-        .trim()
-        .toLowerCase();
-    } finally {
-      prompt.close();
-    }
+  if (!selected || selected === 'auto') {
+    const picked = pickAgent(statuses);
+    if (picked) {
+      console.log(
+        `Auto-selected ${picked}. Override with --agent codex|claude|opencode|skip.`,
+      );
+      selected = picked;
+    } else selected = 'skip';
   }
-  if (!selected || selected === 'skip') {
+  if (selected === 'skip') {
     console.log(
-      'You can annotate now. To run an agent later: usenudge agents --agent codex --managed (or claude/opencode), then restart dev.',
+      'No installed agent CLI was selected. You can annotate now. To run an agent later: usenudge agents --agent codex --managed (or claude/opencode), then restart dev.',
     );
     return;
   }

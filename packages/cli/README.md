@@ -12,7 +12,7 @@ After the preview is published:
 
 ```sh
 bun add -d usenudge@preview
-bunx --bun usenudge init --agent codex
+bunx --bun usenudge init
 bunx --bun usenudge dev
 ```
 
@@ -23,7 +23,7 @@ Default setup writes only self-ignored `.nudge/` state; app source, Vite config
 and normal dev/build scripts stay untouched. `usenudge dev` injects Nudge at runtime.
 Use `init --integrate` only to opt into a portable dev-config/script integration.
 
-Choose `claude` or `opencode` instead of `codex`. Setup installs maintained
+`init` auto-detects an installed, signed-in agent. Pass `--agent codex|claude|opencode` to choose. Setup installs maintained
 Codex/Claude ACP adapters in ignored `.nudge/agents/`. OpenCode needs an installed
 CLI with ACP support. Complete native agent sign-in separately; subscription
 login and API-key billing are different choices. Nudge does not collect tokens.

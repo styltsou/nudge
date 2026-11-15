@@ -24,7 +24,7 @@ try {
     console.log(`Nudge ${version} — request UI changes and review them in your browser.
 
   usenudge init [project]                  Configure local Nudge state for a Vite app
-    --agent codex|claude|opencode          Choose an agent (managed ACP by default)
+    --agent auto|codex|claude|opencode     Choose an agent (default: auto-detect)
     --external                            Connect an external MCP host instead
     --skip-agent                          Configure the overlay; preserve agent settings
     --package-source /path/usenudge.tgz    Use an unpublished local archive

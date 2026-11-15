@@ -39,7 +39,7 @@ Do not assume that release exists yet.
 ## Configure your agent
 
 ```sh
-bunx --bun usenudge init --agent codex
+bunx --bun usenudge init
 ```
 
 Choose `claude` or `opencode` if preferred. Setup installs Codex/Claude ACP

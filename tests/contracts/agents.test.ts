@@ -8,7 +8,11 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { configureAgent, detectAgents } from '../../packages/cli/src/agents';
+import {
+  configureAgent,
+  detectAgents,
+  pickAgent,
+} from '../../packages/cli/src/agents';
 
 test('agent discovery reports sanitized versions and explicit authentication states', () => {
   const statuses = detectAgents((provider, args) =>
@@ -90,3 +94,41 @@ for (const provider of ['codex', 'claude'] as const) {
     }
   });
 }
+
+test('auto-detect prefers a signed-in agent, then any installed one, else none', () => {
+  const st = (c: [boolean, 'signed-in' | 'unknown'][]) =>
+    (['codex', 'claude', 'opencode'] as const).map((provider, i) => ({
+      provider,
+      installed: c[i]![0],
+      auth: c[i]![1],
+      version: null,
+      billing: 'unknown' as const,
+    }));
+  expect(
+    pickAgent(
+      st([
+        [true, 'unknown'],
+        [true, 'signed-in'],
+        [false, 'unknown'],
+      ]),
+    ),
+  ).toBe('claude');
+  expect(
+    pickAgent(
+      st([
+        [false, 'unknown'],
+        [false, 'unknown'],
+        [true, 'unknown'],
+      ]),
+    ),
+  ).toBe('opencode');
+  expect(
+    pickAgent(
+      st([
+        [false, 'unknown'],
+        [false, 'unknown'],
+        [false, 'unknown'],
+      ]),
+    ),
+  ).toBeUndefined();
+});

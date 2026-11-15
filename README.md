@@ -20,7 +20,7 @@ From your app root:
 
 ```sh
 bun add -d /absolute/path/to/usenudge.tgz
-bunx --bun usenudge init --agent codex
+bunx --bun usenudge init
 bunx --bun usenudge dev
 ```
 
