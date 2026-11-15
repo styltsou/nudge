@@ -1017,3 +1017,13 @@ public --tag preview` failed with missing authentication. The alternate local
   policy.” The tracked demo files/workspace/startup are removed and no longer
   build or ship. Those ignored cache directories remain for manual removal;
   no alternate deletion mechanism was attempted after the rejection.
+
+## Website clipboard test in CI
+
+- Updated the setup-copy browser test to grant clipboard permissions and verify
+  the copied command text, normalizing Windows CRLF clipboard line endings.
+  The previous test assumed clipboard write permission, which can fail in CI.
+- Validation: `bun run website:build`, `bun run lint`, and the full
+  `bun run website:test` suite passed locally (15 tests, Windows). The Linux CI
+  run remains to be verified after the change is pushed. The initial enhanced
+  assertion failed on Windows CRLF; normalization fixed it.

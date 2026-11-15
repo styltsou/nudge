@@ -379,7 +379,11 @@ test('public navigation and authored content links resolve without exposing inte
     expect((await request.get(path)).status(), path).toBe(404);
 });
 
-test('keyboard tabs, setup copy, and narrow layouts work', async ({ page }) => {
+test('keyboard tabs, setup copy, and narrow layouts work', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   const first = page.getByRole('tab', { name: 'Bun', exact: true });
   await first.focus();
@@ -392,6 +396,10 @@ test('keyboard tabs, setup copy, and narrow layouts work', async ({ page }) => {
     page.getByRole('tab', { name: 'pnpm', exact: true }),
   ).toBeFocused();
   await page.getByRole('button', { name: 'Copy setup commands' }).click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied.replaceAll('\r\n', '\n')).toBe(
+    await page.locator('#setup-commands').textContent(),
+  );
   await expect(
     page.getByRole('status').filter({ hasText: 'Setup commands copied.' }),
   ).toBeVisible();
