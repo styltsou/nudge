@@ -125,8 +125,13 @@ import SectionIntro from './SectionIntro.astro';
     padding: 20px 10px;
     background: linear-gradient(180deg, var(--surface), var(--canvas));
   }
-  a.framework-tile:is(:hover, :focus-visible) {
+  a.framework-tile:focus-visible {
     background: var(--raised);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    a.framework-tile:hover {
+      background: var(--raised);
+    }
   }
   a.framework-tile:focus-visible {
     outline-offset: -4px;

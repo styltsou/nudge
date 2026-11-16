@@ -78,14 +78,22 @@ site-search .dialog-frame {
   outline-offset: -1px;
 }
 #starlight__search
-  :is(.pagefind-ui__result-title, .pagefind-ui__result-nested):is(
-    :hover,
-    :focus-within
-  ) {
+  :is(.pagefind-ui__result-title, .pagefind-ui__result-nested):focus-within {
   outline-color: var(--nudge-primary);
 }
-#starlight__search .pagefind-ui__result-link:is(:hover, :focus-visible) {
+@media (hover: hover) and (pointer: fine) {
+  #starlight__search
+    :is(.pagefind-ui__result-title, .pagefind-ui__result-nested):hover {
+    outline-color: var(--nudge-primary);
+  }
+}
+#starlight__search .pagefind-ui__result-link:focus-visible {
   color: var(--nudge-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  #starlight__search .pagefind-ui__result-link:hover {
+    color: var(--nudge-accent);
+  }
 }
 
 /* Native details/anchors with a Motion-controlled panel presence lifecycle. */

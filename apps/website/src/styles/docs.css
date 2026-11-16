@@ -7,6 +7,7 @@
 @import './frames.css';
 @import './scrollbars.css';
 @import './docs-controls.css';
+@import './docs-touch.css';
 
 :root {
   --sl-font: var(--font-sans);
@@ -144,15 +145,31 @@ header.header .social-icons svg {
   border-radius: 3px;
   box-shadow: none;
 }
-:where(a, button, summary):is(:hover, :focus-visible) {
+:where(a, button, summary):focus-visible {
   color: var(--nudge-accent);
 }
-.pagination-links a:is(:hover, :focus-visible) {
+@media (hover: hover) and (pointer: fine) {
+  :where(a, button, summary):hover {
+    color: var(--nudge-accent);
+  }
+}
+.pagination-links a:focus-visible {
   border-color: var(--nudge-primary);
   color: var(--nudge-accent);
 }
-.pagination-links a:is(:hover, :focus-visible) .link-title {
+@media (hover: hover) and (pointer: fine) {
+  .pagination-links a:hover {
+    border-color: var(--nudge-primary);
+    color: var(--nudge-accent);
+  }
+}
+.pagination-links a:focus-visible .link-title {
   color: inherit;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pagination-links a:hover .link-title {
+    color: inherit;
+  }
 }
 .sl-markdown-content {
   line-height: 1.75;
@@ -187,9 +204,14 @@ header.header .social-icons svg {
 .expressive-code .copy button {
   border-radius: 2px;
 }
-.expressive-code .copy button:hover,
+
 .expressive-code .copy button:focus-visible {
   color: var(--nudge-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .expressive-code .copy button:hover {
+    color: var(--nudge-accent);
+  }
 }
 .expressive-code .copy button:focus-visible {
   outline: 2px solid var(--nudge-accent);
@@ -214,11 +236,19 @@ starlight-theme-select select {
   border-radius: 8px;
 }
 /* Hover adds a background only; the current page also takes the accent text. */
-.sidebar-content :is(a, summary):is(:hover, :focus-visible) {
+.sidebar-content :is(a, summary):focus-visible {
   /* Beats the frame-paint hover in frames.css, which has a heavier selector. */
   background-image: none !important;
   background-color: var(--sl-color-gray-6);
   color: var(--sl-color-gray-2) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-content :is(a, summary):hover {
+    /* Beats the frame-paint hover in frames.css, which has a heavier selector. */
+    background-image: none !important;
+    background-color: var(--sl-color-gray-6);
+    color: var(--sl-color-gray-2) !important;
+  }
 }
 .sidebar-content a[aria-current='page'] {
   background-image: none !important;

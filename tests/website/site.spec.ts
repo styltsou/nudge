@@ -778,3 +778,103 @@ test('capture representative desktop and mobile design previews', async ({
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: '.nudge/website-preview/docs-mobile.png' });
 });
+
+test('touch devices keep idle styles while retaining keyboard focus and selected states', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({
+    ...(baseURL ? { baseURL } : {}),
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 1024, height: 1000 },
+    reducedMotion: 'reduce',
+  });
+  const page = await context.newPage();
+  const appearance = async (target: ReturnType<typeof page.locator>) =>
+    target.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const after = getComputedStyle(element, '::after');
+      return {
+        color: style.color,
+        background: style.background,
+        border: style.borderColor,
+        opacity: style.opacity,
+        outline: style.outline,
+        decoration: style.textDecoration,
+        frame: after.opacity,
+      };
+    });
+  const check = async (selector: string) => {
+    const target = page.locator(selector).first();
+    await target.scrollIntoViewIfNeeded();
+    await page.mouse.move(0, 0);
+    await page.waitForTimeout(250);
+    const idle = await appearance(target);
+    // Force :hover even though this browser reports a coarse, non-hover pointer.
+    await target.hover();
+    expect(await target.evaluate((el) => el.matches(':hover'))).toBe(true);
+    await page.waitForTimeout(250);
+    expect(await appearance(target), selector).toEqual(idle);
+  };
+  try {
+    await page.goto('/');
+    expect(
+      await page.evaluate(
+        () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+      ),
+    ).toBe(false);
+    for (const selector of [
+      '.site-header .nav-link',
+      '.hero-actions .button-primary',
+      '.hero-actions .button-secondary',
+      '.agent-logos a',
+      '.framework-tile[href]',
+      '.section-guide',
+      '.install-copy',
+    ])
+      await check(selector);
+    const framework = page.locator('.framework-tile[href]').first();
+    await page.keyboard.press('Tab');
+    await framework.focus();
+    expect(await framework.evaluate((el) => el.matches(':focus-visible'))).toBe(
+      true,
+    );
+    await expect(framework).toHaveCSS('outline-style', 'solid');
+    await page.getByRole('tab', { name: 'npm', exact: true }).tap();
+    await expect(
+      page.getByRole('tab', { name: 'npm', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true');
+
+    await page.goto('/docs/getting-started/');
+    for (const selector of [
+      '.sidebar-content a:not([aria-current="page"])',
+      'site-search button[data-open-modal]',
+      '.pagination-links a',
+      '.sl-markdown-content a:not(.sl-anchor-link)',
+      '.expressive-code .copy button',
+    ])
+      await check(selector);
+    await expect(
+      page.locator('.sidebar-content a[aria-current="page"]'),
+    ).toHaveCSS('font-weight', '500');
+    const copy = page.locator('.expressive-code .copy button').first();
+    await page.keyboard.press('Tab');
+    await copy.focus();
+    await expect(copy).toHaveCSS('outline-style', 'solid');
+    await expect(copy).toHaveCSS('opacity', '1');
+    await page.setViewportSize({ width: 390, height: 844 });
+    const search = page.locator('header button[data-open-modal]');
+    await search.tap();
+    const dialog = page.getByRole('dialog');
+    await dialog
+      .getByRole('textbox', { name: 'Search', exact: true })
+      .fill('snapshots');
+    await expect(
+      dialog.locator('.pagefind-ui__result-link').first(),
+    ).toBeVisible();
+    await check('#starlight__search .pagefind-ui__result-link');
+  } finally {
+    await context.close();
+  }
+});

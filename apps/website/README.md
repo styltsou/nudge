@@ -147,3 +147,9 @@ the getting-started guide retains the actual unpublished-preview setup details.
 The framework grid and workflow cards share `SectionIntro.astro`, keeping each
 description close to its title and leaving a larger gap before the content.
 The workflow section has its own accessible heading, From request to review.
+
+Hover treatments require a hover-capable fine pointer. Keyboard focus, touch
+press feedback and selected states remain available independently. Shared docs
+overrides in `src/styles/docs-touch.css` neutralize unconditional hover effects
+from the upstream docs/search/code-block components on touch devices. The website
+browser suite includes a touch-context regression alongside desktop hover checks.

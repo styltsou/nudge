@@ -1456,3 +1456,15 @@ Wrapped the three workflow cards in a labeled section with the heading From requ
 Validation: website:check passed with zero diagnostics; website:build passed with the existing unset-site sitemap warning; all 16 website browser tests passed. Inspected light/dark desktop and 320px mobile captures, measured the 10px title-to-description and 28px description-to-content spacing on desktop, and confirmed no mobile horizontal overflow. Changed files passed Prettier and git diff --check.
 
 Next step: review the section copy and spacing. No SDK behavior changed.
+
+## 2026-11-16 — Keep hover treatments off touch interfaces
+
+Gated authored hover-only styling with (hover: hover) and (pointer: fine) across homepage buttons, agent/framework logos, setup links, install controls, navigation frames, sample controls and docs UI. Split mixed hover/focus selectors so keyboard focus and current-page highlights stay unconditional. Existing active/press feedback remains available.
+
+Added docs-touch.css to preserve idle styling on non-hover/coarse-pointer devices for upstream Starlight, Pagefind and Expressive Code hover rules. The overrides preserve focus-visible, focus-within, active controls and selected navigation states. No dependencies or SDK behavior changed.
+
+Added a browser regression using a touch-enabled, coarse-pointer context at tablet and phone widths. It deliberately forces :hover and compares computed styles for homepage navigation/buttons/logos/grid/copy controls and docs sidebar/search/pagination/links/copy controls. It also checks keyboard focus, selected package-manager tabs, current-page styling and working mobile search.
+
+Validation: website:check passed without diagnostics; website:build passed with the existing unset-site sitemap warning; all 17 website browser tests passed, including existing desktop hover checks and the new touch case. Root TypeScript initially caught an optional baseURL mismatch in the new test; corrected it with a conditional property. Root tsc --noEmit and lint then passed. Changed files passed Prettier and git diff --check. Device behavior was verified through Chromium touch emulation.
+
+Next step: review the touch interaction on the deployed website. No runtime JavaScript is needed to enable/disable hover styling.

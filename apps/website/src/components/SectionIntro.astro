@@ -68,8 +68,13 @@ const { headingId, title, description, href, linkLabel } = Astro.props;
     color: var(--muted);
     font-size: 13px;
   }
-  .section-guide:is(:hover, :focus-visible) {
+  .section-guide:focus-visible {
     color: var(--accent);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .section-guide:hover {
+      color: var(--accent);
+    }
   }
   @media (max-width: 680px) {
     .section-intro {

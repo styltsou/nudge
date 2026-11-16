@@ -7,9 +7,15 @@
   padding: 6px 10px;
   white-space: nowrap;
 }
-.demo-playback:is(:hover, :focus-visible) {
+.demo-playback:focus-visible {
   border-color: var(--accent);
   color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .demo-playback:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }
 .walkthrough-top .sample-label {
   margin-left: auto;
@@ -268,9 +274,15 @@
   font-size: 12px;
   font-weight: 550;
 }
-.button-secondary:is(:hover, :focus-visible) {
+.button-secondary:focus-visible {
   color: var(--accent);
   border-color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .button-secondary:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 }
 @media (max-width: 1100px) {
   .sample-app {

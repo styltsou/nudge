@@ -243,16 +243,20 @@ const managers = [
     background-clip: padding-box;
   }
   /* The active tab keeps its own look; only inactive tabs react to hover. */
-  [role='tab']:not([aria-selected='true']):hover,
-  .install-copy:hover {
-    background: linear-gradient(
-      180deg,
-      var(--btn-hover-top),
-      var(--btn-hover-bottom)
-    );
+  @media (hover: hover) and (pointer: fine) {
+    [role='tab']:not([aria-selected='true']):hover,
+    .install-copy:hover {
+      background: linear-gradient(
+        180deg,
+        var(--btn-hover-top),
+        var(--btn-hover-bottom)
+      );
+    }
   }
-  [role='tab']:not([aria-selected='true']):hover {
-    background-clip: padding-box;
+  @media (hover: hover) and (pointer: fine) {
+    [role='tab']:not([aria-selected='true']):hover {
+      background-clip: padding-box;
+    }
   }
   .install-command {
     display: flex;

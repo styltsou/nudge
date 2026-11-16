@@ -59,9 +59,16 @@
     right var(--frame-inset) bottom var(--frame-inset),
     right var(--frame-inset) bottom var(--frame-inset);
 
-  &:is(:hover, :focus-visible) {
+  &:focus-visible {
     background-image: var(--nudge-frame-paint);
     color: var(--nudge-accent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-image: var(--nudge-frame-paint);
+      color: var(--nudge-accent);
+    }
   }
   &:focus-visible {
     --frame-stroke: 2px;
@@ -79,8 +86,13 @@
   background-image: var(--nudge-frame-paint);
   color: var(--nudge-accent);
 }
-.sidebar-content summary:is(:hover, :focus-visible) .large {
+.sidebar-content summary:focus-visible .large {
   color: inherit;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-content summary:hover .large {
+    color: inherit;
+  }
 }
 
 /* Dashed connecting edges are for the sidebar; the header has structural rails. */
@@ -97,8 +109,13 @@
 }
 .sidebar-content
   .top-level
-  :is(a, summary):is(:hover, :focus-visible, [aria-current='page'])::after {
+  :is(a, summary):is(:focus-visible, [aria-current='page'])::after {
   opacity: 0.45;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-content .top-level :is(a, summary):hover::after {
+    opacity: 0.45;
+  }
 }
 
 @media (forced-colors: active) {
@@ -176,8 +193,21 @@
     header.header .social-icons a,
     header.header button[data-open-modal],
     .sl-menu-button
-  ):is(:hover, :focus-visible)::after {
+  ):focus-visible::after {
   opacity: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(
+      .site-header > .brand,
+      .site-header .nav-link,
+      .theme-toggle,
+      header.header .site-title,
+      header.header .social-icons a,
+      header.header button[data-open-modal],
+      .sl-menu-button
+    ):hover::after {
+    opacity: 1;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   :is(.site-header .nav-link, .theme-toggle)::after {

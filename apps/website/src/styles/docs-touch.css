@@ -1,0 +1,47 @@
+/* Starlight, Pagefind and Expressive Code include unconditional hover rules.
+   Keep their idle appearance on touch, without suppressing focus or press states. */
+@media (hover: none), (pointer: coarse), (pointer: none) {
+  .sidebar-content a:not([aria-current='page']):not(:focus-visible) {
+    color: var(--sl-color-gray-2);
+  }
+  .pagination-links a:not(:focus-visible) {
+    border-color: var(--sl-color-gray-5);
+  }
+  .sl-markdown-content a:not(:focus-visible):not(:where(.not-content *)) {
+    color: var(--sl-color-text-accent);
+  }
+  .sl-markdown-content details:not(:focus-within):not(:where(.not-content *)) {
+    border-color: var(--sl-details-border-color);
+  }
+  starlight-toc a:not([aria-current='true']):not(:focus-visible),
+  footer .kudos:not(:focus-visible) {
+    color: var(--sl-color-gray-3);
+  }
+  site-search button[data-open-modal]:not(:focus-visible) {
+    color: var(--sl-color-gray-2);
+    border-color: var(--sl-color-hairline);
+  }
+  #starlight__search
+    :is(.pagefind-ui__result-title, .pagefind-ui__result-nested):not(
+      :focus-within
+    ) {
+    outline: none;
+  }
+  #starlight__search .pagefind-ui__result-link:not(:focus-visible) {
+    text-decoration: none;
+  }
+  #starlight__search .pagefind-ui__button:not(:focus-visible) {
+    color: var(--pagefind-ui-text);
+    background: var(--pagefind-ui-background);
+    border-color: var(--pagefind-ui-border);
+  }
+  .expressive-code .copy button:not(:active):not(:focus-visible) {
+    opacity: 0.75;
+  }
+  .expressive-code .copy button:not(:active):not(:focus-visible) > div {
+    opacity: var(--ec-frm-inlBtnBgIdleOpa);
+  }
+  .expressive-code pre::-webkit-scrollbar-thumb {
+    background-color: var(--ec-sbThumbCol);
+  }
+}

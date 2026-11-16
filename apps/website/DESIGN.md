@@ -169,3 +169,16 @@ heading, muted description 10px below it, and 28px before the section content
 group. The stack description states the actual Vite/Astro requirement. Introduce
 the three workflow cards with From request to review and a short sentence about
 requesting, following progress and reviewing in the running app.
+
+## Hover and touch
+
+Put hover-only styling inside `(hover: hover) and (pointer: fine)` media queries,
+not viewport-width queries. Keep keyboard focus, pressed controls, selected tabs
+and current-page markers outside that gate. Split mixed hover/focus selectors so
+focus remains visible with touch or keyboard input.
+
+`docs-touch.css` keeps the idle appearance of Starlight, Pagefind and Expressive
+Code controls on non-hover/coarse-pointer devices, overriding their upstream
+unconditional hover rules without suppressing focus or active states. The browser
+suite forces the hover pseudo-class in a touch context and checks computed styles,
+then verifies keyboard focus, selected tabs, copy controls and search.
