@@ -1478,3 +1478,13 @@ Fixed two causes of oversized spacing: the official SVG exports include internal
 Validation: website:check passed without diagnostics; website:build passed with the existing unset-site sitemap warning; three relevant browser tests passed (homepage flow/image loading, narrow layout and touch/focus regression). Inspected light, dark and 320px mobile logo captures; no horizontal overflow. Prettier and git diff --check passed.
 
 Next step: review the tightened Codex lockup. No SDK or other homepage behavior changed.
+
+## 2026-11-16 — Use the Claude Code product name
+
+Changed the agent row and other homepage agent mentions from Claude to Claude Code. Updated the setup link's accessible name and its existing browser assertion. Kept technical provider identifiers, CLI commands and SDK behavior unchanged.
+
+Replaced the full generic Claude wordmark component with ClaudeMark.astro, preserving the original orange spark vector path from Anthropic's site. The product name is rendered separately, without claiming a separately supplied official Claude Code wordmark. Codex and Claude Code share matching 5px gaps and responsive 20–24px name text beside 24px symbols. Updated brand provenance and design notes.
+
+Validation: website:check passed without diagnostics; website:build passed with the existing unset-site sitemap warning; three affected browser checks passed (homepage flow/image loading and agent setup links, narrow layout and touch/focus regression). Inspected light, dark and 320px mobile agent rows; no horizontal overflow. Prettier and git diff --check passed.
+
+Next step: review the updated product naming and agent-row balance. No SDK/provider behavior changed.

@@ -145,7 +145,7 @@ test('walkthrough queues literal text, reports a sample change, revises, accepts
       .getByRole('list', { name: 'Coding agents' })
       .getByRole('listitem'),
   ).toHaveCount(3);
-  for (const agent of ['Codex', 'Claude', 'OpenCode']) {
+  for (const agent of ['Codex', 'Claude Code', 'OpenCode']) {
     await expect(
       compatibility.getByRole('link', { name: `Set up ${agent}`, exact: true }),
     ).toHaveAttribute('href', '/docs/agents/');

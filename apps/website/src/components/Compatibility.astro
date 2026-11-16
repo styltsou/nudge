@@ -1,5 +1,5 @@
 ---
-import ClaudeWordmark from './ClaudeWordmark.astro';
+import ClaudeMark from './ClaudeMark.astro';
 ---
 
 <section class="compatibility" aria-labelledby="compatibility-heading">
@@ -27,10 +27,15 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
       </a>
     </li>
     <li>
-      <a href="/docs/agents/" aria-label="Set up Claude">
-        <span class="claude-wordmark" aria-hidden="true">
-          <ClaudeWordmark />
+      <a
+        href="/docs/agents/"
+        aria-label="Set up Claude Code"
+        class="claude-code-lockup"
+      >
+        <span class="claude-mark" aria-hidden="true">
+          <ClaudeMark />
         </span>
+        <span>Claude Code</span>
       </a>
     </li>
     <li>
@@ -91,9 +96,9 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
     min-height: 44px;
     color: var(--ink);
   }
-  .agent-logos .codex-lockup {
+  .agent-logos :is(.codex-lockup, .claude-code-lockup) {
     gap: 5px;
-    font-size: 24px;
+    font-size: clamp(20px, 3vw, 24px);
     font-weight: 550;
     letter-spacing: -0.04em;
   }
@@ -126,9 +131,9 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
   :global([data-theme='dark']) .dark-mark {
     display: block;
   }
-  .claude-wordmark :global(svg) {
+  .claude-mark :global(svg) {
     display: block;
-    width: 110px;
+    width: 24px;
     height: 24px;
   }
   @media (hover: hover) and (pointer: fine) {

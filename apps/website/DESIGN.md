@@ -139,8 +139,8 @@ agent-setup hero footnote is removed. All three hero install tabs display and co
 untagged `usenudge` commands, per user direction.
 
 Below the hero, show original agent brand assets with setup links: OpenCode's
-official theme-specific wordmarks, Claude's official wordmark (preserving the
-orange spark while its text follows the theme), and the official OpenAI Blossom
+official theme-specific wordmarks, the original orange Claude spark with the
+Claude Code product name, and the official OpenAI Blossom
 beside the Codex name. Keep files local, preserve their proportions and document
 first-party sources in BRAND-ASSETS.md. This is compatibility presentation, not a
 partnership lockup; no separate official Codex mark was verified.
@@ -186,6 +186,6 @@ then verifies keyboard focus, selected tabs, copy controls and search.
 Codex's link uses a 24px layout box around the visible Blossom artwork, with the
 original 48px official export positioned intact around it. Its internal clear
 space no longer expands the logo-to-name gap. Use the more specific
-`.agent-logos .codex-lockup` selector with a 5px gap; the generic link rule has a
-12px gap. Browser measurements give about 5.1px visible spacing for Codex and
-4.7px inside Claude's supplied wordmark.
+agent-specific selector with a 5px gap for both Codex and Claude Code; the
+generic link rule has a 12px gap. Use matching responsive product-name text
+(20–24px) beside 24px marks, preserving the supplied orange Claude spark path.
