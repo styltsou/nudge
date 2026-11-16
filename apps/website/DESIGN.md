@@ -145,7 +145,10 @@ beside the Codex name. Keep files local, preserve their proportions and document
 first-party sources in BRAND-ASSETS.md. This is compatibility presentation, not a
 partnership lockup; no separate official Codex mark was verified.
 
-Built for your stack uses four restrained logo tiles, four across on desktop and
-two across on mobile: Vite, React + Vite, Astro, and a dashed Next.js tile labeled
-Coming soon. Supported tiles link to getting started; the Next.js tile has no
-setup link. Keep framework marks in their supplied colors and theme variants.
+Built for your stack is one joined grid with rounded outer corners and thin
+internal dividers: four columns on desktop, two on mobile. Cells contain their
+logo and name without descriptive subtexts. Next.js keeps its Coming soon status
+and has no setup link; supported cells link to getting started. Keep framework
+marks in their supplied colors and theme variants. The generic Vite entry also
+covers standard Vue + Vite projects; source-checkout compatibility was smoke
+tested on Vue 3.5.45 with Vite 8.3.7.

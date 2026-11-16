@@ -1412,3 +1412,13 @@ Reworked Built for your stack into responsive logo tiles for Vite, React + Vite,
 Validation: website:check passed with zero errors/warnings/hints; website:build passed (existing unset-site sitemap warning). All 16 website Playwright tests passed using installed Chromium. After a final OpenAI-mark sizing adjustment, rebuilt and reran the three affected install/image/mobile scenarios: all passed. Visually inspected both themes at desktop and 320px mobile, with no horizontal overflow. Changed authored files passed Prettier; git diff --check passed. Original downloaded SVG files were preserved without formatting changes.
 
 Next step: review the updated presentation. No SDK behavior, registry publication or live authenticated agent validation was performed.
+
+## 2026-11-16 — Joined framework grid and Vue compatibility check
+
+Removed the descriptive subtexts from supported-framework cells. Replaced separate rounded cards and gaps with one rounded outer grid, clipped outer corners and thin internal dividers. Desktop uses four columns; mobile uses two. Kept the Next.js Coming soon status and aligned its icon/title with supported cells. Keyboard focus stays visible inside the clipped frame. Updated DESIGN.md.
+
+Investigated Vue compatibility: projectFramework accepts a Vite dependency, startDev loads the consumer's Vite config, and the injected browser core has no React requirement. Created an ignored temporary Vue SFC consumer and exercised the current source CLI with Vue 3.5.45, @vitejs/plugin-vue 6.0.11 and Vite 8.3.7. Verified normal reactive clicks, annotation interception, queueing, persistence after reload, SFC style HMR, a synthetic MCP implementation report and human acceptance; no browser errors. This verifies that Vue + Vite combination through the source integration, not a real authenticated agent run or a separately installed release archive. The temporary fixture and its dependencies/state are not committed; the generic Vite website entry remains unchanged.
+
+Validation: website:check passed without diagnostics; website:build passed (existing unset-site sitemap warning); all 16 website browser cases passed using installed Chromium. Light/dark desktop and 320px mobile captures showed the joined grid with no horizontal overflow. After a final icon/title alignment adjustment, rebuilt and reran the narrow-layout browser check. Prettier and git diff --check passed.
+
+Next step: review the joined framework grid. A permanent installed-package Vue regression fixture and live-provider validation remain separate work.
