@@ -1383,3 +1383,10 @@ Updated `apps/website/src/pages/index.astro` with the user-approved hero paragra
 Validation: read the homepage back through GitHub and confirmed its full contents match the intended single-paragraph replacement. No build or browser tests run for this text-only change; no local checkout was available. Updated directly on the default branch through the GitHub connector.
 
 Next steps: await further copy direction; existing live-provider validation remains open.
+
+
+## 2026-11-16 — Hero headline clarification
+
+Changed the homepage headline to “Show your coding agent what you mean.” at the user's request and committed directly through GitHub (afa418f7cc3255b58215d6d0b3a24fd4378129ae). The approved supporting paragraph remains unchanged.
+
+Validation: fetched the committed homepage and confirmed the complete file matches the intended headline-only replacement. No build/browser tests run for this text-only edit. Next step: await further copy direction.
