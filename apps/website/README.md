@@ -130,11 +130,14 @@ self-hosted fonts and local Pagefind search, with no analytics or hosted backend
 ## Compatibility presentation
 
 The homepage puts Get started first, with agent setup as the secondary action.
-`Compatibility.astro` shows locally stored agent brand assets and a separate grid
-of framework cells for Vite, React + Vite, Vue + Vite, Svelte + Vite, Astro and
-Next.js (coming soon). The joined rounded grid has three desktop columns and two
-mobile columns. Vue and Svelte integrations were smoke tested through the source
-CLI, including annotation, hot reload and review using synthetic agent reports.
+`Compatibility.astro` groups the agent heading closely with local brand assets,
+with extra space after the hero actions. `Frameworks.astro` sits after the large
+walkthrough mockup and before the workflow rail. It uses a larger left-aligned
+heading and setup-guide link above the joined rounded grid. Labels are React,
+Vue, Svelte, Astro, Vite and Next.js (coming soon), with one logo each. Framework
+labels are shortened for readability; React, Vue and Svelte support still means
+standalone Vite projects. Vue and Svelte integrations were smoke tested through
+the source CLI, including annotation, hot reload and review with synthetic reports.
 Official assets, their source URLs and theme variants are documented in
 [BRAND-ASSETS.md](BRAND-ASSETS.md). Codex uses the official OpenAI Blossom beside
 its product name; no separately verified Codex mark was available. The hero

@@ -1,0 +1,215 @@
+<section class="frameworks" aria-labelledby="frameworks-heading">
+  <div class="frameworks-header">
+    <h2 id="frameworks-heading">Built for your stack</h2>
+    <a class="frameworks-guide" href="/docs/getting-started/">
+      View setup guide
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M7 17 17 7M7 7h10v10" />
+      </svg>
+    </a>
+  </div>
+  <ul class="framework-grid" aria-label="Framework support">
+    <li>
+      <a class="framework-tile" href="/docs/getting-started/">
+        <span class="framework-icon" aria-hidden="true">
+          <img src="/images/brands/react.svg" width="36" height="36" alt="" />
+        </span>
+        <strong>React</strong>
+      </a>
+    </li>
+    <li>
+      <a class="framework-tile" href="/docs/getting-started/">
+        <span class="framework-icon" aria-hidden="true">
+          <img src="/images/brands/vue.svg" width="32" height="32" alt="" />
+        </span>
+        <strong>Vue</strong>
+      </a>
+    </li>
+    <li>
+      <a class="framework-tile" href="/docs/getting-started/">
+        <span class="framework-icon" aria-hidden="true">
+          <img src="/images/brands/svelte.svg" width="32" height="32" alt="" />
+        </span>
+        <strong>Svelte</strong>
+      </a>
+    </li>
+    <li>
+      <a class="framework-tile" href="/docs/getting-started/">
+        <span class="framework-icon" aria-hidden="true">
+          <img
+            class="light-mark"
+            src="/images/brands/astro-light.svg"
+            width="29"
+            height="36"
+            alt=""
+          />
+          <img
+            class="dark-mark"
+            src="/images/brands/astro-dark.svg"
+            width="29"
+            height="36"
+            alt=""
+          />
+        </span>
+        <strong>Astro</strong>
+      </a>
+    </li>
+    <li>
+      <a class="framework-tile" href="/docs/getting-started/">
+        <span class="framework-icon">
+          <img src="/images/brands/vite.svg" width="36" height="36" alt="" />
+        </span>
+        <strong>Vite</strong>
+      </a>
+    </li>
+    <li class="framework-tile framework-upcoming">
+      <span class="framework-icon">
+        <img
+          class="nextjs-mark"
+          src="/images/brands/nextjs.ico"
+          width="32"
+          height="32"
+          alt=""
+        />
+      </span>
+      <strong>Next.js</strong>
+      <span class="coming-soon">Coming soon</span>
+    </li>
+  </ul>
+</section>
+
+<style>
+  .frameworks {
+    margin: 0 0 64px;
+  }
+  .frameworks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(28px, 3.5vw, 40px);
+    font-weight: 430;
+    line-height: 1.15;
+    letter-spacing: -0.045em;
+  }
+  .frameworks-guide {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .frameworks-guide:is(:hover, :focus-visible) {
+    color: var(--accent);
+  }
+  img {
+    display: block;
+    object-fit: contain;
+    flex: none;
+  }
+  .dark-mark {
+    display: none;
+  }
+  :global([data-theme='dark']) .light-mark {
+    display: none;
+  }
+  :global([data-theme='dark']) .dark-mark {
+    display: block;
+  }
+  .framework-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--line);
+  }
+  .framework-grid > li {
+    min-width: 0;
+    background: var(--canvas);
+  }
+  .framework-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    height: 100%;
+    min-height: 144px;
+    padding: 20px 10px;
+    background: linear-gradient(180deg, var(--surface), var(--canvas));
+  }
+  a.framework-tile:is(:hover, :focus-visible) {
+    background: var(--raised);
+  }
+  a.framework-tile:focus-visible {
+    outline-offset: -4px;
+  }
+  .framework-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    margin-bottom: 4px;
+  }
+  strong {
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 550;
+  }
+
+  .framework-upcoming {
+    position: relative;
+    background: transparent;
+  }
+  .nextjs-mark {
+    border-radius: 50%;
+  }
+  .coming-soon {
+    position: absolute;
+    bottom: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+    padding: 2px 7px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+  }
+  @media (max-width: 680px) {
+    .frameworks {
+      margin-bottom: 48px;
+    }
+    .frameworks-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .framework-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .framework-tile {
+      padding-inline: 8px;
+    }
+  }
+</style>

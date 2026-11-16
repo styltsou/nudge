@@ -1434,3 +1434,15 @@ Svelte support check: created an ignored temporary Svelte consumer using Svelte 
 Validation: website:check passed without diagnostics; website:build passed (existing unset-site sitemap warning); all 16 website browser tests passed. Reviewed desktop light and dark/mobile captures and confirmed no overflow at 320px. After the final mobile agent-spacing adjustment, rebuilt and reran the narrow-layout browser test. Prettier checks and git diff --check passed.
 
 Next step: review logo balance and the expanded grid. Installed-archive Vue/Svelte regression coverage and real authenticated agent validation remain separate work.
+
+## 2026-11-16 — Homepage section hierarchy and simpler framework labels
+
+Separated Frameworks.astro from the agent-only Compatibility.astro component. Moved Built for your stack immediately after the large walkthrough mockup and before the workflow rail. Its heading is now left-aligned, scales from 28px to 40px and aligns with a setup-guide link; the joined rounded grid spans the page content width.
+
+Added 40px above the agent group after the hero's existing bottom spacing and reduced its heading-to-logo margin from 24px to 8px. Measured desktop distances: hero buttons to agent heading 96px, agent heading to logo row 8px, mockup to framework heading 64px. Preserved balanced official agent marks.
+
+Simplified framework labels to React, Vue, Svelte, Astro, Vite and Next.js, with a single logo per cell. Removed the extra Vite logo from React. The ordering puts familiar supported app frameworks first and the upcoming integration last; it is a practical browsing order, not a measured popularity claim. React/Vue/Svelte still require standalone Vite projects as documented in the setup guide. Next.js keeps Coming soon and no setup link. Updated the website README, design notes and browser assertions for separate accessible sections and post-mockup framework placement.
+
+Validation: website:check passed with zero diagnostics; website:build passed (existing unset-site sitemap warning); all 16 website browser cases passed. Visually checked desktop light/dark and 320px mobile layouts; no mobile horizontal overflow. Rebuilt after replacing an unavailable arrow glyph in the setup link with inline SVG. Changed authored files passed Prettier; git diff --check passed.
+
+Next step: review the revised homepage hierarchy. SDK behavior and live-provider validation are unchanged.

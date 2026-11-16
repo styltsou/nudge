@@ -150,18 +150,26 @@ test('walkthrough queues literal text, reports a sample change, revises, accepts
       compatibility.getByRole('link', { name: `Set up ${agent}`, exact: true }),
     ).toHaveAttribute('href', '/docs/agents/');
   }
-  await expect(compatibility).toContainText('React + Vite');
-  await expect(compatibility).toContainText('Astro');
-  await expect(
-    compatibility.getByRole('link', { name: 'Vue + Vite', exact: true }),
-  ).toHaveAttribute('href', '/docs/getting-started/');
-  await expect(
-    compatibility.getByRole('link', { name: 'Svelte + Vite', exact: true }),
-  ).toHaveAttribute('href', '/docs/getting-started/');
-  await expect(compatibility).toContainText('Next.js');
-  await expect(compatibility).toContainText('Coming soon');
+  const frameworks = page.getByRole('region', { name: 'Built for your stack' });
+  for (const name of ['React', 'Vue', 'Svelte', 'Astro', 'Vite']) {
+    await expect(
+      frameworks.getByRole('link', { name, exact: true }),
+    ).toHaveAttribute('href', '/docs/getting-started/');
+  }
+  await expect(frameworks).toContainText('Next.js');
+  await expect(frameworks).toContainText('Coming soon');
+  expect(
+    await frameworks.evaluate((el) => {
+      const mockup = document.querySelector('.hero-demo')!;
+      return Boolean(
+        mockup.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    }),
+  ).toBe(true);
   await expect(page.locator('.hero-footnote')).toHaveCount(0);
-  for (const image of await compatibility.locator('img').all()) {
+  for (const image of await page
+    .locator('.compatibility img, .frameworks img')
+    .all()) {
     await expect(image).toHaveJSProperty('complete', true);
     expect(
       await image.evaluate((el) => (el as HTMLImageElement).naturalWidth),

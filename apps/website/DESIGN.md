@@ -145,11 +145,18 @@ beside the Codex name. Keep files local, preserve their proportions and document
 first-party sources in BRAND-ASSETS.md. This is compatibility presentation, not a
 partnership lockup; no separate official Codex mark was verified.
 
-Built for your stack is one joined grid with rounded outer corners and thin
-internal dividers: three columns on desktop, two on mobile. Cells contain their
-logo and name without descriptive subtexts. Next.js keeps its Coming soon status
-and has no setup link; supported cells link to getting started. Keep framework
-marks in their supplied colors and theme variants. Explicit Vue + Vite and Svelte + Vite entries accompany Vite, React + Vite,
-Astro and Next.js. Source-checkout compatibility was smoke tested on Vue 3.5.45
-and Svelte 5.57.3 with Vite 8.3.7. OpenCode wordmarks display at 117 × 21px to
-balance the other agent marks while preserving their official proportions.
+Keep the agent heading 8px above the logos and add 40px of section padding after
+the hero's existing bottom spacing. The agent row remains above the mockup.
+
+Built for your stack follows the large walkthrough mockup. Its heading is
+left-aligned, 28–40px, paired with a small setup-guide link. The joined grid retains
+rounded outer corners, thin dividers, three desktop columns and two mobile columns.
+Use one logo and a short name per cell: React, Vue, Svelte, Astro, Vite, Next.js.
+This is a practical browsing order with supported app frameworks first and the
+coming-soon integration last, not a measured popularity ranking. React, Vue and
+Svelte still refer to standalone Vite integrations; the setup guide states the
+requirements. Next.js keeps its Coming soon status and has no setup link.
+
+Source-checkout compatibility was smoke tested on Vue 3.5.45 and Svelte 5.57.3 with
+Vite 8.3.7. OpenCode wordmarks remain 117 × 21px to balance the other agent marks
+while preserving their official proportions.
