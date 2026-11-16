@@ -130,8 +130,10 @@ self-hosted fonts and local Pagefind search, with no analytics or hosted backend
 ## Compatibility presentation
 
 The homepage puts Get started first, with agent setup as the secondary action.
-`Compatibility.astro` shows local, monochrome Codex, Claude and OpenCode SVG marks
-with accessible setup links and a separate framework-support line. Vite apps
-(including React + Vite) and Astro are supported; Next.js is labeled coming soon.
-The agent marks are from `@lobehub/icons-static-svg` 1.102.0, under MIT; the
-attribution ships at `/licenses/lobe-icons.txt`. No logo CDN is used at runtime.
+`Compatibility.astro` shows locally stored agent brand assets and a separate grid
+of framework tiles for Vite, React + Vite, Astro and Next.js (coming soon).
+Official assets, their source URLs and theme variants are documented in
+[BRAND-ASSETS.md](BRAND-ASSETS.md). Codex uses the official OpenAI Blossom beside
+its product name; no separately verified Codex mark was available. The hero
+install tabs display and copy untagged `usenudge` commands, per user direction;
+the getting-started guide retains the actual unpublished-preview setup details.

@@ -69,13 +69,13 @@ test('hero install tabs support keyboard selection and copy only the selected co
   ).toBeFocused();
   await box.getByRole('button', { name: 'Copy npm install command' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'npm install -D usenudge@preview',
+    'npm install -D usenudge',
   );
   await expect(box.getByRole('status')).toHaveText('Command copied.');
   await box.getByRole('tab', { name: 'pnpm', exact: true }).click();
   await box.getByRole('button', { name: 'Copy pnpm install command' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    'pnpm add -D usenudge@preview',
+    'pnpm add -D usenudge',
   );
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -140,7 +140,11 @@ test('walkthrough queues literal text, reports a sample change, revises, accepts
   const compatibility = page.getByRole('region', {
     name: 'Works with your coding agent',
   });
-  await expect(compatibility.getByRole('listitem')).toHaveCount(3);
+  await expect(
+    compatibility
+      .getByRole('list', { name: 'Coding agents' })
+      .getByRole('listitem'),
+  ).toHaveCount(3);
   for (const agent of ['Codex', 'Claude', 'OpenCode']) {
     await expect(
       compatibility.getByRole('link', { name: `Set up ${agent}`, exact: true }),
@@ -148,7 +152,15 @@ test('walkthrough queues literal text, reports a sample change, revises, accepts
   }
   await expect(compatibility).toContainText('React + Vite');
   await expect(compatibility).toContainText('Astro');
-  await expect(compatibility).toContainText('Next.js Coming soon');
+  await expect(compatibility).toContainText('Next.js');
+  await expect(compatibility).toContainText('Coming soon');
+  await expect(page.locator('.hero-footnote')).toHaveCount(0);
+  for (const image of await compatibility.locator('img').all()) {
+    await expect(image).toHaveJSProperty('complete', true);
+    expect(
+      await image.evaluate((el) => (el as HTMLImageElement).naturalWidth),
+    ).toBeGreaterThan(0);
+  }
   const example = page.getByRole('region', {
     name: 'Try a nudge',
   });

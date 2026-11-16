@@ -1400,3 +1400,15 @@ Added a separate framework-support line for Vite (React + Vite and more), Astro 
 Validation: frozen dependency install passed with Bun 1.4.4; website:check passed with zero errors/warnings/hints; website:build passed (existing unset-canonical-site sitemap warning); all 16 website Playwright cases passed using installed /usr/bin/chromium with a temporary ignored config. Visually inspected desktop light/dark and 320px mobile captures; no mobile horizontal overflow. Prettier and git diff --check passed for the changed content.
 
 Next step: review the updated public presentation. Live authenticated provider validation remains open; this change only updates website presentation and documentation.
+
+## 2026-11-16 — Official brand sources and framework tiles
+
+Removed the entire open-source / runs-in-project / agent-setup hero footnote and its unused CSS. Removed @preview from all three displayed/copied install commands at the user's request. The getting-started guide still documents the actual unpublished-preview install state.
+
+Replaced the community agent vectors with first-party assets: official OpenCode light/dark wordmarks from its brand page, the original Claude site wordmark with its orange spark, and the official OpenAI Blossom beside Codex. A separate distributable Codex mark was not verified; the source notes explicitly distinguish OpenAI's mark from a Codex-specific asset. All logos stay local. Added BRAND-ASSETS.md with exact source URLs and removed the now-unused LobeHub license file.
+
+Reworked Built for your stack into responsive logo tiles for Vite, React + Vite, Astro and Next.js (Coming soon). Supported tiles link to getting started; Next.js remains noninteractive. Updated website design notes, README and existing browser checks for copied commands, removed footnote, loaded logo assets and supported-framework labels.
+
+Validation: website:check passed with zero errors/warnings/hints; website:build passed (existing unset-site sitemap warning). All 16 website Playwright tests passed using installed Chromium. After a final OpenAI-mark sizing adjustment, rebuilt and reran the three affected install/image/mobile scenarios: all passed. Visually inspected both themes at desktop and 320px mobile, with no horizontal overflow. Changed authored files passed Prettier; git diff --check passed. Original downloaded SVG files were preserved without formatting changes.
+
+Next step: review the updated presentation. No SDK behavior, registry publication or live authenticated agent validation was performed.

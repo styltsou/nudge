@@ -134,9 +134,18 @@ evidence and setup rather than putting each item in another rounded card.
 ## Agent and framework compatibility
 
 The primary Get started action comes first (left on desktop); Connect your agent
-is secondary and links to the primary agent setup guide. Below the hero, show a
-quiet, centered row of monochrome Codex, Claude and OpenCode marks with setup
-links, inheriting the active theme. Keep SVG assets local and ship their license.
-A separate framework line lists Vite (including React + Vite) and Astro. Per the
-user's updated direction, Next.js is explicitly labeled coming soon in this
-compatibility section, outside the hero install presentation.
+is secondary and links to the primary agent setup guide. The former open-source /
+agent-setup hero footnote is removed. All three hero install tabs display and copy
+untagged `usenudge` commands, per user direction.
+
+Below the hero, show original agent brand assets with setup links: OpenCode's
+official theme-specific wordmarks, Claude's official wordmark (preserving the
+orange spark while its text follows the theme), and the official OpenAI Blossom
+beside the Codex name. Keep files local, preserve their proportions and document
+first-party sources in BRAND-ASSETS.md. This is compatibility presentation, not a
+partnership lockup; no separate official Codex mark was verified.
+
+Built for your stack uses four restrained logo tiles, four across on desktop and
+two across on mobile: Vite, React + Vite, Astro, and a dashed Next.js tile labeled
+Coming soon. Supported tiles link to getting started; the Next.js tile has no
+setup link. Keep framework marks in their supplied colors and theme variants.
