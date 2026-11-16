@@ -35,6 +35,7 @@ async function queue(page: Page, request: APIRequestContext) {
   await host
     .getByLabel('What should the coding agent change here?')
     .fill(comment);
+  await host.getByRole('button', { name: 'More options', exact: true }).click();
   await host
     .getByLabel('Capture before and automatically capture after')
     .check();

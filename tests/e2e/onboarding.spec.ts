@@ -118,6 +118,12 @@ test('agent setup explains missing readiness, copies setup, preserves drafts and
     await expect(
       host.getByRole('button', { name: 'Run agent', exact: true }),
     ).toBeDisabled();
+    await expect(
+      host.getByRole('button', { name: 'Save without running' }),
+    ).toBeHidden();
+    await host
+      .getByRole('button', { name: 'More options', exact: true })
+      .click();
     await host.getByRole('button', { name: 'Save without running' }).click();
     await expect(
       host.getByRole('heading', { name: 'Queued for agent', exact: true }),

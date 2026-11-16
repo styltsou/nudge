@@ -9,8 +9,11 @@ This is implemented as an ACP preview with fixture coverage; live provider
 validation is open. Queue/pull controls below describe optional external MCP mode;
 preserve truthful mode-specific copy.
 
-Managed mode exposes **New session** (default) and **Existing session** with a
-project-scoped picker. Reset to New session for each submission, including
+The composer is one prompt surface with an input and compact footer. Keep
+**New session** as a small footer disclosure; open its project-scoped picker only
+on request. After explicit reuse, show **Continue: session title** in the footer.
+Put opt-in capture and **Save without running** under **More options**. Keep
+blocked-run guidance visible. Follow-up prompts use the same compact surface. Reset to New session for each submission, including
 follow-ups. Show the chosen session in run detail. Explicitly routed requests
 for different elements may share a conversation while keeping review histories
 separate. Explain busy/missing/incompatible selections; never silently switch.
@@ -28,7 +31,8 @@ Use Shadow DOM style isolation. Respect dark/light preference and keyboard focus
 - Toggle via button and a documented keyboard shortcut (e.g. `Alt+Shift+A`) with collision handling; focus remains accessible.
 - While annotation mode is active, pointer click selects an element rather than invoking its click handler; outside annotation mode app interactions remain untouched.
 - Overlays must not intercept typing inside app input fields if annotation mode is off.
-- Escape closes composer / exits selection; Shift+Tab and Tab navigate controls.
+- Escape closes an open prompt disclosure first and restores its trigger focus;
+  otherwise it closes the composer / exits selection. Shift+Tab and Tab navigate controls.
 - Selection outline updates on scroll and resize without full-page reflow.
 - Self-targeting must be impossible: ignore Nudge's own host, dialogs and overlays.
 - Composer requires non-empty trimmed comment with max length (2,000 characters).

@@ -6,6 +6,7 @@ import {
 } from '../../shared/src/runs';
 import { BridgeClient } from './client';
 import { spinner } from './spinner';
+import { promptDisclosure } from './prompt-controls';
 import { icons, setIcon, submitOnEnter } from './icons';
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text = '') {
@@ -56,6 +57,17 @@ export class ManagedControls {
       this.render(this.target.annotation, this.target.node);
   }
   selector() {
+    const trigger = element('button');
+    trigger.className = 'session-trigger';
+    const caption = element('span', 'New session');
+    const chevron = element('span');
+    chevron.innerHTML = icons.chevron; // static icon markup
+    trigger.append(caption, chevron);
+    trigger.setAttribute('aria-label', 'Agent session: New session');
+    trigger.dataset.tip =
+      'Choose a session for this request. New session is the default.';
+    const picker = promptDisclosure(trigger);
+    picker.node.classList.add('session-selector');
     const label = element('label', 'Agent session');
     const select = element('select');
     select.setAttribute('aria-label', 'Agent session');
@@ -64,18 +76,43 @@ export class ManagedControls {
     select.append(fresh);
     for (const session of this.state.sessions) {
       if (session.provider !== (this.state.provider ?? 'codex')) continue;
-      const option = element(
-        'option',
-        `${session.title} · ${session.provider}`,
-      );
-      option.value = session.id;
-      option.disabled = this.state.runs.some(
+      const busy = this.state.runs.some(
         (r) => r.sessionId === session.id && activeRun(r),
       );
+      const option = element(
+        'option',
+        `${session.title} · ${session.provider}${busy ? ' · Busy' : ''}`,
+      );
+      option.value = session.id;
+      option.disabled = busy;
       select.append(option);
     }
+    // Each selector is local to one submission, never to the project or item.
+    select.value = '';
+    select.addEventListener('change', () => {
+      const session = this.state.sessions.find((s) => s.id === select.value);
+      caption.textContent = session
+        ? `Continue: ${session.title}`
+        : 'New session';
+      trigger.setAttribute(
+        'aria-label',
+        `Agent session: ${caption.textContent}`,
+      );
+      trigger.dataset.tip = session
+        ? `Continue this request in ${session.title}`
+        : 'Start a new session for this request';
+      trigger.dataset.reused = String(!!session);
+      picker.close(true);
+    });
     label.append(select);
-    return { node: label, value: () => select.value || undefined };
+    const hint = element(
+      'small',
+      select.options.length === 1
+        ? 'No other sessions for this agent yet.'
+        : 'Continue a conversation only when you need its earlier context.',
+    );
+    picker.content.append(label, hint);
+    return { node: picker.node, value: () => select.value || undefined };
   }
   async dispatch(
     a: Annotation,
@@ -241,9 +278,8 @@ export class ManagedControls {
       runButton.disabled = !this.canRun();
       runButton.classList.add('primary');
       const actions = element('div');
-      actions.className = 'actions';
-      actions.append(runButton);
-      box.append(session.node);
+      actions.className = 'actions prompt-footer';
+      actions.append(session.node, runButton);
       if (!this.canRun()) box.append(element('small', this.runHint()));
       box.append(actions);
     }

@@ -21,15 +21,17 @@ comment; **Pin to element** returns it to the page.
 
 Use **Agent setup** in the toolbar if the agent is not ready. You can inspect
 connection and sign-in hints there without losing your draft. In managed mode,
-**Save without running** keeps a queued comment for later; it does not dispatch
+open **More options** for optional **Capture before / after** or
+**Save without running**. Saving keeps a queued comment for later; it does not dispatch
 work. Known missing setup or sign-in states disable **Run agent** with guidance.
 
 In [managed mode](/docs/agents/), click **Run agent**. Nudge creates a durable
 run and starts the configured agent through ACP.
 
 Each submission defaults to **New session**, including follow-ups on the same
-item. Choose an existing session explicitly when you want its conversation
-history. An item can have several sessions; a session can handle several items.
+item. Open the small **New session** control below the prompt to choose an
+existing session when you want its conversation history. The footer then shows
+**Continue: session title** for that submission. An item can have several sessions; a session can handle several items.
 Only compatible sessions in this project are eligible. Requests on different
 elements can run at the same time (three by default); a session handles one
 request at a time, and extra requests wait their turn.

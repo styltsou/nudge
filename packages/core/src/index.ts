@@ -4,6 +4,7 @@ import { anchorFor, findAnchor, locateAnchor, textPreview } from './anchors';
 import { captureElement } from './capture';
 import { BridgeClient } from './client';
 import { ManagedControls } from './managed';
+import { promptDisclosure, closePromptDisclosures } from './prompt-controls';
 import { OnboardingPanel } from './onboarding';
 import { spinner } from './spinner';
 import { applyTheme, themeControl } from './theme';
@@ -216,6 +217,30 @@ textarea, select { box-shadow: inset 0 1px 2px var(--well); }
 button:active:not(:disabled) { transform: scale(.985); }
 .pin:active { transform: scale(.96); }
 @media (prefers-reduced-motion: reduce) { button:active { transform: none !important; } }
+/* One prompt surface; secondary choices expand in place only when requested. */
+.prompt-composer { margin-top: 8px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); }
+.prompt-composer:has(textarea:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+textarea.prompt-input { min-height: 88px; margin: 0; padding: 12px; border: 0; border-radius: 12px 12px 0 0; background: transparent; box-shadow: none; line-height: 1.6; }
+textarea.prompt-input:focus-visible { outline: none; }
+.prompt-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 8px 8px; margin: 0; }
+.prompt-disclosure { display: contents; }
+button.session-trigger { min-width: 0; max-width: calc(100% - 76px); justify-content: flex-start; margin-right: auto; padding: 3px 5px; border: 0; background: transparent; box-shadow: none; color: var(--muted); font-size: 11px; }
+.session-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-trigger > span:last-child { display: flex; flex: none; }
+.session-trigger svg { width: 12px; height: 12px; }
+button.session-trigger[data-reused=true] { color: var(--accent); }
+.prompt-footer .prompt-more-trigger { margin-left: auto; }
+.prompt-menu { order: 1; flex: 1 0 100%; min-width: 0; padding: 10px 2px 2px; margin-top: 4px; border-top: 1px solid var(--line); }
+.prompt-menu label { display: block; }
+.prompt-menu .check { display: flex; margin: 0 0 8px; color: var(--ink); }
+.prompt-menu select { margin: 6px 0; }
+.prompt-menu small { display: block; line-height: 1.5; }
+.prompt-menu button { width: 100%; justify-content: flex-start; }
+.composer-hint { display: block; margin: 8px 0 0; }
+.followup-composer { margin-top: 12px; }
+.followup-composer textarea.prompt-input { min-height: 64px; }
+@media (hover: hover) and (pointer: fine) { button.session-trigger:hover { color: var(--ink); background: var(--raised); } }
+
 `;
 function node<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -706,6 +731,8 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
     if (open) placePopover();
   }
   const closePopover = (event: Event) => {
+    if (!(event instanceof KeyboardEvent))
+      closePromptDisclosures(shadow, event.composedPath());
     if (popover.hidden) return;
     const path = event.composedPath();
     if (event instanceof KeyboardEvent) {
@@ -1219,9 +1246,11 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       'What should the coding agent change here?',
     );
     input.placeholder = 'Describe the change…';
+    input.className = 'prompt-input';
     const error = node('p', '', 'error');
     error.setAttribute('role', 'alert');
-    const actions = node('div', undefined, 'actions');
+    const prompt = node('div', undefined, 'prompt-composer');
+    const actions = node('div', undefined, 'prompt-footer');
     const session = managed.selector();
     const requestId = crypto.randomUUID();
     let saved: Annotation | undefined;
@@ -1234,7 +1263,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       },
       'primary',
     );
-    const runHint = node('small');
+    const runHint = node('small', undefined, 'composer-hint');
     runHint.setAttribute('role', 'status');
     updateComposerReadiness = () => {
       if (!queue.isConnected) return;
@@ -1248,6 +1277,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       // Only explain when something blocks a run; the happy path stays quiet.
       runHint.textContent =
         managed.state.enabled && !managed.canRun() ? managed.runHint() : '';
+      runHint.hidden = !runHint.textContent;
     };
     queue.disabled = true;
     input.addEventListener('input', () => {
@@ -1273,19 +1303,23 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       capture,
       document.createTextNode('Capture before / after'),
     );
-    actions.className = 'composer-row';
-    // Whole-page snapshots are large and rarely useful; offer capture per element.
-    if (selected !== document.body) actions.append(captureLabel);
+    const moreButton = node('button');
+    moreButton.className = 'icon prompt-more-trigger';
+    setIcon(moreButton, icons.more, 'More options');
+    const more = promptDisclosure(moreButton);
+    // Optional capture and save controls stay out of the default prompt view.
+    if (selected !== document.body) more.content.append(captureLabel);
     if (managed.state.enabled) {
-      saveOnly = iconButton(icons.save, 'Save without running', () => {
+      saveOnly = button('Save without running', () => {
         void save(false);
       });
-      actions.append(saveOnly);
+      more.content.append(saveOnly);
+      actions.append(session.node);
     }
+    if (more.content.childElementCount) actions.append(more.node);
     actions.append(queue);
-    panel.append(input);
-    if (managed.state.enabled) panel.append(session.node);
-    panel.append(runHint, error, actions);
+    prompt.append(input, actions);
+    panel.append(prompt, runHint, error);
     updateComposerReadiness();
     input.focus();
     async function save(run = managed.state.enabled) {
@@ -1713,6 +1747,7 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       error.setAttribute('role', 'alert');
       const followup = node('textarea');
       followup.maxLength = 2000;
+      followup.className = 'prompt-input';
       followup.setAttribute('aria-label', 'Follow-up request');
       followup.placeholder = 'What needs another pass?';
       const actions = node('div', undefined, 'actions');
@@ -1733,12 +1768,17 @@ export function mountNudge(options: NudgeOptions): NudgeHandle {
       submitOnEnter(followup, () => {
         if (!revise.disabled) revise.click();
       });
-      const reviseRow = node('div', undefined, 'review-row');
-      reviseRow.append(followup, revise);
+      const reviseRow = node(
+        'div',
+        undefined,
+        'prompt-composer followup-composer',
+      );
+      const reviseFooter = node('div', undefined, 'prompt-footer');
+      if (managed.state.enabled) reviseFooter.append(session.node);
+      reviseFooter.append(revise);
+      reviseRow.append(followup, reviseFooter);
       actions.append(accept);
-      panel.append(actions);
-      if (managed.state.enabled) panel.append(session.node);
-      panel.append(reviseRow, error);
+      panel.append(actions, reviseRow, error);
       async function review(action: 'accept' | 'request-changes') {
         if (busy) return;
         busy = true;

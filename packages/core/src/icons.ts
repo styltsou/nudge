@@ -23,6 +23,10 @@ export const icons = {
     '<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>',
   ),
   refresh: svg('<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>'),
+  more: svg(
+    '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  ),
+  chevron: svg('<path d="m8 10 4 4 4-4"/>'),
   send: svg('<path d="M12 19V5M6 11l6-6 6 6"/>'),
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   save: svg('<path d="M7 4h10v16l-5-3.5L7 20z"/>'),

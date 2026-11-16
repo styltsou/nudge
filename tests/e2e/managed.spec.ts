@@ -141,12 +141,38 @@ for (const provider of ['codex', 'claude', 'opencode'] as const)
           .getByRole('button', { name: 'Annotate UI', exact: true })
           .click();
         await page.locator(target).click();
-        await expect(overlay.getByLabel('Agent session')).toHaveValue('');
-        if (session)
-          await overlay.getByLabel('Agent session').selectOption(session);
+        await expect(
+          overlay.getByLabel('Agent session', { exact: true }),
+        ).toHaveValue('');
+        await expect(
+          overlay.getByLabel('Agent session', { exact: true }),
+        ).toBeHidden();
+        await expect(
+          overlay.getByRole('button', {
+            name: 'Agent session: New session',
+            exact: true,
+          }),
+        ).toBeVisible();
         await overlay
           .getByLabel('What should the coding agent change here?')
           .fill(comment);
+        if (session) {
+          await overlay
+            .getByRole('button', {
+              name: 'Agent session: New session',
+              exact: true,
+            })
+            .click();
+          await overlay
+            .getByLabel('Agent session', { exact: true })
+            .selectOption(session);
+          await expect(
+            overlay.getByRole('button', { name: /^Agent session: Continue:/ }),
+          ).toBeVisible();
+          await expect(
+            overlay.getByLabel('Agent session', { exact: true }),
+          ).toBeHidden();
+        }
         await overlay
           .getByRole('button', { name: 'Run agent', exact: true })
           .click();
@@ -173,10 +199,13 @@ for (const provider of ['codex', 'claude', 'opencode'] as const)
       ).toBeVisible();
       // The agent's own (sanitised) title replaces the prompt excerpt.
       await expect(
-        overlay.getByLabel('Agent session').locator('option').nth(1),
+        overlay
+          .getByLabel('Agent session', { exact: true })
+          .locator('option')
+          .nth(1),
       ).toHaveText(`Pad the primary button · ${provider}`);
       const session = await overlay
-        .getByLabel('Agent session')
+        .getByLabel('Agent session', { exact: true })
         .locator('option')
         .nth(1)
         .getAttribute('value');
@@ -196,7 +225,12 @@ for (const provider of ['codex', 'claude', 'opencode'] as const)
       await expect(
         overlay.getByRole('button', { name: 'Retry agent', exact: true }),
       ).toBeVisible();
-      await expect(overlay.getByLabel('Agent session')).toHaveValue('');
+      await expect(
+        overlay.getByLabel('Agent session', { exact: true }),
+      ).toHaveValue('');
+      await expect(
+        overlay.getByLabel('Agent session', { exact: true }),
+      ).toBeHidden();
     } finally {
       ended = true;
       await agent?.stop();

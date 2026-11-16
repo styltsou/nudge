@@ -21,7 +21,7 @@ runs/sessions, supported approvals/questions, Stop and human review now exist.
 1. Set up a supported local agent and select its model/permissions in Nudge.
    Reuse supported authentication and show real setup/sign-in requirements.
 2. Select an element and describe the change. The composer defaults to **New
-   session**. Optionally choose **Existing session** and select a compatible
+   session**. Open the compact session control only to select a compatible
    Nudge-managed session in this project, then choose **Run agent**.
 3. Save the request and optional before capture, then create a durable run.
    Nudge starts a fresh background agent session in the configured project unless
@@ -49,7 +49,9 @@ Every submitted prompt defaults to a new agent session, including a prompt on a
 newly selected element and a follow-up within an existing item. Do not silently
 resume the last session, the item's original session, or a project-wide
 conversation. Reset to **New session** for the next submission; continuation is
-an explicit choice for that submission.
+an explicit choice for that submission. The footer shows **New session** until
+the user opens its disclosure and chooses a session. Explicit reuse changes the
+footer to **Continue: session title**; busy sessions are labeled and disabled.
 
 - **New session** — fresh provider conversation without another request's
   conversation history. Supply the selected element, current prompt and

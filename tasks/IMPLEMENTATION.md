@@ -80,6 +80,7 @@ over the remaining showcase tasks. See [target contract](../docs/09-MANAGED-AGEN
 
 - [x] Polish onboarding: browser Agent setup with provider selection, copyable setup/sign-in guidance, scoped runner readiness and billing hints, draft preservation, save-only fallback, and managed-by-default init with explicit external mode.
 
+- [x] Simplify draft/follow-up composers to a unified prompt surface; put session reuse in a compact default-new disclosure and capture/save controls under More options. Preserve explicit per-submission routing and keyboard dismissal.
 - [x] Keep pinned comments compact: collapse optional snapshots/capture controls under View comparison, load images on demand, and preserve direct human review actions.
 
 - [x] Add a local-checkout installer and development-only Vite integration; verify generated wrappers in a separate app, repeat setup, origin/auth handling, cleanup and production exclusion.

@@ -1375,7 +1375,6 @@ remains the next managed-run acceptance gate; this session used deterministic AC
 Use the rebuilt dist/usenudge.tgz in an existing Astro project and run usenudge
 init followed by usenudge dev. No registry publication or Git commit performed.
 
-
 ## 2026-11-16 — Hero copy clarification
 
 Updated `apps/website/src/pages/index.astro` with the user-approved hero paragraph: select an element in the running app, tell the agent what to change, run it from the browser, and review the result in place. Kept the existing headline.
@@ -1383,7 +1382,6 @@ Updated `apps/website/src/pages/index.astro` with the user-approved hero paragra
 Validation: read the homepage back through GitHub and confirmed its full contents match the intended single-paragraph replacement. No build or browser tests run for this text-only change; no local checkout was available. Updated directly on the default branch through the GitHub connector.
 
 Next steps: await further copy direction; existing live-provider validation remains open.
-
 
 ## 2026-11-16 — Hero headline clarification
 
@@ -1488,3 +1486,15 @@ Replaced the full generic Claude wordmark component with ClaudeMark.astro, prese
 Validation: website:check passed without diagnostics; website:build passed with the existing unset-site sitemap warning; three affected browser checks passed (homepage flow/image loading and agent setup links, narrow layout and touch/focus regression). Inspected light, dark and 320px mobile agent rows; no horizontal overflow. Prettier and git diff --check passed.
 
 Next step: review the updated product naming and agent-row balance. No SDK/provider behavior changed.
+
+## 2026-11-16 — Simplify the SDK prompt composer
+
+Replaced the draft's separate textarea, session selector, snapshot checkbox and action row with one prompt surface. Its compact footer contains New session, More options and the primary send action. Capture remains opt-in; capture and managed Save without running are now under More options. Follow-up prompts use the same surface, and queued/retry controls use the compact session chooser. Blocked-run guidance stays visible.
+
+Session selection opens inline without another floating layer over the app. Each new selector defaults to New session; explicit reuse displays Continue: session title before sending. Provider filtering and busy-session disabling remain enforced. Selection is local to one submission and does not become a project/item preference. Escape closes an open chooser first and restores trigger focus; outside clicks dismiss it without losing the choice. Existing backend routing, approval boundaries and human review are unchanged.
+
+Added focused selector tests and updated managed browser flows, onboarding save-only and snapshot helpers for the disclosures. Updated internal UX/managed contracts, public workflow guide and implementation checklist. Visually reviewed actual element-pinned overlays in light/dark themes, expanded session/options controls and a narrow mobile layout. Kept the existing palette and readable focus indicators; the default pinned panel now shows only the request header and unified prompt. Temporary preview apps/screenshots remain ignored.
+
+Validation: root TypeScript and lint passed; all 114 unit/contract tests passed (433 assertions). Full SDK browser suite: 13 passed, one installed Astro shutdown-cleanup assertion failed (connection.json remained after dev-process exit). Reran the installed-package suite: both Vite and Astro passed, including agent edit, human acceptance and shutdown cleanup. All 14 browser cases therefore passed across the full run and targeted rerun; deterministic Codex, Claude and OpenCode flows passed. Initial focused managed tests caught an ambiguous accessible-label locator introduced by the new trigger; corrected tests to use the exact select label and all three provider cases passed. Full build/typecheck passed, including website docs with zero diagnostics; existing unset-site sitemap warning remains. Changed authored files passed Prettier; git diff --check passed.
+
+Next step: review the simplified composer in an installed app. Live authenticated provider validation and unrelated roadmap work remain open.
