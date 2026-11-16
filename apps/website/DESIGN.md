@@ -130,3 +130,13 @@ with the annotation interaction itself. The decorative three-feature strip and
 three-column process repeated the same information; replace both with one
 connected, compact workflow rail. Use border rails to align the real example,
 evidence and setup rather than putting each item in another rounded card.
+
+## Agent and framework compatibility
+
+The primary Get started action comes first (left on desktop); Connect your agent
+is secondary and links to the primary agent setup guide. Below the hero, show a
+quiet, centered row of monochrome Codex, Claude and OpenCode marks with setup
+links, inheriting the active theme. Keep SVG assets local and ship their license.
+A separate framework line lists Vite (including React + Vite) and Astro. Per the
+user's updated direction, Next.js is explicitly labeled coming soon in this
+compatibility section, outside the hero install presentation.

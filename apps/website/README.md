@@ -126,3 +126,12 @@ skipped with a build warning rather than assuming ownership of a domain.
 
 Astro CLI telemetry is disabled in the package scripts. The public site uses
 self-hosted fonts and local Pagefind search, with no analytics or hosted backend.
+
+## Compatibility presentation
+
+The homepage puts Get started first, with agent setup as the secondary action.
+`Compatibility.astro` shows local, monochrome Codex, Claude and OpenCode SVG marks
+with accessible setup links and a separate framework-support line. Vite apps
+(including React + Vite) and Astro are supported; Next.js is labeled coming soon.
+The agent marks are from `@lobehub/icons-static-svg` 1.102.0, under MIT; the
+attribution ships at `/licenses/lobe-icons.txt`. No logo CDN is used at runtime.

@@ -13,13 +13,15 @@ application-source edits are required.
 ## Requirements
 
 - **Bun 1.4.4+**, even if your app uses another package manager.
-- An existing standalone local HTTP **Vite** or **Astro** app with installed dependencies. Astro support is tested with Astro 7.4.
+- An existing standalone local HTTP **Vite** app (including React + Vite) or **Astro** app with installed dependencies. Astro support is tested with Astro 7.4.
 - An ESM config (`.ts`, `.mts`, `.js`, `.mjs`), or no config file.
 - A supported agent with native authentication; registry access for new adapters.
 
 Linux is the primary target; live-provider/Linux validation remains open. HTTPS,
 CommonJS Vite configs and middleware servers are unsupported. Nudge dev loads your framework's
 config rather than running arbitrary dev-script pipelines.
+
+Next.js support is coming soon; it is not supported by the current preview.
 
 ## Install in your app
 

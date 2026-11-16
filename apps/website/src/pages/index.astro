@@ -2,6 +2,7 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import Walkthrough from '../components/Walkthrough.astro';
 import InstallCommands from '../components/InstallCommands.astro';
+import Compatibility from '../components/Compatibility.astro';
 ---
 
 <SiteLayout
@@ -22,11 +23,11 @@ import InstallCommands from '../components/InstallCommands.astro';
         </p>
         <InstallCommands />
         <div class="hero-actions">
-          <a href="/docs/mcp-setup/" class="button-secondary">
-            Connect your agent
-          </a>
           <a href="/docs/getting-started/" class="button-primary">
             Get started
+          </a>
+          <a href="/docs/agents/" class="button-secondary">
+            Connect your agent
           </a>
         </div>
         <p class="hero-footnote">
@@ -37,6 +38,7 @@ import InstallCommands from '../components/InstallCommands.astro';
         </p>
       </div>
     </section>
+    <Compatibility />
     <section class="hero-demo" aria-label="Explore Nudge">
       <Walkthrough />
     </section>
@@ -163,8 +165,9 @@ import InstallCommands from '../components/InstallCommands.astro';
             Which projects does Nudge work with?<span aria-hidden="true"></span>
           </summary>
           <p>
-            Nudge supports standalone local Vite and Astro apps. Bun is required
-            to run Nudge, even if your project uses another package manager.{' '}
+            Nudge supports standalone local Vite apps, including React + Vite,
+            and Astro. Next.js support is coming soon. Bun is required to run
+            Nudge, even if your project uses another package manager.{' '}
             <a href="/docs/getting-started/">See the requirements</a>.
           </p>
         </details>

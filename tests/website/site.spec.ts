@@ -132,8 +132,23 @@ test('walkthrough queues literal text, reports a sample change, revises, accepts
   });
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Show your agentwhat you mean.',
+    'Show your coding agentwhat you mean.',
   );
+  const actions = page.locator('.hero-actions a');
+  await expect(actions.first()).toHaveText('Get started');
+  await expect(actions.last()).toHaveAttribute('href', '/docs/agents/');
+  const compatibility = page.getByRole('region', {
+    name: 'Works with your coding agent',
+  });
+  await expect(compatibility.getByRole('listitem')).toHaveCount(3);
+  for (const agent of ['Codex', 'Claude', 'OpenCode']) {
+    await expect(
+      compatibility.getByRole('link', { name: `Set up ${agent}`, exact: true }),
+    ).toHaveAttribute('href', '/docs/agents/');
+  }
+  await expect(compatibility).toContainText('React + Vite');
+  await expect(compatibility).toContainText('Astro');
+  await expect(compatibility).toContainText('Next.js Coming soon');
   const example = page.getByRole('region', {
     name: 'Try a nudge',
   });

@@ -1390,3 +1390,13 @@ Next steps: await further copy direction; existing live-provider validation rema
 Changed the homepage headline to “Show your coding agent what you mean.” at the user's request and committed directly through GitHub (afa418f7cc3255b58215d6d0b3a24fd4378129ae). The approved supporting paragraph remains unchanged.
 
 Validation: fetched the committed homepage and confirmed the complete file matches the intended headline-only replacement. No build/browser tests run for this text-only edit. Next step: await further copy direction.
+
+## 2026-11-16 — Agent logos, primary action and framework support
+
+Put Get started first in the hero action order (left on desktop, first on narrow screens). Pointed Connect your agent at the primary agent setup guide instead of optional external MCP setup. Added Compatibility.astro beneath the hero with locally bundled, theme-aware Codex, Claude and OpenCode marks and accessible setup links. Included MIT attribution in public/licenses/lobe-icons.txt.
+
+Added a separate framework-support line for Vite (React + Vite and more), Astro and Next.js coming soon. Updated the homepage FAQ and getting-started guide to match. No Next.js SDK implementation or unsupported present-tense support claim was added. Updated existing browser coverage for the approved headline, action order, setup links and compatibility section.
+
+Validation: frozen dependency install passed with Bun 1.4.4; website:check passed with zero errors/warnings/hints; website:build passed (existing unset-canonical-site sitemap warning); all 16 website Playwright cases passed using installed /usr/bin/chromium with a temporary ignored config. Visually inspected desktop light/dark and 320px mobile captures; no mobile horizontal overflow. Prettier and git diff --check passed for the changed content.
+
+Next step: review the updated public presentation. Live authenticated provider validation remains open; this change only updates website presentation and documentation.
