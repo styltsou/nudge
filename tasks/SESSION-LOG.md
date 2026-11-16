@@ -1374,3 +1374,12 @@ Linux still need compatibility validation. Authenticated live-provider validatio
 remains the next managed-run acceptance gate; this session used deterministic ACP.
 Use the rebuilt dist/usenudge.tgz in an existing Astro project and run usenudge
 init followed by usenudge dev. No registry publication or Git commit performed.
+
+
+## 2026-11-16 — Hero copy clarification
+
+Updated `apps/website/src/pages/index.astro` with the user-approved hero paragraph: select an element in the running app, tell the agent what to change, run it from the browser, and review the result in place. Kept the existing headline.
+
+Validation: read the homepage back through GitHub and confirmed its full contents match the intended single-paragraph replacement. No build or browser tests run for this text-only change; no local checkout was available. Updated directly on the default branch through the GitHub connector.
+
+Next steps: await further copy direction; existing live-provider validation remains open.
