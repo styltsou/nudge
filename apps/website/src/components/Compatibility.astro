@@ -42,15 +42,15 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
         <img
           class="light-mark"
           src="/images/brands/opencode-light.svg"
-          width="156"
-          height="28"
+          width="117"
+          height="21"
           alt="OpenCode"
         />
         <img
           class="dark-mark"
           src="/images/brands/opencode-dark.svg"
-          width="156"
-          height="28"
+          width="117"
+          height="21"
           alt="OpenCode"
         />
       </a>
@@ -76,6 +76,27 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
             <img src="/images/brands/vite.svg" width="24" height="24" alt="" />
           </span>
           <strong>React + Vite</strong>
+        </a>
+      </li>
+      <li>
+        <a class="framework-tile" href="/docs/getting-started/">
+          <span class="framework-icon" aria-hidden="true">
+            <img src="/images/brands/vue.svg" width="32" height="32" alt="" />
+          </span>
+          <strong>Vue + Vite</strong>
+        </a>
+      </li>
+      <li>
+        <a class="framework-tile" href="/docs/getting-started/">
+          <span class="framework-icon" aria-hidden="true">
+            <img
+              src="/images/brands/svelte.svg"
+              width="32"
+              height="32"
+              alt=""
+            />
+          </span>
+          <strong>Svelte + Vite</strong>
         </a>
       </li>
       <li>
@@ -187,21 +208,19 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
   }
   .framework-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
     list-style: none;
     padding: 0;
     margin: 0;
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    background: var(--surface);
+    background: var(--line);
   }
   .framework-grid > li {
     min-width: 0;
-  }
-  .framework-grid > li + li {
-    border-left: 1px solid var(--line);
+    background: var(--canvas);
   }
   .framework-tile {
     display: flex;
@@ -261,16 +280,10 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
       margin-bottom: 32px;
     }
     .agent-logos {
-      gap: 12px 32px;
+      gap: 12px 24px;
     }
     .framework-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .framework-grid > li:nth-child(odd) {
-      border-left: 0;
-    }
-    .framework-grid > li:nth-child(n + 3) {
-      border-top: 1px solid var(--line);
     }
     .framework-tile {
       min-height: 144px;

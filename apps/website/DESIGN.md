@@ -146,9 +146,10 @@ first-party sources in BRAND-ASSETS.md. This is compatibility presentation, not 
 partnership lockup; no separate official Codex mark was verified.
 
 Built for your stack is one joined grid with rounded outer corners and thin
-internal dividers: four columns on desktop, two on mobile. Cells contain their
+internal dividers: three columns on desktop, two on mobile. Cells contain their
 logo and name without descriptive subtexts. Next.js keeps its Coming soon status
 and has no setup link; supported cells link to getting started. Keep framework
-marks in their supplied colors and theme variants. The generic Vite entry also
-covers standard Vue + Vite projects; source-checkout compatibility was smoke
-tested on Vue 3.5.45 with Vite 8.3.7.
+marks in their supplied colors and theme variants. Explicit Vue + Vite and Svelte + Vite entries accompany Vite, React + Vite,
+Astro and Next.js. Source-checkout compatibility was smoke tested on Vue 3.5.45
+and Svelte 5.57.3 with Vite 8.3.7. OpenCode wordmarks display at 117 × 21px to
+balance the other agent marks while preserving their official proportions.

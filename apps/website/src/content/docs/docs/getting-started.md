@@ -13,7 +13,7 @@ application-source edits are required.
 ## Requirements
 
 - **Bun 1.4.4+**, even if your app uses another package manager.
-- An existing standalone local HTTP **Vite** app (including React + Vite) or **Astro** app with installed dependencies. Astro support is tested with Astro 7.4.
+- An existing standalone local HTTP **Vite** app (including React, Vue and Svelte projects) or **Astro** app with installed dependencies. Astro support is tested with Astro 7.4.
 - An ESM config (`.ts`, `.mts`, `.js`, `.mjs`), or no config file.
 - A supported agent with native authentication; registry access for new adapters.
 

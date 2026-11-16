@@ -15,6 +15,15 @@ stored locally in `public/images/brands/` (Claude is an inline component), witho
 | `astro-light.svg`, `astro-dark.svg`       | [Astro black icon](https://astro.build/assets/press/astro-icon-dark.svg), [Astro white icon](https://astro.build/assets/press/astro-icon-light.svg)                                                                | Original files; named here by the background they appear on.                                                             |
 | `nextjs.ico`                              | [Next.js website icon](https://nextjs.org/favicon.ico)                                                                                                                                                             | Original icon; paired with a Coming soon label, not a working setup link.                                                |
 
+Vue and Svelte marks were added from their official repositories:
+
+- `vue.svg`: [vuejs/art logo.svg](https://github.com/vuejs/art/blob/master/logo.svg), downloaded from `raw.githubusercontent.com/vuejs/art/master/logo.svg`.
+- `svelte.svg`: [sveltejs/branding svelte-logo.svg](https://github.com/sveltejs/branding/blob/master/svelte-logo.svg), downloaded from `raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg`.
+
+Both retain their original vector geometry and colors. OpenCode wordmarks display
+at 117 × 21px, the brand guide's minimum wordmark size, to balance the other agent
+logos without distorting them.
+
 OpenAI marks belong to OpenAI. Claude marks belong to Anthropic. OpenCode marks
 belong to Anomaly. Framework marks belong to their respective owners. Refer to
 the official sources for their current usage guidance. The previous LobeHub

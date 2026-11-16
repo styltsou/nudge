@@ -1422,3 +1422,15 @@ Investigated Vue compatibility: projectFramework accepts a Vite dependency, star
 Validation: website:check passed without diagnostics; website:build passed (existing unset-site sitemap warning); all 16 website browser cases passed using installed Chromium. Light/dark desktop and 320px mobile captures showed the joined grid with no horizontal overflow. After a final icon/title alignment adjustment, rebuilt and reran the narrow-layout browser check. Prettier and git diff --check passed.
 
 Next step: review the joined framework grid. A permanent installed-package Vue regression fixture and live-provider validation remain separate work.
+
+## 2026-11-16 — Balanced OpenCode mark and explicit Vue/Svelte entries
+
+Reduced both official OpenCode wordmark variants from 156 × 28px to 117 × 21px, preserving their proportions and the official minimum size. This balances the Codex and Claude wordmarks. Adjusted narrow-screen agent spacing to keep the first two marks together.
+
+Added explicit Vue + Vite and Svelte + Vite cells using original SVGs from the official vuejs/art and sveltejs/branding repositories. The joined grid now has six cells: three columns on desktop, two on mobile, with one-pixel internal dividers and rounded outer corners. Next.js remains Coming soon. Updated the FAQ, getting-started requirements, brand provenance, design notes, website README and the existing browser test for both setup links.
+
+Svelte support check: created an ignored temporary Svelte consumer using Svelte 5.57.3, @sveltejs/vite-plugin-svelte 7.3.1 and Vite 8.3.7, and ran the current source CLI. Verified reactive button interaction, annotation click interception, queued request persistence after reload, Svelte component style HMR, a synthetic MCP implementation report and human acceptance, with no browser errors. Vue + Vite had passed the same checks in the prior session with Vue 3.5.45 and @vitejs/plugin-vue 6.0.11. These verify the standalone Vite integrations; no SvelteKit/Nuxt or live authenticated provider claims are added. Temporary fixtures, packages and private state remain ignored and uncommitted.
+
+Validation: website:check passed without diagnostics; website:build passed (existing unset-site sitemap warning); all 16 website browser tests passed. Reviewed desktop light and dark/mobile captures and confirmed no overflow at 320px. After the final mobile agent-spacing adjustment, rebuilt and reran the narrow-layout browser test. Prettier checks and git diff --check passed.
+
+Next step: review logo balance and the expanded grid. Installed-archive Vue/Svelte regression coverage and real authenticated agent validation remain separate work.

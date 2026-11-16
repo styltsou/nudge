@@ -152,6 +152,12 @@ test('walkthrough queues literal text, reports a sample change, revises, accepts
   }
   await expect(compatibility).toContainText('React + Vite');
   await expect(compatibility).toContainText('Astro');
+  await expect(
+    compatibility.getByRole('link', { name: 'Vue + Vite', exact: true }),
+  ).toHaveAttribute('href', '/docs/getting-started/');
+  await expect(
+    compatibility.getByRole('link', { name: 'Svelte + Vite', exact: true }),
+  ).toHaveAttribute('href', '/docs/getting-started/');
   await expect(compatibility).toContainText('Next.js');
   await expect(compatibility).toContainText('Coming soon');
   await expect(page.locator('.hero-footnote')).toHaveCount(0);
