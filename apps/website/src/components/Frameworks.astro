@@ -1,23 +1,15 @@
+---
+import SectionIntro from './SectionIntro.astro';
+---
+
 <section class="frameworks" aria-labelledby="frameworks-heading">
-  <div class="frameworks-header">
-    <h2 id="frameworks-heading">Built for your stack</h2>
-    <a class="frameworks-guide" href="/docs/getting-started/">
-      View setup guide
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M7 17 17 7M7 7h10v10" />
-      </svg>
-    </a>
-  </div>
+  <SectionIntro
+    headingId="frameworks-heading"
+    title="Built for your stack"
+    description="Use Nudge in your existing Vite or Astro project."
+    href="/docs/getting-started/"
+    linkLabel="View setup guide"
+  />
   <ul class="framework-grid" aria-label="Framework support">
     <li>
       <a class="framework-tile" href="/docs/getting-started/">
@@ -91,32 +83,6 @@
 <style>
   .frameworks {
     margin: 0 0 64px;
-  }
-  .frameworks-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 28px;
-  }
-  h2 {
-    margin: 0;
-    color: var(--ink);
-    font-size: clamp(28px, 3.5vw, 40px);
-    font-weight: 430;
-    line-height: 1.15;
-    letter-spacing: -0.045em;
-  }
-  .frameworks-guide {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .frameworks-guide:is(:hover, :focus-visible) {
-    color: var(--accent);
   }
   img {
     display: block;
@@ -198,12 +164,6 @@
   @media (max-width: 680px) {
     .frameworks {
       margin-bottom: 48px;
-    }
-    .frameworks-header {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 24px;
     }
     .framework-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));

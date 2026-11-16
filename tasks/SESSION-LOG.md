@@ -1446,3 +1446,13 @@ Simplified framework labels to React, Vue, Svelte, Astro, Vite and Next.js, with
 Validation: website:check passed with zero diagnostics; website:build passed (existing unset-site sitemap warning); all 16 website browser cases passed. Visually checked desktop light/dark and 320px mobile layouts; no mobile horizontal overflow. Rebuilt after replacing an unavailable arrow glyph in the setup link with inline SVG. Changed authored files passed Prettier; git diff --check passed.
 
 Next step: review the revised homepage hierarchy. SDK behavior and live-provider validation are unchanged.
+
+## 2026-11-16 — Section descriptions and workflow introduction
+
+Added shared SectionIntro.astro for the framework and workflow sections. Each title and description form a close group (10px gap), followed by 28px before the grid/cards, or 24px on mobile. Framework description: Use Nudge in your existing Vite or Astro project. Kept the setup-guide link as a separate action.
+
+Wrapped the three workflow cards in a labeled section with the heading From request to review and description: Request a change, follow your agent’s progress and review the result in your running app. Kept card content and the existing workflow list label unchanged. Updated design notes and website README.
+
+Validation: website:check passed with zero diagnostics; website:build passed with the existing unset-site sitemap warning; all 16 website browser tests passed. Inspected light/dark desktop and 320px mobile captures, measured the 10px title-to-description and 28px description-to-content spacing on desktop, and confirmed no mobile horizontal overflow. Changed files passed Prettier and git diff --check.
+
+Next step: review the section copy and spacing. No SDK behavior changed.

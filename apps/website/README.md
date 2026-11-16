@@ -143,3 +143,7 @@ Official assets, their source URLs and theme variants are documented in
 its product name; no separately verified Codex mark was available. The hero
 install tabs display and copy untagged `usenudge` commands, per user direction;
 the getting-started guide retains the actual unpublished-preview setup details.
+
+The framework grid and workflow cards share `SectionIntro.astro`, keeping each
+description close to its title and leaving a larger gap before the content.
+The workflow section has its own accessible heading, From request to review.

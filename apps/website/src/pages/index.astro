@@ -4,6 +4,7 @@ import Walkthrough from '../components/Walkthrough.astro';
 import InstallCommands from '../components/InstallCommands.astro';
 import Compatibility from '../components/Compatibility.astro';
 import Frameworks from '../components/Frameworks.astro';
+import SectionIntro from '../components/SectionIntro.astro';
 ---
 
 <SiteLayout
@@ -39,43 +40,50 @@ import Frameworks from '../components/Frameworks.astro';
     </section>
     <Frameworks />
 
-    <ol class="workflow-rail" aria-label="How Nudge works">
-      <li>
-        <span class="rail-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 3l14 7-6 2-2 6z" />
-          </svg>
-        </span>
-        <strong>Point at it</strong>
-        <span>
-          Select an element in your running app and describe the change.
-        </span>
-      </li>
-      <li>
-        <span class="rail-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 6h16v12H4z" />
-            <path d="m8 10 2 2-2 2M13 14h3" />
-          </svg>
-        </span>
-        <strong>Your agent makes it</strong>
-        <span>
-          Codex, Claude or OpenCode runs in your project, started from the
-          browser.
-        </span>
-      </li>
-      <li>
-        <span class="rail-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12.5l4.5 4.5L19 7.5" />
-          </svg>
-        </span>
-        <strong>Review it in place</strong>
-        <span>
-          Check the result on the page, then accept or ask for another pass.
-        </span>
-      </li>
-    </ol>
+    <section class="workflow-section" aria-labelledby="workflow-heading">
+      <SectionIntro
+        headingId="workflow-heading"
+        title="From request to review"
+        description="Request a change, follow your agent’s progress and review the result in your running app."
+      />
+      <ol class="workflow-rail" aria-label="How Nudge works">
+        <li>
+          <span class="rail-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 3l14 7-6 2-2 6z" />
+            </svg>
+          </span>
+          <strong>Point at it</strong>
+          <span>
+            Select an element in your running app and describe the change.
+          </span>
+        </li>
+        <li>
+          <span class="rail-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16v12H4z" />
+              <path d="m8 10 2 2-2 2M13 14h3" />
+            </svg>
+          </span>
+          <strong>Your agent makes it</strong>
+          <span>
+            Codex, Claude or OpenCode runs in your project, started from the
+            browser.
+          </span>
+        </li>
+        <li>
+          <span class="rail-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          <strong>Review it in place</strong>
+          <span>
+            Check the result on the page, then accept or ask for another pass.
+          </span>
+        </li>
+      </ol>
+    </section>
 
     <section class="review-section" aria-labelledby="review-heading">
       <div class="review-copy">

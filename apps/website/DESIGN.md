@@ -160,3 +160,12 @@ requirements. Next.js keeps its Coming soon status and has no setup link.
 Source-checkout compatibility was smoke tested on Vue 3.5.45 and Svelte 5.57.3 with
 Vite 8.3.7. OpenCode wordmarks remain 117 × 21px to balance the other agent marks
 while preserving their official proportions.
+
+## Section introductions
+
+Framework and workflow sections share SectionIntro.astro: a left-aligned 28–40px
+heading, muted description 10px below it, and 28px before the section content
+(24px on mobile). Keep the setup-guide link separate from the framework text
+group. The stack description states the actual Vite/Astro requirement. Introduce
+the three workflow cards with From request to review and a short sentence about
+requesting, following progress and reviewing in the running app.
