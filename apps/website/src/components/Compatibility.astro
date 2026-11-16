@@ -91,11 +91,26 @@ import ClaudeWordmark from './ClaudeWordmark.astro';
     min-height: 44px;
     color: var(--ink);
   }
-  .codex-lockup {
-    gap: 2px;
+  .agent-logos .codex-lockup {
+    gap: 5px;
     font-size: 24px;
     font-weight: 550;
     letter-spacing: -0.04em;
+  }
+  .openai-mark {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+  /* The official export contains clear space around its 24px painted mark.
+     Keep the source intact while sizing the layout box to the visible artwork. */
+  .openai-mark img {
+    position: absolute;
+    inset: -12px;
+    width: 48px;
+    height: 48px;
+    max-width: none;
   }
   img {
     display: block;

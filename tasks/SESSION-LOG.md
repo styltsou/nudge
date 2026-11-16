@@ -1468,3 +1468,13 @@ Added a browser regression using a touch-enabled, coarse-pointer context at tabl
 Validation: website:check passed without diagnostics; website:build passed with the existing unset-site sitemap warning; all 17 website browser tests passed, including existing desktop hover checks and the new touch case. Root TypeScript initially caught an optional baseURL mismatch in the new test; corrected it with a conditional property. Root tsc --noEmit and lint then passed. Changed files passed Prettier and git diff --check. Device behavior was verified through Chromium touch emulation.
 
 Next step: review the touch interaction on the deployed website. No runtime JavaScript is needed to enable/disable hover styling.
+
+## 2026-11-16 — Verify Codex mark and correct its visual spacing
+
+Verified that OpenAI's official Codex IDE extension listing currently publishes the OpenAI Blossom icon. Retained the local official OpenAI SVG variants; clarified the verified use and exact source in BRAND-ASSETS.md without claiming the mark is unique to Codex or used by every historical app icon.
+
+Fixed two causes of oversized spacing: the official SVG exports include internal clear space, and the generic .agent-logos a selector overrode the less specific .codex-lockup gap. Added a 24px layout box that positions the unchanged 48px image around the visible artwork, then set a 5px gap with the correctly specific selector. The SVG paths and asset files remain unchanged. Measured visible mark-to-name gaps: Codex 5.12px; Claude 4.74px.
+
+Validation: website:check passed without diagnostics; website:build passed with the existing unset-site sitemap warning; three relevant browser tests passed (homepage flow/image loading, narrow layout and touch/focus regression). Inspected light, dark and 320px mobile logo captures; no horizontal overflow. Prettier and git diff --check passed.
+
+Next step: review the tightened Codex lockup. No SDK or other homepage behavior changed.

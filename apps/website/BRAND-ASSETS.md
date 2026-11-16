@@ -28,3 +28,19 @@ OpenAI marks belong to OpenAI. Claude marks belong to Anthropic. OpenCode marks
 belong to Anomaly. Framework marks belong to their respective owners. Refer to
 the official sources for their current usage guidance. The previous LobeHub
 vectors and their now-unused attribution file were removed in this revision.
+
+## Codex mark verification and spacing
+
+The [official OpenAI Codex IDE extension](https://marketplace.visualstudio.com/items?itemName=openai.chatgpt)
+currently publishes an OpenAI Blossom icon. Its current icon asset was checked
+on 2026-11-16 at
+`https://openai.gallerycdn.vsassets.io/extensions/openai/chatgpt/26.51111.21308/1794532255365/Microsoft.VisualStudio.Services.Icons.Default`.
+This verifies Codex usage of the Blossom; it does not mean the mark is unique to
+Codex or identical to every past Codex app icon. The website continues to use the
+local official monochrome SVG variants from the OpenAI brand archive.
+
+Those SVG exports include clear space. A 24px layout box positions the unchanged
+48px export around its visible artwork, so the internal whitespace does not add
+to the logo-to-name gap. The Codex lockup uses a 5px gap to match the visible gap
+in Claude's supplied wordmark. The selector includes the agent-list class so it
+correctly overrides the generic 12px link gap.

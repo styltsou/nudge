@@ -182,3 +182,10 @@ Code controls on non-hover/coarse-pointer devices, overriding their upstream
 unconditional hover rules without suppressing focus or active states. The browser
 suite forces the hover pseudo-class in a touch context and checks computed styles,
 then verifies keyboard focus, selected tabs, copy controls and search.
+
+Codex's link uses a 24px layout box around the visible Blossom artwork, with the
+original 48px official export positioned intact around it. Its internal clear
+space no longer expands the logo-to-name gap. Use the more specific
+`.agent-logos .codex-lockup` selector with a 5px gap; the generic link rule has a
+12px gap. Browser measurements give about 5.1px visible spacing for Codex and
+4.7px inside Claude's supplied wordmark.
