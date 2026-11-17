@@ -1498,3 +1498,17 @@ Added focused selector tests and updated managed browser flows, onboarding save-
 Validation: root TypeScript and lint passed; all 114 unit/contract tests passed (433 assertions). Full SDK browser suite: 13 passed, one installed Astro shutdown-cleanup assertion failed (connection.json remained after dev-process exit). Reran the installed-package suite: both Vite and Astro passed, including agent edit, human acceptance and shutdown cleanup. All 14 browser cases therefore passed across the full run and targeted rerun; deterministic Codex, Claude and OpenCode flows passed. Initial focused managed tests caught an ambiguous accessible-label locator introduced by the new trigger; corrected tests to use the exact select label and all three provider cases passed. Full build/typecheck passed, including website docs with zero diagnostics; existing unset-site sitemap warning remains. Changed authored files passed Prettier; git diff --check passed.
 
 Next step: review the simplified composer in an installed app. Live authenticated provider validation and unrelated roadmap work remain open.
+
+## 2026-11-17 — Avoid competing Astro restart navigations
+
+Updated tests/e2e/package.spec.ts to wait for Astro's automatic full reload after a config restart, using the disappearance of the existing window marker. Removed the competing manual reload that can abort when Astro's HMR reload arrives. The test still requires exactly one overlay, unchanged bridge connection state, an installed ACP fixture edit and persisted human acceptance. No runtime behavior or roadmap checkbox changed.
+
+Validation: git diff --check passed. bun install --frozen-lockfile failed with registry DNSResolveFailed errors. Retried with network escalation; it produced no progress and was interrupted (exit 130). The targeted command bun --bun playwright test tests/e2e/package.spec.ts --grep Astro --repeat-each=3 could not run because Playwright is not installed (Script not found). Browser validation remains unverified.
+
+Next step: install locked dependencies in a network-enabled environment, run the targeted Astro command above, then bun run test:e2e. Live-provider and unrelated roadmap checks remain open.
+
+### Follow-up validation
+
+After the user completed dependency installation, installed Playwright Chromium and ran the browser checks outside the sandbox (local server binding was denied inside it). The targeted Astro case passed three consecutive runs (45.3s). The full SDK browser suite passed all 14 cases (47.5s), including installed Vite/Astro agent edits, restart, human acceptance and shutdown cleanup. Root typecheck and website diagnostics passed after rerunning outside the sandbox; lint, changed-file Prettier and git diff --check passed. Initial browser attempts failed only because the Playwright browser was not yet installed. Existing Vite native-config migration warnings remain advisory.
+
+Next step: push the reviewed test fix and session log as requested, then confirm the remote CI result. No runtime changes or live-provider validation are included.

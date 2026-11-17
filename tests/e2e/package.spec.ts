@@ -157,7 +157,14 @@ async function installedEdit(page: Page, framework: 'Vite' | 'Astro') {
       await expect
         .poll(() => output, { timeout: 15000 })
         .toContain('server restarted');
-      await page.reload();
+      // Astro's restart also sends a full reload over HMR. A manual reload
+      // races that navigation and can fail with net::ERR_ABORTED. Wait for
+      // the old document's marker to disappear instead of starting another.
+      await page.waitForFunction(
+        () => Reflect.get(window, 'astroNavigationTest') === undefined,
+        undefined,
+        { timeout: 15000 },
+      );
       await expect(overlay).toHaveCount(1);
       expect(readFileSync(connectionFile, 'utf8')).toBe(connection);
       // Compare with the user's new config later to catch any CLI edits.
