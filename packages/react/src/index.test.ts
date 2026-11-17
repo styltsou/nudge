@@ -69,6 +69,7 @@ test('React StrictMode mounts one overlay and cleans it up; disabled mounts noth
     globalThis.fetch = originalFetch;
     if (originalAct === undefined) delete globals.IS_REACT_ACT_ENVIRONMENT;
     else globals.IS_REACT_ACT_ENVIRONMENT = originalAct;
+    await new Promise((resolve) => setTimeout(resolve, 10));
     restore();
   }
 });

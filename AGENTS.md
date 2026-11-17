@@ -83,6 +83,7 @@ before implementing the next vertical slice.
 ```text
 apps/website/            # Astro + Tailwind + Starlight public site and user docs
 packages/core/
+packages/overlay/         # internal React + shadcn/Base UI presentation in Shadow DOM
 packages/react/
 packages/shared/
 packages/bridge/
@@ -90,7 +91,7 @@ packages/mcp/
 packages/cli/             # optional in first slice; keep runnable scripts regardless
 ```
 
-Use workspace references. Avoid circular package dependencies. `shared` owns common contracts; `core` does not depend on React; `mcp` depends on contracts and talks to the bridge over HTTP, not direct in-memory state.
+Use workspace references. Avoid circular package dependencies. `shared` owns common contracts; `core` exposes a framework-neutral API and uses the private React-based `overlay` workspace for presentation; `mcp` depends on contracts and talks to the bridge over HTTP, not direct in-memory state.
 
 Keep public website guides in `apps/website/src/content/docs/docs/`. Root `docs/` and `tasks/` remain internal contributor/agent contracts and handoff material. Website code must not load local bridge credentials or contact the loopback tool service.
 

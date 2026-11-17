@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@nudge-ui/*": ["./src/*"] }
+  },
+  "include": ["src"]
+}

@@ -29,6 +29,7 @@ export async function startRuntime(
       target: 'browser',
       format: 'esm',
       minify: true,
+      define: { 'process.env.NODE_ENV': '"production"' },
     });
     if (!result.success)
       throw new Error('Unable to build the Nudge browser integration.');

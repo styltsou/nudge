@@ -59,6 +59,11 @@ test('agent setup explains missing readiness, copies setup, preserves drafts and
     });
     const dialog = host.getByRole('dialog', { name: 'Connect your agent' });
     await setup.click();
+    // Dialog portals and their styles must stay within the owned shadow root.
+    await expect(page.locator('body > [data-base-ui-portal]')).toHaveCount(0);
+    expect(
+      await dialog.evaluate((node) => node.getRootNode() instanceof ShadowRoot),
+    ).toBe(true);
     await expect(
       dialog.getByText('Setup needed', { exact: true }),
     ).toBeVisible();
@@ -81,6 +86,9 @@ test('agent setup explains missing readiness, copies setup, preserves drafts and
     await expect(dialog.getByRole('status')).toContainText('Command copied');
     await page.keyboard.press('Escape');
     await expect(setup).toBeFocused();
+    await expect(page.locator('body')).not.toHaveAttribute(
+      'data-base-ui-scroll-lock',
+    );
     await host
       .getByRole('button', { name: 'Annotate UI', exact: true })
       .click();
@@ -159,9 +167,23 @@ test('agent setup explains missing readiness, copies setup, preserves drafts and
     await expect(
       dialog.getByRole('button', { name: 'Annotate your first element' }),
     ).toBeEnabled();
+    const primary = dialog.getByRole('button', {
+      name: 'Annotate your first element',
+    });
+    expect(
+      await primary.evaluate(
+        (element) => getComputedStyle(element).backgroundImage,
+      ),
+    ).toContain('linear-gradient');
     expect(await dialog.innerText()).not.toContain(config.runnerToken);
     await page.screenshot({ path: '.nudge/onboarding-desktop.png' });
     await page.setViewportSize({ width: 390, height: 844 });
+    await expect
+      .poll(async () => {
+        const bounds = await dialog.boundingBox();
+        return !!bounds && bounds.x >= 15 && bounds.x + bounds.width <= 375;
+      })
+      .toBe(true);
     expect(
       await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
     ).toBe(true);

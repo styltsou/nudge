@@ -3,7 +3,10 @@
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": ["bun", "node", "vite/client"]
+    "types": ["bun", "node", "vite/client"],
+    "paths": {
+      "@nudge-ui/*": ["./packages/overlay/src/*"]
+    }
   },
   "include": ["packages", "scripts", "tests", "*.ts"]
 }

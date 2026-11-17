@@ -51,7 +51,7 @@ supersede earlier deferrals of snapshots and managed agent execution.
 - **D-001 Local-first:** SQLite bridge on loopback, no backend SaaS or login for MVP.
 - **D-002 Agent-agnostic:** MCP stdio server; agent owns editing and approvals.
 - **D-003 No pretend push:** browser queues feedback; MCP client pulls. Auto-send is later and requires agent-specific adapter.
-- **D-004 Vanilla overlay:** TypeScript + Shadow DOM; React is only a wrapper/demo dependency.
+- **D-004 Vanilla overlay (superseded by D-030):** Originally TypeScript + Shadow DOM with React only as an optional wrapper.
 - **D-005 Closure:** agent reports implementation; human accepts or requests changes.
 - **D-006 Snapshots:** best-effort element captures with explicit unavailable state; no guaranteed full-page screenshot.
 - **D-007 DOM source context:** best-effort selectors, no guaranteed file/line mapping initially.
@@ -332,3 +332,22 @@ for browser bootstrap. Astro client navigation remounts the overlay for the new
 page, and Astro config restarts retain the same local bridge and runner. A full
 shutdown closes both. The initial browser-tested target is Astro 7.4 on local HTTP.
 The persistent `init --integrate` option remains Vite-specific.
+
+### D-030 React overlay presentation (2026-11-17)
+
+The user requested migrating overlay views to React and shadcn. This supersedes
+D-004's restriction on internal React dependencies. Core retains a browser-only,
+framework-neutral mount/destroy API, DOM selection, anchoring, capture and bridge
+coordination. A private @usenudge/overlay workspace owns React/React DOM views,
+MIT-licensed shadcn Base UI primitives, Lucide icons and Tailwind-generated CSS.
+The injected installed-package client bundles that runtime; Vue, Svelte and Astro
+consumers need no React integration or source/config changes. Production remains
+disabled by default and the public website does not contact the bridge.
+
+Every view root is reused for state/focus-preserving updates and explicitly
+disposed before removal. Deferred unmount avoids nested React effect commits.
+Portal-bearing content requires an explicit shadow-owned container; no overlay
+styles or portals are appended to the application body. Setup restores focus to
+its engine-owned trigger. Request IDs stay stable across uncertain dispatches
+but reset when a run terminates, and each new submission defaults to a new session.
+The release includes shadcn's source license alongside bundled package notices.

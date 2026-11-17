@@ -47,10 +47,11 @@ describe('overlay lifecycle and app isolation', () => {
       { preconnect: originalFetch.preconnect },
     );
   });
-  afterEach(() => {
+  afterEach(async () => {
     cleanups.splice(0).forEach((cleanup) => cleanup());
     document.body.replaceChildren();
     globalThis.fetch = originalFetch;
+    await new Promise((resolve) => setTimeout(resolve, 10));
   });
   it('is disabled unless explicitly enabled and replaces duplicate mounts without leaking listeners', () => {
     mountNudge({ ...options, enabled: false });

@@ -49,7 +49,7 @@ sessions. Agent sessions and annotation items have independent identities.
 
 ## MVP capabilities (must-have)
 
-- Development-only overlay install, vanilla core + React wrapper.
+- Development-only overlay install, framework-neutral browser API with internal React views and an optional React wrapper.
 - Hover highlight with correct scroll/resize behavior and keyboard cancellation.
 - Single-element selection and accessible comment popover.
 - Stable-ish DOM anchor with metadata: URL path, tag, textual snippet (limited/redacted), test ID if present, reasonable CSS selector, bounding box, viewport and timestamp.

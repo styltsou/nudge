@@ -23,7 +23,8 @@ nudge/
   tasks/
   apps/website/            # Astro + Tailwind + Starlight public site and user docs
   packages/shared/         # Zod schemas, DTOs, constants, protocol
-  packages/core/           # vanilla TS DOM overlay, anchor and capture
+  packages/core/           # browser engine, anchor and capture
+  packages/overlay/        # private React + shadcn/Base UI Shadow DOM views
   packages/react/          # dev-only React convenience component
   packages/bridge/         # Fastify HTTP/SSE + SQLite repository
   packages/mcp/            # stdio MCP server; bridge HTTP client
@@ -49,7 +50,8 @@ If an npm name is unavailable, keep local workspace naming and seek user approva
 ### Dependencies
 
 - `shared`: Zod; no browser or Node-only dependencies.
-- `core` → `shared`: DOM overlay and `html-to-image` optional lazy import for snapshots.
+- `core` → `shared`, `overlay`: framework-neutral browser engine and `html-to-image` optional lazy import for snapshots.
+- `overlay` → `shared`, React/React DOM, Base UI: internal views and shadcn primitives; compiled Tailwind CSS is embedded only in the shadow root. Consumer apps need no React setup; the injected client bundles its own presentation runtime.
 - `react` → `core`: lifecycle wrapper, React as peer dependency.
 - `bridge` → `shared`: Fastify, built-in `bun:sqlite`, SSE endpoint, local disk only.
 - `mcp` → `shared`: official MCP TypeScript SDK, authenticated local HTTP client.

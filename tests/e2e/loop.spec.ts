@@ -54,6 +54,24 @@ test('select, queue, reload, report, revise and accept with honest unavailable e
     element.style.transform = '';
   });
   await host
+    .getByRole('button', { name: 'Layout and theme', exact: true })
+    .click();
+  await host.getByRole('radio', { name: 'Light', exact: true }).click();
+  await expect(host).toHaveAttribute('data-theme', 'light');
+  await host
+    .getByRole('button', { name: 'Layout and theme', exact: true })
+    .click();
+  await page.screenshot({ path: '.nudge/overlay-migration-light.png' });
+  await host
+    .getByRole('button', { name: 'Layout and theme', exact: true })
+    .click();
+  await host.getByRole('radio', { name: 'Dark', exact: true }).click();
+  await expect(host).toHaveAttribute('data-theme', 'dark');
+  await host
+    .getByRole('button', { name: 'Layout and theme', exact: true })
+    .click();
+  await page.screenshot({ path: '.nudge/overlay-migration-dark.png' });
+  await host
     .getByRole('button', { name: 'Open in side panel', exact: true })
     .click();
   await expect(host.locator('.panel')).toHaveClass(/docked/);
@@ -118,6 +136,43 @@ test('select, queue, reload, report, revise and accept with honest unavailable e
     page.locator('script').filter({ hasText: 'window.__nudgeXss=true' }),
   ).toHaveCount(0);
   await host.getByLabel('Follow-up request').fill('Add more breathing room');
+  // Failed review requests must retain the error and the user's draft.
+  await page.route(
+    `**/annotations/${annotation.id}/accept`,
+    (route) =>
+      route.fulfill({
+        status: 409,
+        headers: { 'access-control-allow-origin': new URL(page.url()).origin },
+        json: { error: 'Review conflict' },
+      }),
+    { times: 1 },
+  );
+  await host.getByRole('button', { name: 'Accept', exact: true }).click();
+  await expect(
+    host.getByRole('alert').filter({ hasText: 'Annotation changed' }).first(),
+  ).toBeVisible();
+  await expect(host.getByLabel('Follow-up request')).toHaveValue(
+    'Add more breathing room',
+  );
+  await page.route(
+    `**/annotations/${annotation.id}/request-changes`,
+    (route) =>
+      route.fulfill({
+        status: 409,
+        headers: { 'access-control-allow-origin': new URL(page.url()).origin },
+        json: { error: 'Revision conflict' },
+      }),
+    { times: 1 },
+  );
+  await host
+    .getByRole('button', { name: 'Request changes', exact: true })
+    .click();
+  await expect(
+    host.getByRole('alert').filter({ hasText: 'Annotation changed' }).last(),
+  ).toBeVisible();
+  await expect(host.getByLabel('Follow-up request')).toHaveValue(
+    'Add more breathing room',
+  );
   await host
     .getByRole('button', { name: 'Request changes', exact: true })
     .click();

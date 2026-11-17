@@ -1,3 +1,5 @@
+import { flushSync } from 'react-dom';
+import { disposeViews } from '@usenudge/overlay';
 import { afterAll, afterEach, beforeAll, expect, test } from 'bun:test';
 import { installDom } from '../../../tests/helpers/dom';
 import { BridgeClient } from './client';
@@ -9,7 +11,11 @@ beforeAll(() => {
   restore = installDom();
 });
 afterAll(() => restore());
-afterEach(() => document.body.replaceChildren());
+afterEach(async () => {
+  disposeViews(document.body);
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  document.body.replaceChildren();
+});
 
 function controls() {
   const client = new BridgeClient(
@@ -70,10 +76,12 @@ test('session reuse is explicit, compatible and local to one submission', () => 
   ]);
   expect(select.options[2]!.disabled).toBe(true);
   expect(select.options[2]!.textContent).toContain('Busy');
-  trigger.click();
+  flushSync(() => trigger.click());
   expect(trigger.getAttribute('aria-expanded')).toBe('true');
   select.value = 'first';
-  select.dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync(() => {
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   expect(first.value()).toBe('first');
   expect(trigger.textContent).toContain('Continue: Adjust the header');
   expect(trigger.getAttribute('aria-expanded')).toBe('false');
@@ -85,9 +93,11 @@ test('session reuse is explicit, compatible and local to one submission', () => 
     'New session',
   );
   expect(first.value()).toBe('first');
-  trigger.click();
+  flushSync(() => trigger.click());
   select.value = '';
-  select.dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync(() => {
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   expect(first.value()).toBeUndefined();
   expect(trigger.textContent).toContain('New session');
 });
@@ -97,19 +107,21 @@ test('Escape closes the session chooser without escaping the composer or losing 
   document.body.append(picker.node);
   const trigger = picker.node.querySelector('button')!;
   const select = picker.node.querySelector('select')!;
-  trigger.click();
+  flushSync(() => trigger.click());
   select.focus();
   const escaped: string[] = [];
   const listener = () => escaped.push('document');
   document.addEventListener('keydown', listener);
   try {
-    select.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        key: 'Escape',
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    flushSync(() => {
+      select.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(trigger);
     expect(escaped).toEqual([]);

@@ -1,9 +1,11 @@
+import { buildOverlayStyles } from './build-overlay-styles';
 import { mkdirSync, writeFileSync, readFileSync, chmodSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { version } from '../packages/shared/src/release';
 import manifest from '../package.release.json';
 import { packageNotices } from './package-notices';
 
+buildOverlayStyles();
 const root = resolve(import.meta.dir, '..');
 const destination = resolve(root, 'dist/usenudge');
 mkdirSync(resolve(destination, 'dist'), { recursive: true });
@@ -22,6 +24,9 @@ for (const [name, entry, target] of [
     packages: 'bundle',
     external: ['vite'],
     minify: target === 'browser',
+    ...(target === 'browser'
+      ? { define: { 'process.env.NODE_ENV': '"production"' } }
+      : {}),
     plugins: [notices.plugin],
   });
   if (!result.success)

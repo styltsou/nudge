@@ -24,16 +24,17 @@
     "package:release": "bun scripts/package-release.ts",
     "package:check": "bun scripts/check-release.ts",
     "release:check": "bun run typecheck && bun run lint && bun run test && bun run build && bun run test:e2e && bun run website:test && bun run package:release && bun run package:check",
-    "typecheck": "bun --bun tsc --noEmit && bun run website:check",
+    "typecheck": "bun run overlay:styles && bun --bun tsc --noEmit && bun run website:check",
     "lint": "bun --bun oxlint --deny-warnings packages apps scripts tests",
     "format": "bun --bun prettier --write .",
     "format:check": "bun --bun prettier --check .",
-    "test": "bun test ./packages ./tests/contracts --timeout 10000",
-    "test:e2e": "bun --bun playwright test",
+    "test": "bun run overlay:styles && bun test ./packages ./tests/contracts --timeout 10000",
+    "test:e2e": "bun run overlay:styles && bun --bun playwright test",
     "bridge:doctor": "bun packages/cli/src/index.ts doctor",
     "bridge:setup": "bun packages/cli/src/index.ts setup",
     "state:clean": "bun packages/cli/src/index.ts clean",
-    "mcp": "bun packages/mcp/src/index.ts"
+    "mcp": "bun packages/mcp/src/index.ts",
+    "overlay:styles": "bun scripts/build-overlay-styles.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
@@ -49,6 +50,8 @@
     "prettier": "3.10.1",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "5.9.3",
-    "vite": "8.3.7"
+    "vite": "8.3.7",
+    "@tailwindcss/cli": "^4.3.5",
+    "tailwindcss": "^4.3.5"
   }
 }

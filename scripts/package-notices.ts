@@ -36,6 +36,12 @@ export function packageNotices() {
     render() {
       return (
         '# Bundled third-party notices\n\nGenerated from dependencies loaded by the release bundler. These notices apply to their respective packages, independently of Nudge’s MIT license.\n\n' +
+        '## shadcn/ui source components\n\nSource: https://github.com/shadcn-ui/ui\n\n' +
+        readFileSync(
+          resolve(import.meta.dir, '../packages/overlay/LICENSE.shadcn.md'),
+          'utf8',
+        ) +
+        '\n\n' +
         [...packages]
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([name, pkg]) => {

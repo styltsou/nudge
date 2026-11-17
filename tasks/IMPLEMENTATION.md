@@ -73,6 +73,10 @@ over the remaining showcase tasks. See [target contract](../docs/09-MANAGED-AGEN
 - [ ] Install/verify real ACP adapter packages and authenticated provider runs; expand unsupported form/permission variants against verified APIs.
 - [x] Cover malformed-report subprocess rejection. The prior timeout reproduces with Bun's rejects matcher; an explicit settled-outcome assertion passes the full process case.
 
+## Overlay migration — user-requested continuation
+
+- [x] Migrate presentation to private React/shadcn views, retain Shadow DOM isolation and the framework-neutral consumer API, verify draft/error/retry/root cleanup behavior, and validate installed-package review loops.
+
 ## Phase 4 — showcase/readiness
 
 - [x] Replace the public demo/test-drive launcher with existing-project installation. Default local init/dev leave source/config/scripts untouched; persistent integration is explicit. Keep installed CLI/runner/edit/HMR/acceptance coverage in temporary test consumers.
